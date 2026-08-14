@@ -1,6 +1,7 @@
+import { motion } from 'framer-motion'
 import type { AcaiBase } from '../../data/builder'
 import { formatPrice } from '../../lib/order'
-import { SelectedBadge } from './SizeSelector'
+import { SelectedCheck } from './SelectedCheck'
 
 interface BaseSelectorProps {
   readonly bases: readonly AcaiBase[]
@@ -15,30 +16,44 @@ export function BaseSelector({ bases, selected, onSelect }: BaseSelectorProps) {
         const isSelected = selected?.id === base.id
 
         return (
-          <button
+          <motion.button
             key={base.id}
             type="button"
             role="radio"
             aria-checked={isSelected}
             disabled={!base.available}
             onClick={() => onSelect(base)}
-            className={`relative rounded-card border p-4 pr-12 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-45 ${
+            whileTap={base.available ? { scale: 0.98 } : undefined}
+            className={`relative flex items-start gap-3 rounded-card border p-4 pr-12 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-45 ${
               isSelected
-                ? 'border-acai-700 bg-acai-50 ring-2 ring-acai-700'
-                : 'border-acai-100 bg-white hover:border-acai-300 enabled:hover:animate-pulse-soft'
+                ? 'border-acai-800 bg-white shadow-xl shadow-acai-900/10 ring-2 ring-acai-800'
+                : 'border-acai-100 bg-white hover:-translate-y-0.5 hover:border-acai-300 hover:shadow-lg hover:shadow-acai-900/5'
             }`}
           >
-            {isSelected && <SelectedBadge />}
+            {isSelected && <SelectedCheck />}
 
-            <span className="block text-base font-bold text-ink">{base.name}</span>
-            <span className="mt-1 block text-sm text-muted">{base.description}</span>
-            <span className="mt-2 block text-xs font-semibold text-acai-800">
-              {base.extraPrice > 0 ? `+ ${formatPrice(base.extraPrice)}` : 'Sem custo extra'}
+            <span
+              aria-hidden="true"
+              className={`mt-0.5 size-3 shrink-0 rounded-full transition-colors ${
+                isSelected ? 'bg-acai-800' : 'bg-acai-200'
+              }`}
+            />
+
+            <span className="min-w-0">
+              <span className="block text-base font-bold leading-tight text-ink">{base.name}</span>
+              <span className="mt-1 block text-sm leading-snug text-muted">{base.description}</span>
+              <span
+                className={`mt-2 inline-block rounded-full px-2.5 py-1 text-xs font-bold ${
+                  base.extraPrice > 0 ? 'bg-acai-50 text-acai-800' : 'bg-green-50 text-green-700'
+                }`}
+              >
+                {base.extraPrice > 0 ? `+ ${formatPrice(base.extraPrice)}` : 'Sem custo extra'}
+              </span>
+              {!base.available && (
+                <span className="mt-2 block text-xs font-semibold text-muted">Indisponível hoje</span>
+              )}
             </span>
-            {!base.available && (
-              <span className="mt-1 block text-xs font-semibold text-muted">Indisponível hoje</span>
-            )}
-          </button>
+          </motion.button>
         )
       })}
     </div>

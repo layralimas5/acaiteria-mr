@@ -1,5 +1,7 @@
+import { motion } from 'framer-motion'
 import type { Topping } from '../../data/builder'
 import { formatPrice } from '../../lib/order'
+import { SelectedCheck } from './SelectedCheck'
 
 interface ToppingCardProps {
   readonly topping: Topping
@@ -12,31 +14,28 @@ interface ToppingCardProps {
 
 export function ToppingCard({ topping, selected, free, disabled, onToggle }: ToppingCardProps) {
   const unavailable = !topping.available
+  const blocked = unavailable || disabled
 
   return (
-    <button
+    <motion.button
       type="button"
       aria-pressed={selected}
-      disabled={unavailable || disabled}
+      disabled={blocked}
       onClick={() => onToggle(topping)}
-      className={`relative flex flex-col items-center gap-2 rounded-2xl border p-3 text-center transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-45 ${
+      whileTap={blocked ? undefined : { scale: 0.95 }}
+      className={`relative flex flex-col items-center gap-2 rounded-2xl border px-2 py-4 text-center transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${
         selected
-          ? 'border-acai-700 bg-acai-50 ring-2 ring-acai-700'
-          : 'border-acai-100 bg-white hover:border-acai-300 enabled:hover:animate-pulse-soft'
+          ? 'border-acai-800 bg-white shadow-lg shadow-acai-900/10 ring-2 ring-acai-800'
+          : 'border-acai-100 bg-white hover:-translate-y-0.5 hover:border-acai-300 hover:shadow-md'
       }`}
     >
-      {selected && (
-        <span
-          aria-hidden="true"
-          className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-acai-700 text-white"
-        >
-          <svg viewBox="0 0 20 20" className="size-3 fill-none stroke-current stroke-[3]">
-            <path d="M4 10.5l4 4 8-9" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </span>
-      )}
+      {selected && <SelectedCheck size="sm" className="right-2 top-2" />}
 
-      <span className="grid size-12 place-items-center overflow-hidden rounded-full bg-acai-50 text-xl">
+      <span
+        className={`grid size-14 place-items-center overflow-hidden rounded-full text-2xl transition-colors ${
+          selected ? 'bg-acai-100' : 'bg-acai-50'
+        }`}
+      >
         {topping.image ? (
           <img src={topping.image} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
         ) : (
@@ -44,11 +43,19 @@ export function ToppingCard({ topping, selected, free, disabled, onToggle }: Top
         )}
       </span>
 
-      <span className="text-sm font-semibold leading-tight text-ink">{topping.name}</span>
+      <span className="text-sm font-bold leading-tight text-ink">{topping.name}</span>
 
-      <span className={`text-xs font-bold ${free && !unavailable ? 'text-green-700' : 'text-acai-800'}`}>
+      <span
+        className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+          unavailable
+            ? 'bg-acai-50 text-muted'
+            : free
+              ? 'bg-green-50 text-green-700'
+              : 'bg-acai-50 text-acai-800'
+        }`}
+      >
         {unavailable ? 'Esgotado' : free ? 'Grátis' : `+ ${formatPrice(topping.price)}`}
       </span>
-    </button>
+    </motion.button>
   )
 }
