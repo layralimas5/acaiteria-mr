@@ -9,12 +9,8 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-card border border-acai-100 bg-white transition-all duration-200 hover:-translate-y-1 hover:border-acai-200 hover:shadow-xl hover:shadow-acai-900/5">
-      <div
-        className={`relative flex items-center justify-center px-6 pb-4 pt-8 ${
-          product.image ? 'bg-acai-900' : 'bg-gradient-to-b from-acai-50 to-white'
-        }`}
-      >
+    <article className="group flex h-full flex-col overflow-hidden rounded-card border border-acai-100 bg-white transition-all duration-200 hover:animate-pulse-soft hover:border-acai-200 hover:shadow-xl hover:shadow-acai-900/5">
+      <div className="relative flex items-center justify-center px-6 pb-2 pt-8">
         {product.highlight && (
           <span className="absolute left-4 top-4 rounded-full bg-acai-800 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
             {product.highlight}
@@ -22,6 +18,7 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
         <ProductVisual
           product={product}
+          illustrationOnly
           className="h-36 w-auto transition-transform duration-300 group-hover:scale-105"
         />
       </div>

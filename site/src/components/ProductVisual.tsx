@@ -5,9 +5,11 @@ import { AcaiCup } from './AcaiCup'
 interface ProductVisualProps {
   readonly product: Product
   readonly className?: string
-  /** Gira o produto continuamente. Usado só no banner. */
+  /** Gira o produto em torno do próprio eixo. Usado só no banner. */
   readonly spin?: boolean
   readonly priority?: boolean
+  /** Força a ilustração vetorial mesmo quando existe foto (fundos claros). */
+  readonly illustrationOnly?: boolean
 }
 
 /**
@@ -22,8 +24,14 @@ const fadeEdges: CSSProperties = {
     'radial-gradient(closest-side circle, #000 62%, rgba(0,0,0,0.55) 82%, transparent 100%)',
 }
 
-export function ProductVisual({ product, className = '', spin = false, priority = false }: ProductVisualProps) {
-  if (!product.image) {
+export function ProductVisual({
+  product,
+  className = '',
+  spin = false,
+  priority = false,
+  illustrationOnly = false,
+}: ProductVisualProps) {
+  if (!product.image || illustrationOnly) {
     return <AcaiCup label={product.size} className={className} />
   }
 
@@ -37,7 +45,7 @@ export function ProductVisual({ product, className = '', spin = false, priority 
       decoding="async"
       fetchPriority={priority ? 'high' : 'auto'}
       style={fadeEdges}
-      className={`select-none object-contain ${spin ? 'animate-spin-slow' : ''} ${className}`}
+      className={`select-none object-contain ${spin ? 'animate-spin-y [transform-style:preserve-3d]' : ''} ${className}`}
     />
   )
 }
