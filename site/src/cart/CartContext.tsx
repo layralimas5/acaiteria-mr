@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react'
 import type { ReactNode } from 'react'
-import type { AcaiBase, CupSize, Topping } from '../data/builder'
+import type { AcaiBase, CupSize, ProductKind, Topping } from '../data/builder'
 import type { BuildSelection } from '../lib/builder'
 import { priceBuild } from '../lib/builder'
 
@@ -13,7 +13,8 @@ import { priceBuild } from '../lib/builder'
 export interface CartItem {
   /** Identidade da montagem: mesma combinação agrupa, combinação diferente não. */
   readonly id: string
-  readonly productType: 'custom-acai'
+  readonly productType: 'custom-acai' | 'custom-sorvete'
+  readonly product: ProductKind
   readonly size: CupSize
   readonly base: AcaiBase
   readonly toppings: readonly Topping[]
@@ -33,7 +34,7 @@ const STORAGE_KEY = 'acaiteria-mr:cart'
 
 const buildId = (selection: BuildSelection): string => {
   const toppingIds = selection.toppings.map((topping) => topping.id).sort()
-  return [selection.size?.id, selection.base?.id, ...toppingIds].join('|')
+  return [selection.product?.id, selection.size?.id, selection.base?.id, ...toppingIds].join('|')
 }
 
 const reducer = (state: readonly CartItem[], action: CartAction): readonly CartItem[] => {
@@ -106,11 +107,12 @@ export function CartProvider({ children }: { readonly children: ReactNode }) {
   }, [items])
 
   const addBuild = useCallback((selection: BuildSelection): CartItem | null => {
-    if (!selection.size || !selection.base) return null
+    if (!selection.product || !selection.size || !selection.base) return null
 
     const item: CartItem = {
       id: buildId(selection),
-      productType: 'custom-acai',
+      productType: selection.product.id === 'sorvete' ? 'custom-sorvete' : 'custom-acai',
+      product: selection.product,
       size: selection.size,
       base: selection.base,
       toppings: selection.toppings,

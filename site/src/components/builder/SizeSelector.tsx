@@ -12,7 +12,7 @@ interface SizeSelectorProps {
 export function SizeSelector({ sizes, selected, onSelect }: SizeSelectorProps) {
   return (
     <div role="radiogroup" aria-label="Tamanho do copo" className="grid gap-3 sm:grid-cols-3">
-      {sizes.map((size, index) => {
+      {sizes.map((size) => {
         const isSelected = selected?.id === size.id
 
         return (
@@ -52,9 +52,9 @@ export function SizeSelector({ sizes, selected, onSelect }: SizeSelectorProps) {
             <span className="min-w-0 sm:mt-3">
               <span className="flex items-baseline gap-2">
                 <span className="text-lg font-extrabold tracking-tight text-ink">{size.volume}</span>
-                {index === 1 && (
+                {size.highlight && (
                   <span className="rounded-full bg-acai-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-acai-800">
-                    Mais pedido
+                    {size.highlight}
                   </span>
                 )}
               </span>

@@ -46,7 +46,7 @@ export function Footer() {
           <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-acai-300">Navegue</h2>
           <ul className="mt-4 flex flex-col gap-3 text-sm">
             {[
-              { href: '#monte-seu-acai', label: 'Monte seu açaí' },
+              { href: '#monte-seu-acai', label: 'Monte seu pedido' },
               { href: '#entrega', label: 'Entrega' },
               { href: '#onde-estamos', label: 'Área de entrega' },
             ].map((link) => (

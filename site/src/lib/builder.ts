@@ -1,4 +1,4 @@
-import type { AcaiBase, CupSize, Topping } from '../data/builder'
+import type { AcaiBase, CupSize, ProductKind, Topping } from '../data/builder'
 
 /**
  * Regras de preço da montagem.
@@ -9,6 +9,8 @@ import type { AcaiBase, CupSize, Topping } from '../data/builder'
  */
 
 export interface BuildSelection {
+  /** Açaí ou sorvete: define quais tamanhos e bases aparecem. */
+  readonly product: ProductKind | null
   readonly size: CupSize | null
   readonly base: AcaiBase | null
   /** Na ordem em que foram escolhidos. */
@@ -25,7 +27,7 @@ export interface BuildPricing {
   readonly totalPrice: number
 }
 
-export const emptySelection: BuildSelection = { size: null, base: null, toppings: [] }
+export const emptySelection: BuildSelection = { product: null, size: null, base: null, toppings: [] }
 
 export const priceBuild = (selection: BuildSelection): BuildPricing => {
   const basePrice = (selection.size?.basePrice ?? 0) + (selection.base?.extraPrice ?? 0)
@@ -61,8 +63,9 @@ export const toppingsLabel = (selection: BuildSelection, pricing: BuildPricing):
 /** O que ainda falta para poder mandar o pedido. */
 export const missingSteps = (selection: BuildSelection): readonly string[] => {
   const missing: string[] = []
+  if (!selection.product) missing.push('escolha o produto')
   if (!selection.size) missing.push('escolha o tamanho')
-  if (!selection.base) missing.push('escolha a base')
+  if (!selection.base) missing.push(`escolha ${(selection.product?.baseLabel ?? 'a base').toLowerCase()}`)
   return missing
 }
 

@@ -90,14 +90,14 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                 <div className="flex h-full flex-col items-center justify-center text-center">
                   <p className="text-base font-bold text-ink">Seu pedido está vazio</p>
                   <p className="mt-2 max-w-xs text-sm text-muted">
-                    Monte um açaí do seu jeito escolhendo tamanho, base e complementos.
+                    Monte um açaí ou sorvete do seu jeito, escolhendo tamanho, sabor e complementos.
                   </p>
                   <a
                     href="#monte-seu-acai"
                     onClick={onClose}
                     className="mt-5 rounded-full bg-acai-800 px-6 py-3 text-sm font-bold text-white"
                   >
-                    Montar meu açaí
+                    Montar meu pedido
                   </a>
                 </div>
               ) : (
@@ -107,7 +107,9 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="text-sm font-bold text-ink">{item.size.name}</p>
-                          <p className="text-xs text-muted">{item.base.name}</p>
+                          <p className="text-xs text-muted">
+                            {item.product.baseLabel}: {item.base.name}
+                          </p>
                         </div>
                         <p className="shrink-0 text-sm font-extrabold text-acai-800">
                           {formatPrice(item.unitPrice * item.quantity)}

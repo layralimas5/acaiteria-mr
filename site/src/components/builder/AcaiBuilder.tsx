@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useCart } from '../../cart/CartContext'
-import { acaiBases, cupSizes, toppingCategories, toppingsByCategory } from '../../data/builder'
-import type { AcaiBase, CupSize, Topping } from '../../data/builder'
+import { productKinds, toppingCategories, toppingsByCategory } from '../../data/builder'
+import type { AcaiBase, CupSize, ProductKind, Topping } from '../../data/builder'
 import type { BuildSelection } from '../../lib/builder'
 import { emptySelection, priceBuild, toggleTopping } from '../../lib/builder'
 import { formatPrice } from '../../lib/order'
@@ -10,6 +10,7 @@ import { MobileOrderBar } from './MobileOrderBar'
 import { BaseSelector } from './BaseSelector'
 import { FreeToppingsMeter } from './FreeToppingsMeter'
 import { OrderSummary } from './OrderSummary'
+import { ProductSelector } from './ProductSelector'
 import { SizeSelector } from './SizeSelector'
 import { StepPanel } from './StepPanel'
 import { StepTabs } from './StepTabs'
@@ -22,7 +23,7 @@ interface AcaiBuilderProps {
   readonly onVisibilityChange: (visible: boolean) => void
 }
 
-const LAST_STEP = 4
+const LAST_STEP = 5
 
 export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps) {
   const { addBuild, count } = useCart()
@@ -71,6 +72,15 @@ export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps
     })
   }, [])
 
+  /** Trocar de produto zera tamanho e base, que pertencem ao produto anterior. */
+  const selectProduct = useCallback((product: ProductKind) => {
+    setSelection((current) =>
+      current.product?.id === product.id
+        ? { ...current, product }
+        : { ...current, product, size: null, base: null },
+    )
+  }, [])
+
   const selectSize = useCallback((size: CupSize) => {
     setSelection((current) => ({ ...current, size }))
   }, [])
@@ -98,21 +108,25 @@ export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps
     setStep(1)
   }, [])
 
+  const product = selection.product
+  const productDone = Boolean(product)
   const sizeDone = Boolean(selection.size)
   const baseDone = Boolean(selection.base)
   const toppingsDone = selection.toppings.length > 0
-  const canFinish = sizeDone && baseDone
+  const canFinish = productDone && sizeDone && baseDone
+  const baseLabel = product?.baseLabel ?? 'Base'
 
   const steps: readonly StepInfo[] = [
-    { id: 1, label: 'Tamanho', done: sizeDone, hint: selection.size?.volume ?? 'obrigatório' },
-    { id: 2, label: 'Base', done: baseDone, hint: selection.base?.name ?? 'obrigatório' },
+    { id: 1, label: 'Produto', done: productDone, hint: product?.name ?? 'açaí ou sorvete' },
+    { id: 2, label: 'Tamanho', done: sizeDone, hint: selection.size?.volume ?? 'obrigatório' },
+    { id: 3, label: baseLabel, done: baseDone, hint: selection.base?.name ?? 'obrigatório' },
     {
-      id: 3,
+      id: 4,
       label: 'Complementos',
       done: toppingsDone,
       hint: toppingsDone ? `${selection.toppings.length} escolhidos` : 'opcional',
     },
-    { id: 4, label: 'Finalizar', done: false, hint: formatPrice(pricing.totalPrice) },
+    { id: 5, label: 'Finalizar', done: false, hint: formatPrice(pricing.totalPrice) },
   ]
 
   return (
@@ -123,9 +137,9 @@ export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps
     >
       <div className="mx-auto max-w-6xl px-5">
         <div className="max-w-xl">
-          <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-700">Monte seu açaí</span>
+          <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-700">Monte seu pedido</span>
           <h2 className="mt-2 text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
-            Do seu jeito, do tamanho que você quiser
+            Açaí ou sorvete, do jeito que você monta
           </h2>
           <p className="mt-3 text-base text-muted">
             Uma etapa por vez. Pode pular para qualquer uma tocando no nome aqui em cima.
@@ -143,61 +157,93 @@ export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps
               <AnimatePresence mode="wait" initial={false}>
                 {step === 1 && (
                   <StepPanel
-                    key="size"
-                    title="Escolha seu tamanho"
-                    subtitle={
-                      sizeDone
-                        ? `${selection.size?.volume} · ${pricing.freeLimit} complementos grátis`
-                        : 'Cada tamanho já vem com uma cota de complementos grátis.'
-                    }
-                    done={sizeDone}
+                    key="product"
+                    title="O que você quer hoje?"
+                    subtitle={productDone ? (product?.name ?? '') : 'Escolha entre açaí e sorvete.'}
+                    done={productDone}
                     footer={
                       <StepFooter
                         onNext={() => goToStep(2)}
-                        nextLabel="Escolher a base"
-                        nextDisabled={!sizeDone}
-                        disabledHint="Escolha um tamanho para continuar"
+                        nextLabel="Escolher o tamanho"
+                        nextDisabled={!productDone}
+                        disabledHint="Escolha um produto para continuar"
                       />
                     }
                   >
-                    <SizeSelector sizes={cupSizes} selected={selection.size} onSelect={selectSize} />
+                    <ProductSelector
+                      products={productKinds}
+                      selected={selection.product}
+                      onSelect={selectProduct}
+                    />
                   </StepPanel>
                 )}
 
                 {step === 2 && (
                   <StepPanel
-                    key="base"
-                    title="Escolha sua base"
-                    subtitle={baseDone ? (selection.base?.name ?? '') : 'Uma base por copo.'}
-                    done={baseDone}
+                    key="size"
+                    title="Escolha seu tamanho"
+                    subtitle={
+                      sizeDone
+                        ? `${selection.size?.volume} · ${pricing.freeLimit} complementos grátis`
+                        : `Todo tamanho vem com ${product?.sizes[0]?.freeToppings ?? 3} complementos grátis.`
+                    }
+                    done={sizeDone}
                     footer={
                       <StepFooter
                         onBack={() => goToStep(1)}
                         onNext={() => goToStep(3)}
-                        nextLabel="Escolher complementos"
-                        nextDisabled={!baseDone}
-                        disabledHint="Escolha uma base para continuar"
+                        nextLabel={`Escolher ${baseLabel.toLowerCase()}`}
+                        nextDisabled={!sizeDone}
+                        disabledHint="Escolha um tamanho para continuar"
                       />
                     }
                   >
-                    <BaseSelector bases={acaiBases} selected={selection.base} onSelect={selectBase} />
+                    {product ? (
+                      <SizeSelector sizes={product.sizes} selected={selection.size} onSelect={selectSize} />
+                    ) : (
+                      <StepBlocked onGo={() => goToStep(1)} label="Escolha primeiro entre açaí e sorvete." />
+                    )}
                   </StepPanel>
                 )}
 
                 {step === 3 && (
                   <StepPanel
-                    key="toppings"
-                    title="Escolha seus complementos"
-                    subtitle={
-                      sizeDone
-                        ? 'Os primeiros entram na cota grátis. Depois disso, cada um soma no total.'
-                        : 'Escolha o tamanho antes para saber quantos entram de graça.'
-                    }
-                    done={toppingsDone}
+                    key="base"
+                    title={product?.baseStepTitle ?? 'Escolha sua base'}
+                    subtitle={baseDone ? (selection.base?.name ?? '') : (product?.baseStepSubtitle ?? '')}
+                    done={baseDone}
                     footer={
                       <StepFooter
                         onBack={() => goToStep(2)}
                         onNext={() => goToStep(4)}
+                        nextLabel="Escolher complementos"
+                        nextDisabled={!baseDone}
+                        disabledHint={`Escolha ${baseLabel.toLowerCase()} para continuar`}
+                      />
+                    }
+                  >
+                    {product ? (
+                      <BaseSelector bases={product.bases} selected={selection.base} onSelect={selectBase} />
+                    ) : (
+                      <StepBlocked onGo={() => goToStep(1)} label="Escolha primeiro entre açaí e sorvete." />
+                    )}
+                  </StepPanel>
+                )}
+
+                {step === 4 && (
+                  <StepPanel
+                    key="toppings"
+                    title="Escolha seus complementos"
+                    subtitle={
+                      sizeDone
+                        ? `Os ${pricing.freeLimit} primeiros são grátis. A partir daí, cada um soma no total.`
+                        : 'Escolha o tamanho antes para liberar os complementos.'
+                    }
+                    done={toppingsDone}
+                    footer={
+                      <StepFooter
+                        onBack={() => goToStep(3)}
+                        onNext={() => goToStep(5)}
                         nextLabel={toppingsDone ? 'Ir para o resumo' : 'Pular complementos'}
                       />
                     }
@@ -207,13 +253,10 @@ export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps
                         <FreeToppingsMeter limit={pricing.freeLimit} chosen={selection.toppings.length} />
                       </div>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => goToStep(1)}
-                        className="mb-6 block w-full rounded-2xl bg-amber-50 px-4 py-3 text-left text-sm font-semibold text-amber-800"
-                      >
-                        Escolha o tamanho primeiro para liberar os complementos. Tocar aqui volta para a etapa 1.
-                      </button>
+                      <StepBlocked
+                        onGo={() => goToStep(2)}
+                        label="Escolha o tamanho primeiro para liberar os complementos."
+                      />
                     )}
 
                     <div className="space-y-8">
@@ -233,10 +276,10 @@ export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps
                   </StepPanel>
                 )}
 
-                {step === 4 && (
+                {step === 5 && (
                   <StepPanel
                     key="finish"
-                    title="Finalize seu açaí"
+                    title="Finalize seu pedido"
                     subtitle={
                       canFinish
                         ? 'Confira a montagem e mande pra cozinha.'
@@ -245,15 +288,16 @@ export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps
                     done={false}
                   >
                     <div className="space-y-3">
+                      <ReviewRow label="Produto" value={product?.name ?? null} onEdit={() => goToStep(1)} />
                       <ReviewRow
                         label="Tamanho"
                         value={selection.size?.volume ?? null}
-                        onEdit={() => goToStep(1)}
+                        onEdit={() => goToStep(2)}
                       />
                       <ReviewRow
-                        label="Base"
+                        label={baseLabel}
                         value={selection.base?.name ?? null}
-                        onEdit={() => goToStep(2)}
+                        onEdit={() => goToStep(3)}
                       />
                       <ReviewRow
                         label="Complementos"
@@ -263,7 +307,7 @@ export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps
                             : 'nenhum'
                         }
                         optional
-                        onEdit={() => goToStep(3)}
+                        onEdit={() => goToStep(4)}
                       />
                     </div>
 
@@ -309,7 +353,7 @@ export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps
                     <div className="mt-4 flex items-center justify-between gap-4">
                       <button
                         type="button"
-                        onClick={() => goToStep(3)}
+                        onClick={() => goToStep(4)}
                         className="text-sm font-semibold text-muted transition-colors hover:text-acai-800"
                       >
                         Voltar
@@ -336,7 +380,7 @@ export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps
                     transition={{ duration: 0.2 }}
                     className="mt-5 rounded-xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-800"
                   >
-                    Açaí adicionado ao pedido. Quer montar outro?
+                    Adicionado ao pedido. Quer montar outro?
                   </motion.p>
                 )}
               </AnimatePresence>
@@ -360,6 +404,18 @@ export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps
         />
       )}
     </section>
+  )
+}
+
+function StepBlocked({ onGo, label }: { readonly onGo: () => void; readonly label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onGo}
+      className="mb-6 block w-full rounded-2xl bg-amber-50 px-4 py-3 text-left text-sm font-semibold text-amber-800"
+    >
+      {label} Tocar aqui volta para essa etapa.
+    </button>
   )
 }
 

@@ -14,22 +14,25 @@ interface OrderSummaryProps {
 export function OrderSummary({ selection, pricing, onAdd, onReset }: OrderSummaryProps) {
   const missing = missingSteps(selection)
   const paidIds = pricing.paidToppings.map((topping) => topping.id)
-  const started = Boolean(selection.size ?? selection.base) || selection.toppings.length > 0
+  const started = Boolean(selection.product ?? selection.size) || selection.toppings.length > 0
 
   return (
     <aside className="overflow-hidden rounded-card border border-acai-100 bg-white shadow-xl shadow-acai-900/5 lg:sticky lg:top-28">
       <header className="bg-acai-900 px-6 py-5 text-white">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-acai-200">Seu açaí</p>
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-acai-200">
+          {selection.product ? `Seu ${selection.product.name.toLowerCase()}` : 'Seu pedido'}
+        </p>
         <p className="mt-1 text-3xl font-extrabold tracking-tight">{formatPrice(pricing.totalPrice)}</p>
         <p className="mt-1 text-xs text-acai-100/70">
-          {started ? 'Atualiza conforme você monta' : 'Comece escolhendo o tamanho'}
+          {started ? 'Atualiza conforme você monta' : 'Comece escolhendo o produto'}
         </p>
       </header>
 
       <div className="px-6 py-5">
         <ul className="space-y-3 text-sm">
+          <SummaryRow label="Produto" value={selection.product?.name ?? null} />
           <SummaryRow label="Tamanho" value={selection.size?.volume ?? null} />
-          <SummaryRow label="Base" value={selection.base?.name ?? null} />
+          <SummaryRow label={selection.product?.baseLabel ?? 'Base'} value={selection.base?.name ?? null} />
         </ul>
 
         <div className="mt-5 border-t border-acai-100 pt-5">

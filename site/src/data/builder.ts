@@ -1,10 +1,17 @@
 /**
- * Catálogo do "Monte seu Açaí".
+ * Catálogo do montador.
+ *
+ * A loja vende açaí e sorvete, então o catálogo é organizado por produto:
+ * cada um tem os próprios tamanhos e as próprias bases (no sorvete, sabores).
+ * Os complementos são compartilhados pelos dois.
  *
  * Tudo aqui é dado puro e serializável: nenhum preço, limite ou nome vive
  * dentro de componente. Quando existir painel administrativo ou banco, basta
  * trocar estas constantes por uma resposta de API com o mesmo formato.
  */
+
+/** Complementos que saem sem custo em qualquer tamanho. */
+export const FREE_TOPPINGS = 3
 
 export interface CupSize {
   readonly id: string
@@ -14,6 +21,8 @@ export interface CupSize {
   /** Quantos complementos saem sem custo nesse tamanho. */
   readonly freeToppings: number
   readonly image?: string
+  /** Etiqueta opcional no card, tipo "Mais pedido". */
+  readonly highlight?: string
   readonly available: boolean
 }
 
@@ -21,8 +30,25 @@ export interface AcaiBase {
   readonly id: string
   readonly name: string
   readonly description: string
-  /** Acréscimo sobre o preço do tamanho. Zero na maioria das bases. */
+  /** Acréscimo sobre o preço do tamanho. Zero na maioria das opções. */
   readonly extraPrice: number
+  readonly available: boolean
+}
+
+export type ProductKindId = 'acai' | 'sorvete'
+
+export interface ProductKind {
+  readonly id: ProductKindId
+  readonly name: string
+  readonly description: string
+  readonly emoji: string
+  /** Título da etapa de base, que muda de nome conforme o produto. */
+  readonly baseStepTitle: string
+  readonly baseStepSubtitle: string
+  /** Como a base aparece no resumo do pedido. */
+  readonly baseLabel: string
+  readonly sizes: readonly CupSize[]
+  readonly bases: readonly AcaiBase[]
   readonly available: boolean
 }
 
@@ -45,37 +71,38 @@ export interface ToppingCategory {
   readonly subtitle: string
 }
 
-export const cupSizes: readonly CupSize[] = [
+const acaiSizes: readonly CupSize[] = [
   {
     id: 'copo-300',
-    name: 'Copo 300ml',
+    name: 'Açaí 300ml',
     volume: '300ml',
     basePrice: 12.9,
-    freeToppings: 3,
+    freeToppings: FREE_TOPPINGS,
     image: '/imagem/poto-300ml.webp',
     available: true,
   },
   {
     id: 'copo-500',
-    name: 'Copo 500ml',
+    name: 'Açaí 500ml',
     volume: '500ml',
     basePrice: 17.9,
-    freeToppings: 5,
+    freeToppings: FREE_TOPPINGS,
     image: '/imagem/pote-500ml.webp',
+    highlight: 'Mais pedido',
     available: true,
   },
   {
     id: 'copo-700',
-    name: 'Copo 700ml',
+    name: 'Açaí 700ml',
     volume: '700ml',
     basePrice: 22.9,
-    freeToppings: 7,
+    freeToppings: FREE_TOPPINGS,
     image: '/imagem/copo-700ml.webp',
     available: true,
   },
 ]
 
-export const acaiBases: readonly AcaiBase[] = [
+const acaiBases: readonly AcaiBase[] = [
   {
     id: 'tradicional',
     name: 'Açaí tradicional',
@@ -106,11 +133,74 @@ export const acaiBases: readonly AcaiBase[] = [
   },
 ]
 
+// TODO cliente: confirmar tamanhos, preços e sabores do sorvete.
+const sorveteSizes: readonly CupSize[] = [
+  {
+    id: 'sorvete-1-bola',
+    name: 'Sorvete 1 bola',
+    volume: '1 bola',
+    basePrice: 8.9,
+    freeToppings: FREE_TOPPINGS,
+    available: true,
+  },
+  {
+    id: 'sorvete-2-bolas',
+    name: 'Sorvete 2 bolas',
+    volume: '2 bolas',
+    basePrice: 13.9,
+    freeToppings: FREE_TOPPINGS,
+    available: true,
+  },
+  {
+    id: 'sorvete-pote-500',
+    name: 'Sorvete pote 500ml',
+    volume: 'Pote 500ml',
+    basePrice: 24.9,
+    freeToppings: FREE_TOPPINGS,
+    available: true,
+  },
+]
+
+const sorveteFlavors: readonly AcaiBase[] = [
+  { id: 'chocolate', name: 'Chocolate', description: 'O mais pedido da casa.', extraPrice: 0, available: true },
+  { id: 'morango', name: 'Morango', description: 'Feito com fruta.', extraPrice: 0, available: true },
+  { id: 'creme', name: 'Creme', description: 'Clássico, combina com tudo.', extraPrice: 0, available: true },
+  { id: 'flocos', name: 'Flocos', description: 'Creme com raspas de chocolate.', extraPrice: 0, available: true },
+  { id: 'napolitano', name: 'Napolitano', description: 'Chocolate, morango e creme.', extraPrice: 1, available: true },
+]
+
+export const productKinds: readonly ProductKind[] = [
+  {
+    id: 'acai',
+    name: 'Açaí',
+    description: 'Cremoso, batido na hora, montado do seu jeito.',
+    emoji: '🍇',
+    baseStepTitle: 'Escolha sua base',
+    baseStepSubtitle: 'Uma base por copo.',
+    baseLabel: 'Base',
+    sizes: acaiSizes,
+    bases: acaiBases,
+    available: true,
+  },
+  {
+    id: 'sorvete',
+    name: 'Sorvete',
+    description: 'Bola, casquinha ou pote, com os mesmos complementos.',
+    emoji: '🍦',
+    baseStepTitle: 'Escolha o sabor',
+    baseStepSubtitle: 'Um sabor por pedido.',
+    baseLabel: 'Sabor',
+    sizes: sorveteSizes,
+    bases: sorveteFlavors,
+    available: true,
+  },
+]
+
 export const toppingCategories: readonly ToppingCategory[] = [
-  { id: 'frutas', title: 'Escolha suas frutas', subtitle: 'Fresquinhas, cortadas na hora' },
-  { id: 'cremes', title: 'Escolha seus cremes', subtitle: 'Pra dar aquela camada extra' },
-  { id: 'crocantes', title: 'Escolha os crocantes', subtitle: 'O barulhinho da colherada' },
-  { id: 'caldas', title: 'Escolha as caldas', subtitle: 'Por cima de tudo' },
+  { id: 'frutas', title: 'Frutas', subtitle: 'Fresquinhas, cortadas na hora' },
+  { id: 'cremes', title: 'Cremes', subtitle: 'Pra dar aquela camada extra' },
+  { id: 'crocantes', title: 'Crocantes', subtitle: 'O barulhinho da colherada' },
+  { id: 'caldas', title: 'Caldas', subtitle: 'Por cima de tudo' },
 ]
 
 export const toppings: readonly Topping[] = [

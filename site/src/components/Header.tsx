@@ -6,7 +6,7 @@ import { Logo } from './Logo'
 import { OrderButton } from './OrderButton'
 
 const links = [
-  { href: '#monte-seu-acai', label: 'Monte seu açaí' },
+  { href: '#monte-seu-acai', label: 'Monte seu pedido' },
   { href: '#entrega', label: 'Entrega' },
   { href: '#onde-estamos', label: 'Área de entrega' },
 ] as const

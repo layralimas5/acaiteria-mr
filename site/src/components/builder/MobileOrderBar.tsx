@@ -61,11 +61,15 @@ export function MobileOrderBar({
               <div className="max-h-[52vh] overflow-y-auto px-5 pt-5">
                 <dl className="space-y-2.5 text-sm">
                   <div className="flex justify-between gap-4">
+                    <dt className="text-muted">Produto</dt>
+                    <dd className="font-bold text-ink">{selection.product?.name ?? 'a escolher'}</dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
                     <dt className="text-muted">Tamanho</dt>
                     <dd className="font-bold text-ink">{selection.size?.volume ?? 'a escolher'}</dd>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <dt className="text-muted">Base</dt>
+                    <dt className="text-muted">{selection.product?.baseLabel ?? 'Base'}</dt>
                     <dd className="font-bold text-ink">{selection.base?.name ?? 'a escolher'}</dd>
                   </div>
                 </dl>
@@ -142,7 +146,8 @@ export function MobileOrderBar({
                 </svg>
               </span>
               <span className="block truncate text-lg font-extrabold text-ink">
-                Seu açaí • {formatPrice(pricing.totalPrice)}
+                {selection.product ? `Seu ${selection.product.name.toLowerCase()}` : 'Seu pedido'} •{' '}
+                {formatPrice(pricing.totalPrice)}
               </span>
             </span>
           </button>

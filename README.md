@@ -109,8 +109,10 @@ Configurador de produto em etapas na própria página, com preço em tempo real.
 
 | O que | Arquivo |
 | --- | --- |
-| Tamanhos, preço base, cota de complementos grátis, foto, disponibilidade | `src/data/builder.ts` → `cupSizes` |
-| Bases (tradicional, zero, cupuaçu…) e acréscimo de cada uma | `src/data/builder.ts` → `acaiBases` |
+| Produtos vendidos (açaí, sorvete) | `src/data/builder.ts` → `productKinds` |
+| Tamanhos, preço base, foto, etiqueta, disponibilidade | `productKinds[].sizes` |
+| Bases do açaí e sabores do sorvete, com acréscimo | `productKinds[].bases` |
+| Quantos complementos saem de graça | `src/data/builder.ts` → `FREE_TOPPINGS` |
 | Complementos: nome, categoria, preço, emoji/foto, disponibilidade | `src/data/builder.ts` → `toppings` |
 | Categorias e seus títulos | `src/data/builder.ts` → `toppingCategories` |
 | Regra de preço (o que é grátis, o que é cobrado) | `src/lib/builder.ts` |
@@ -121,9 +123,11 @@ serializáveis, prontos para virem de API ou painel administrativo sem alterar a
 interface. Para marcar algo como esgotado, basta `available: false` — o card
 aparece desabilitado com o aviso.
 
-**Regra dos gratuitos:** os primeiros complementos escolhidos ocupam a cota do
-tamanho (300ml = 3, 500ml = 5, 700ml = 7). A partir daí cada complemento soma
-seu preço. A tela mostra "3 de 5 grátis" e, ao passar, "5 grátis + 2 adicionais".
+**Regra dos gratuitos:** os 3 primeiros complementos escolhidos são grátis em
+qualquer produto ou tamanho (`FREE_TOPPINGS`). A partir do quarto, cada um soma
+seu preço. A tela mostra "2 de 3 grátis" e, ao passar, "3 grátis + 2 adicionais".
+Cada tamanho ainda tem seu próprio campo `freeToppings`, então dá para abrir
+exceção num tamanho específico sem mexer no resto.
 
 **Carrinho:** montagens diferentes são itens diferentes; montagens idênticas
 somam quantidade. O pedido persiste em `localStorage` e é finalizado pelo
