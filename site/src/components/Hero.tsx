@@ -8,7 +8,7 @@ export function Hero() {
   return (
     <section
       id="topo"
-      className="relative isolate flex min-h-[30rem] items-center overflow-hidden bg-acai-900 text-white sm:min-h-[34rem] lg:min-h-[40rem]"
+      className="relative isolate flex min-h-[34rem] items-center overflow-hidden bg-acai-900 text-white sm:min-h-[36rem] lg:min-h-[40rem]"
     >
       {heroImage.src && (
         <div aria-hidden="true" className="absolute inset-0 -z-10">
@@ -20,12 +20,12 @@ export function Hero() {
               loading="eager"
               decoding="async"
               fetchPriority="high"
-              className="size-full object-cover object-[72%_center] lg:object-right"
+              className="size-full object-cover object-[92%_center] lg:object-right"
             />
           </picture>
 
           {/* Escurece o lado do texto sem apagar os copos do outro lado. */}
-          <div className="absolute inset-0 bg-gradient-to-b from-acai-950 from-20% via-acai-950/80 via-55% to-acai-950/40 lg:bg-gradient-to-r lg:from-acai-950 lg:from-12% lg:via-acai-950/80 lg:via-42% lg:to-transparent lg:to-70%" />
+          <div className="absolute inset-0 bg-gradient-to-b from-acai-950 from-16% via-acai-950/82 via-58% to-acai-950/25 lg:bg-gradient-to-r lg:from-acai-950 lg:from-12% lg:via-acai-950/78 lg:via-42% lg:to-transparent lg:to-68%" />
         </div>
       )}
 

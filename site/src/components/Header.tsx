@@ -5,8 +5,6 @@ import { Logo } from './Logo'
 import { OrderButton } from './OrderButton'
 
 const links = [
-  { href: '#produtos', label: 'Cardápio' },
-  { href: '#montar', label: 'Complementos' },
   { href: '#entrega', label: 'Entrega' },
   { href: '#onde-estamos', label: 'Área de entrega' },
 ] as const

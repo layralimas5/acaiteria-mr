@@ -66,7 +66,7 @@ export const business: BusinessConfig = {
   whatsappNumber: '5500000000000',
   whatsappMessage: 'Oi! Quero fazer um pedido na Açaiteria MR.',
   preLaunchMessage: 'Oi! Quero ser avisado quando a Açaiteria MR abrir, dia 05/09.',
-  instagramHandle: 'acaiteriamr',
+  instagramHandle: 'mracai9',
   address: {
     street: '',
     district: '',
