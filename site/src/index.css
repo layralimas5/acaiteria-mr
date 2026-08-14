@@ -19,6 +19,17 @@
   --color-muted: #675d70;
 
   --radius-card: 1.5rem;
+
+  --animate-marquee: marquee 26s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
 }
 
 @layer base {

@@ -13,12 +13,6 @@ const featured: readonly Product[] = featuredIds
   .map((id) => products.find((product) => product.id === id))
   .filter((product): product is Product => product !== undefined)
 
-const perks = [
-  'Batido na hora',
-  'Complemento à vontade de escolha',
-  `Entrega em ~${business.delivery.averageMinutes} min`,
-] as const
-
 export function Hero() {
   const [index, setIndex] = useState(1)
   const total = featured.length
@@ -120,16 +114,6 @@ export function Hero() {
                 </a>
               </div>
 
-              <ul className="mt-9 flex flex-wrap gap-x-6 gap-y-2 border-t border-white/10 pt-6">
-                {perks.map((perk) => (
-                  <li key={perk} className="flex items-center gap-2 text-sm text-acai-100/80">
-                    <svg viewBox="0 0 20 20" aria-hidden="true" className="size-4 fill-none stroke-acai-300 stroke-2">
-                      <path d="M4 10.5l4 4 8-9" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    {perk}
-                  </li>
-                ))}
-              </ul>
             </div>
 
             <div className="order-1 flex items-center justify-center gap-2 sm:gap-4 lg:order-2">

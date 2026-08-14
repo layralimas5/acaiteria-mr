@@ -1,5 +1,6 @@
 import { business } from '../config/business'
 import { openStatus, whatsappUrl } from '../lib/order'
+import { Logo } from './Logo'
 
 export function Footer() {
   const year = new Date().getFullYear()
@@ -16,9 +17,7 @@ export function Footer() {
       <div className="relative mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div className="sm:col-span-2 lg:col-span-2">
           <div className="flex items-center gap-3">
-            <span className="grid size-10 place-items-center rounded-xl bg-white text-sm font-extrabold tracking-widest text-acai-900">
-              MR
-            </span>
+            <Logo className="size-12" />
             <span className="text-base font-bold">{business.name}</span>
           </div>
           <p className="mt-4 max-w-xs text-sm text-acai-100/70">{business.tagline}</p>

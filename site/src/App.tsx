@@ -4,6 +4,7 @@ import { Footer } from './components/Footer'
 import { Header } from './components/Header'
 import { Hero } from './components/Hero'
 import { Location } from './components/Location'
+import { Marquee } from './components/Marquee'
 import { Products } from './components/Products'
 import { Toppings } from './components/Toppings'
 
@@ -21,6 +22,7 @@ export default function App() {
 
       <main className="pb-20 sm:pb-0">
         <Hero />
+        <Marquee />
         <Products />
         <Toppings />
         <Delivery />

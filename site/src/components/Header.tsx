@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { business } from '../config/business'
 import { openStatus } from '../lib/order'
+import { Logo } from './Logo'
 import { OrderButton } from './OrderButton'
 
 const links = [
@@ -34,9 +35,7 @@ export function Header() {
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5 sm:h-20">
         <a href="#topo" className="flex items-center gap-3">
-          <span className="grid size-10 place-items-center rounded-xl bg-white text-sm font-extrabold tracking-widest text-acai-900">
-            MR
-          </span>
+          <Logo priority className="size-11 sm:size-12" />
           <span className="flex flex-col leading-tight">
             <span className="text-base font-bold text-white">Açaiteria MR</span>
             <span className="text-xs font-medium text-acai-200">{status.label}</span>
