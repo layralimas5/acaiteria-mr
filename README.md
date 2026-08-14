@@ -74,17 +74,24 @@ Para adicionar a foto de um novo produto, jogue o original em
 
 ## Imagem do banner
 
-O banner não tem mais o produto: ele mostra a arte definida em
-`business.heroImage` (`src` e `alt`). Com `src` vazio, o banner fica só com o
-texto — nenhum espaço em branco sobra.
+A arte de fundo do banner é definida em `business.heroImage`: `src` (versão
+grande, a partir de 768px) e `srcSmall` (versão leve do celular). Com `src`
+vazio, o banner fica só com o roxo da marca.
 
-Tamanhos:
+A arte é panorâmica com o produto à direita e espaço livre à esquerda, onde
+entram os selos, o título e a descrição. O escurecimento é feito por gradiente:
+horizontal no desktop (escuro à esquerda, limpo à direita) e vertical no
+celular (escuro em cima, produto visível embaixo).
 
-| Onde | Medida na tela | Arquivo a entregar |
-| --- | --- | --- |
-| Arte ao lado do texto (formato atual) | 395x416 px no desktop, 240x240 no celular | **1200x1200 px** (quadrado, 2x) |
-| Banner inteiro como fundo | 1920x843 px no desktop, 390x1201 no celular | 2560x1200 px |
+Medidas do banner na tela:
 
-Coloque o arquivo em `assets-originais/`, registre em
-`scripts/optimize-images.mjs`, rode `npm run images` e aponte o caminho gerado
-em `heroImage.src`.
+| Tela | Tamanho |
+| --- | --- |
+| Desktop grande (1920px) | 1920x843 |
+| Desktop (1440px) | 1440x843 |
+| Tablet | 768x~600 |
+| Celular | 390x~520 |
+
+Arte recomendada: **1830x860 px** (proporção ~2,1:1), com o produto à direita e
+o terço esquerdo livre. Coloque em `assets-originais/`, registre em
+`scripts/optimize-images.mjs` e rode `npm run images`.

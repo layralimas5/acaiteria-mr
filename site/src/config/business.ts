@@ -35,11 +35,13 @@ export interface BusinessConfig {
   }
   readonly hours: readonly OpeningHour[]
   /**
-   * Arte que aparece ao lado do texto no banner. Formato quadrado (1:1),
-   * entregue em 1200x1200. Com `src` vazio, o banner fica só com o texto.
+   * Arte de fundo do banner. `src` é a versão grande (a partir de 768px) e
+   * `srcSmall` a versão leve do celular. Com `src` vazio, o banner fica só
+   * com o roxo da marca.
    */
   readonly heroImage: {
     readonly src: string
+    readonly srcSmall: string
     readonly alt: string
   }
   /** Data de inauguração no formato AAAA-MM-DD. Antes dela o site fica em modo pré-lançamento. */
@@ -78,8 +80,9 @@ export const business: BusinessConfig = {
     { label: 'Sábado e domingo', days: ['sab', 'dom'], opensAt: '14:00', closesAt: '23:00' },
   ],
   heroImage: {
-    src: '',
-    alt: 'Açaí da Açaiteria MR',
+    src: '/imagem/banner.webp',
+    srcSmall: '/imagem/banner-960.webp',
+    alt: 'Copos e potes de açaí da Açaiteria MR em vários tamanhos',
   },
   launchDate: '2026-09-05',
   deliveryOnly: true,

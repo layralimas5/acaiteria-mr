@@ -21,6 +21,9 @@ const targets = [
   // Fotos de produto: fundo recortado para funcionar sobre qualquer cor.
   { source: 'poto-300ml.png', output: 'poto-300ml.webp', width: 900, format: 'webp', quality: 84, cutout: true },
   { source: 'pote-500ml.png', output: 'pote-500ml.webp', width: 900, format: 'webp', quality: 84, cutout: true },
+  // Arte de fundo do banner, em duas larguras (celular e desktop).
+  { source: 'banner.png', output: 'banner.webp', width: 1830, format: 'webp', quality: 80 },
+  { source: 'banner.png', output: 'banner-960.webp', width: 960, format: 'webp', quality: 78 },
   { source: 'logo-oficial.png', output: 'logo-oficial.webp', width: 256, format: 'webp', quality: 86 },
   { source: 'logo-oficial.png', output: 'logo-192.png', width: 192, format: 'png', quality: 90 },
   // Imagem de compartilhamento (WhatsApp, Instagram, Google).
