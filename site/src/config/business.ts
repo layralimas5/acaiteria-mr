@@ -34,6 +34,14 @@ export interface BusinessConfig {
     readonly mapsUrl: string
   }
   readonly hours: readonly OpeningHour[]
+  /**
+   * Arte que aparece ao lado do texto no banner. Formato quadrado (1:1),
+   * entregue em 1200x1200. Com `src` vazio, o banner fica só com o texto.
+   */
+  readonly heroImage: {
+    readonly src: string
+    readonly alt: string
+  }
   /** Data de inauguração no formato AAAA-MM-DD. Antes dela o site fica em modo pré-lançamento. */
   readonly launchDate: string
   /** true enquanto a operação for só entrega, sem atendimento no balcão. */
@@ -69,6 +77,10 @@ export const business: BusinessConfig = {
     { label: 'Segunda a sexta', days: ['seg', 'ter', 'qua', 'qui', 'sex'], opensAt: '13:00', closesAt: '22:00' },
     { label: 'Sábado e domingo', days: ['sab', 'dom'], opensAt: '14:00', closesAt: '23:00' },
   ],
+  heroImage: {
+    src: '',
+    alt: 'Açaí da Açaiteria MR',
+  },
   launchDate: '2026-09-05',
   deliveryOnly: true,
   delivery: {

@@ -10,14 +10,17 @@ import { mkdir, readdir } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
+import { cutoutBackground } from './cutout.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const sourceDir = resolve(root, '../assets-originais')
 const outputDir = join(root, 'public/imagem')
 
-/** @type {{ source: string, output: string, width: number, height?: number, format: 'webp' | 'png' | 'jpeg', quality: number }[]} */
+/** @type {{ source: string, output: string, width: number, height?: number, format: 'webp' | 'png' | 'jpeg', quality: number, cutout?: boolean }[]} */
 const targets = [
-  { source: 'poto-300ml.png', output: 'poto-300ml.webp', width: 900, format: 'webp', quality: 82 },
+  // Fotos de produto: fundo recortado para funcionar sobre qualquer cor.
+  { source: 'poto-300ml.png', output: 'poto-300ml.webp', width: 900, format: 'webp', quality: 84, cutout: true },
+  { source: 'pote-500ml.png', output: 'pote-500ml.webp', width: 900, format: 'webp', quality: 84, cutout: true },
   { source: 'logo-oficial.png', output: 'logo-oficial.webp', width: 256, format: 'webp', quality: 86 },
   { source: 'logo-oficial.png', output: 'logo-192.png', width: 192, format: 'png', quality: 90 },
   // Imagem de compartilhamento (WhatsApp, Instagram, Google).
@@ -34,7 +37,11 @@ const run = async () => {
       continue
     }
 
-    const pipeline = sharp(join(sourceDir, target.source)).resize({
+    const input = target.cutout
+      ? await cutoutBackground(join(sourceDir, target.source))
+      : join(sourceDir, target.source)
+
+    const pipeline = sharp(input).resize({
       width: target.width,
       height: target.height,
       fit: target.height ? 'cover' : 'inside',

@@ -45,6 +45,7 @@ export const products: readonly Product[] = [
     category: 'copos',
     toppingsIncluded: 3,
     highlight: 'Mais pedido',
+    image: '/imagem/pote-500ml.webp',
   },
   {
     id: 'copo-700',

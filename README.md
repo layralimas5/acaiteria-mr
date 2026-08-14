@@ -71,3 +71,20 @@ Isso produz `public/imagem/`: foto do produto em WebP 900px, logo em WebP
 Para adicionar a foto de um novo produto, jogue o original em
 `assets-originais/`, registre em `scripts/optimize-images.mjs` e aponte o campo
 `image` do produto em `src/data/products.ts`.
+
+## Imagem do banner
+
+O banner não tem mais o produto: ele mostra a arte definida em
+`business.heroImage` (`src` e `alt`). Com `src` vazio, o banner fica só com o
+texto — nenhum espaço em branco sobra.
+
+Tamanhos:
+
+| Onde | Medida na tela | Arquivo a entregar |
+| --- | --- | --- |
+| Arte ao lado do texto (formato atual) | 395x416 px no desktop, 240x240 no celular | **1200x1200 px** (quadrado, 2x) |
+| Banner inteiro como fundo | 1920x843 px no desktop, 390x1201 no celular | 2560x1200 px |
+
+Coloque o arquivo em `assets-originais/`, registre em
+`scripts/optimize-images.mjs`, rode `npm run images` e aponte o caminho gerado
+em `heroImage.src`.
