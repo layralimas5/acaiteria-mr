@@ -1,17 +1,24 @@
 import { useEffect, useState } from 'react'
 import { business } from '../config/business'
+import { useCart } from '../cart/CartContext'
 import { locationLabel } from '../lib/order'
 import { Logo } from './Logo'
 import { OrderButton } from './OrderButton'
 
 const links = [
+  { href: '#monte-seu-acai', label: 'Monte seu açaí' },
   { href: '#entrega', label: 'Entrega' },
   { href: '#onde-estamos', label: 'Área de entrega' },
 ] as const
 
-export function Header() {
+interface HeaderProps {
+  readonly onOpenCart: () => void
+}
+
+export function Header({ onOpenCart }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const { count } = useCart()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -48,6 +55,18 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          {count > 0 && (
+            <button
+              type="button"
+              onClick={onOpenCart}
+              className="inline-flex items-center gap-2 rounded-full border border-white/25 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+            >
+              Pedido
+              <span className="grid size-5 place-items-center rounded-full bg-white text-xs font-extrabold text-acai-900">
+                {count}
+              </span>
+            </button>
+          )}
           <OrderButton variant="light" className="hidden sm:inline-flex" />
           <button
             type="button"

@@ -1,3 +1,7 @@
+import { useCallback, useState } from 'react'
+import { CartProvider } from './cart/CartContext'
+import { AcaiBuilder } from './components/builder/AcaiBuilder'
+import { CartDrawer } from './components/CartDrawer'
 import { Delivery } from './components/Delivery'
 import { FloatingOrder } from './components/FloatingOrder'
 import { Footer } from './components/Footer'
@@ -7,26 +11,37 @@ import { Location } from './components/Location'
 import { Marquee } from './components/Marquee'
 
 export default function App() {
+  const [cartOpen, setCartOpen] = useState(false)
+  const [builderVisible, setBuilderVisible] = useState(false)
+
+  const openCart = useCallback(() => setCartOpen(true), [])
+  const closeCart = useCallback(() => setCartOpen(false), [])
+
   return (
-    <>
+    <CartProvider>
       <a
-        href="#entrega"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-acai-800 focus:px-5 focus:py-3 focus:text-sm focus:font-semibold focus:text-white"
+        href="#monte-seu-acai"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[70] focus:rounded-full focus:bg-acai-800 focus:px-5 focus:py-3 focus:text-sm focus:font-semibold focus:text-white"
       >
-        Pular para a entrega
+        Pular para a montagem do açaí
       </a>
 
-      <Header />
+      <Header onOpenCart={openCart} />
 
       <main className="pb-20 sm:pb-0">
         <Hero />
         <Marquee />
+        <AcaiBuilder onOpenCart={openCart} onVisibilityChange={setBuilderVisible} />
         <Delivery />
         <Location />
       </main>
 
       <Footer />
-      <FloatingOrder />
-    </>
+
+      {/* A barra do builder já ocupa o rodapé do celular quando ele está na tela. */}
+      {!builderVisible && <FloatingOrder onOpenCart={openCart} />}
+
+      <CartDrawer open={cartOpen} onClose={closeCart} />
+    </CartProvider>
   )
 }

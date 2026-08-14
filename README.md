@@ -95,3 +95,36 @@ Medidas do banner na tela:
 Arte recomendada: **1830x860 px** (proporção ~2,1:1), com o produto à direita e
 o terço esquerdo livre. Coloque em `assets-originais/`, registre em
 `scripts/optimize-images.mjs` e rode `npm run images`.
+
+## Monte seu Açaí (configurador + carrinho)
+
+Configurador de produto em etapas na própria página, com preço em tempo real.
+
+**Onde mexer:**
+
+| O que | Arquivo |
+| --- | --- |
+| Tamanhos, preço base, cota de complementos grátis, foto, disponibilidade | `src/data/builder.ts` → `cupSizes` |
+| Bases (tradicional, zero, cupuaçu…) e acréscimo de cada uma | `src/data/builder.ts` → `acaiBases` |
+| Complementos: nome, categoria, preço, emoji/foto, disponibilidade | `src/data/builder.ts` → `toppings` |
+| Categorias e seus títulos | `src/data/builder.ts` → `toppingCategories` |
+| Regra de preço (o que é grátis, o que é cobrado) | `src/lib/builder.ts` |
+| Carrinho (agrupamento, quantidade, persistência) | `src/cart/CartContext.tsx` |
+
+Nenhum preço vive dentro de componente: os dados são objetos puros e
+serializáveis, prontos para virem de API ou painel administrativo sem alterar a
+interface. Para marcar algo como esgotado, basta `available: false` — o card
+aparece desabilitado com o aviso.
+
+**Regra dos gratuitos:** os primeiros complementos escolhidos ocupam a cota do
+tamanho (300ml = 3, 500ml = 5, 700ml = 7). A partir daí cada complemento soma
+seu preço. A tela mostra "3 de 5 grátis" e, ao passar, "5 grátis + 2 adicionais".
+
+**Carrinho:** montagens diferentes são itens diferentes; montagens idênticas
+somam quantidade. O pedido persiste em `localStorage` e é finalizado pelo
+WhatsApp com a lista detalhada, que é o canal de venda atual (ver `docs/ifood.md`).
+
+**Componentes:** `builder/AcaiBuilder` (orquestra), `SizeSelector`,
+`BaseSelector`, `ToppingCategory`, `ToppingCard`, `OrderSummary` (sticky no
+desktop), `MobileOrderBar` (barra fixa no celular), `StepSection` (etapa com
+marca de concluído) e `CartDrawer` (painel do pedido).
