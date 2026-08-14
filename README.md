@@ -55,3 +55,19 @@ e o botão de WhatsApp continua disponível na seção de entrega.
 - [ ] Imagem `public/og.png` (1200x630) pro compartilhamento
 - [ ] Domínio + deploy (Netlify ou Vercel, build `npm run build`, pasta `dist`)
 - [ ] Loja aberta no iFood e link colado em `business.ts` — ver `docs/ifood.md`
+
+## Imagens
+
+Originais ficam em `assets-originais/` (fora do build). As versões que o site
+usa são geradas por script:
+
+```bash
+cd site
+npm run images
+```
+
+Isso produz `public/imagem/`: foto do produto em WebP 900px, logo em WebP
+256px, ícone PNG 192px e a imagem de compartilhamento `og.jpg` (1200x630).
+Para adicionar a foto de um novo produto, jogue o original em
+`assets-originais/`, registre em `scripts/optimize-images.mjs` e aponte o campo
+`image` do produto em `src/data/products.ts`.

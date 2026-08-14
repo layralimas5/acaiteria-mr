@@ -1,7 +1,7 @@
 import type { Product } from '../data/products'
 import { formatPrice } from '../lib/order'
-import { AcaiCup } from './AcaiCup'
 import { OrderButton } from './OrderButton'
+import { ProductVisual } from './ProductVisual'
 
 interface ProductCardProps {
   readonly product: Product
@@ -10,13 +10,20 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-card border border-acai-100 bg-white transition-all duration-200 hover:-translate-y-1 hover:border-acai-200 hover:shadow-xl hover:shadow-acai-900/5">
-      <div className="relative flex items-center justify-center bg-gradient-to-b from-acai-50 to-white px-6 pb-4 pt-8">
+      <div
+        className={`relative flex items-center justify-center px-6 pb-4 pt-8 ${
+          product.image ? 'bg-acai-900' : 'bg-gradient-to-b from-acai-50 to-white'
+        }`}
+      >
         {product.highlight && (
           <span className="absolute left-4 top-4 rounded-full bg-acai-800 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
             {product.highlight}
           </span>
         )}
-        <AcaiCup label={product.size} className="h-36 w-auto transition-transform duration-300 group-hover:scale-105" />
+        <ProductVisual
+          product={product}
+          className="h-36 w-auto transition-transform duration-300 group-hover:scale-105"
+        />
       </div>
 
       <div className="flex flex-1 flex-col p-6">

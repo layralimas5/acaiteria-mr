@@ -9,6 +9,8 @@ export interface Product {
   readonly category: ProductCategory
   readonly toppingsIncluded: number
   readonly highlight?: string
+  /** Foto do produto. Sem ela, o site desenha a ilustração vetorial. */
+  readonly image?: string
 }
 
 export interface CategoryMeta {
@@ -32,6 +34,7 @@ export const products: readonly Product[] = [
     description: 'Pra matar a vontade sem pesar. Açaí batido na hora com 2 complementos.',
     category: 'copos',
     toppingsIncluded: 2,
+    image: '/imagem/poto-300ml.webp',
   },
   {
     id: 'copo-500',

@@ -4,8 +4,8 @@ import { business } from '../config/business'
 import { products } from '../data/products'
 import type { Product } from '../data/products'
 import { daysToLaunch, formatPrice, hasIfood, isPreLaunch, launchLabel, openStatus } from '../lib/order'
-import { AcaiCup } from './AcaiCup'
 import { OrderButton } from './OrderButton'
+import { ProductVisual } from './ProductVisual'
 
 const featuredIds = ['copo-300', 'copo-500', 'copo-700', 'barca-1l'] as const
 
@@ -14,7 +14,7 @@ const featured: readonly Product[] = featuredIds
   .filter((product): product is Product => product !== undefined)
 
 export function Hero() {
-  const [index, setIndex] = useState(1)
+  const [index, setIndex] = useState(0)
   const total = featured.length
   const status = openStatus(new Date())
   const preLaunch = isPreLaunch()
@@ -141,11 +141,7 @@ export function Hero() {
             <div className="order-1 flex items-center justify-center gap-2 sm:gap-4 lg:order-2">
               <CarouselArrow direction="prev" onClick={() => go(-1)} />
 
-              <div className="relative flex min-h-[290px] w-full max-w-xs items-center justify-center sm:min-h-[360px]">
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-x-6 bottom-6 top-10 rounded-[2rem] bg-white/5 ring-1 ring-white/10"
-                />
+              <div className="relative flex w-full items-center justify-center">
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={active.id}
@@ -153,14 +149,19 @@ export function Hero() {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.92, y: -12 }}
                     transition={{ duration: 0.3, ease: 'easeOut' }}
-                    className="relative flex flex-col items-center"
+                    className="relative flex w-full flex-col items-center"
                   >
                     {active.highlight && (
                       <span className="mb-3 rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-acai-900">
                         {active.highlight}
                       </span>
                     )}
-                    <AcaiCup label={active.size} className="h-56 w-auto drop-shadow-2xl sm:h-72" />
+                    <ProductVisual
+                      product={active}
+                      priority
+                      spin={Boolean(active.image)}
+                      className="h-[clamp(15rem,42vw,26rem)] w-auto max-w-full drop-shadow-2xl"
+                    />
                   </motion.div>
                 </AnimatePresence>
               </div>

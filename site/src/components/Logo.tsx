@@ -9,10 +9,10 @@ interface LogoProps {
 export function Logo({ className = 'size-11', priority = false }: LogoProps) {
   return (
     <img
-      src="/imagem/logo-oficial.png"
+      src="/imagem/logo-oficial.webp"
       alt={`Logo da ${business.name}`}
-      width={96}
-      height={96}
+      width={256}
+      height={256}
       loading={priority ? 'eager' : 'lazy'}
       decoding="async"
       fetchPriority={priority ? 'high' : 'auto'}

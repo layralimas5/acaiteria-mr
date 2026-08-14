@@ -22,6 +22,7 @@
 
   --animate-marquee: marquee 26s linear infinite;
   --animate-pulse-soft: pulse-soft 1.6s ease-in-out infinite;
+  --animate-spin-slow: spin 18s linear infinite;
 
   @keyframes pulse-soft {
     0%,
