@@ -31,19 +31,22 @@ export function Hero() {
   if (!active) return null
 
   return (
-    <section id="topo" className="bg-white sm:px-5 sm:pt-6">
-      <div className="mx-auto max-w-6xl">
-        <div className="relative isolate overflow-hidden bg-acai-900 text-white sm:rounded-[2.5rem]">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -left-24 -top-32 size-[420px] rounded-full bg-acai-600/40 blur-3xl"
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -bottom-40 right-0 size-[460px] rounded-full bg-acai-500/25 blur-3xl"
-          />
+    <section id="topo" className="relative isolate overflow-hidden bg-acai-900 text-white">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-32 -top-40 size-[520px] rounded-full bg-acai-600/40 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-48 -right-20 size-[560px] rounded-full bg-acai-500/25 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"
+      />
 
-          <div className="relative grid gap-10 px-6 py-12 sm:px-12 sm:py-14 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-14">
+      <div className="relative mx-auto max-w-6xl px-5">
+        <div className="grid gap-10 pb-14 pt-28 sm:pb-16 sm:pt-36 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-14">
             <div className="order-2 lg:order-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-acai-100 ring-1 ring-white/15">
@@ -160,20 +163,19 @@ export function Hero() {
             </div>
           </div>
 
-          <div className="relative flex items-center justify-center gap-2 pb-8 lg:hidden">
-            {featured.map((product, position) => (
-              <button
-                key={product.id}
-                type="button"
-                onClick={() => setIndex(position)}
-                aria-label={`Ver ${product.name}`}
-                aria-current={position === index}
-                className={`h-1.5 rounded-full transition-all duration-200 ${
-                  position === index ? 'w-7 bg-white' : 'w-1.5 bg-white/30 hover:bg-white/60'
-                }`}
-              />
-            ))}
-          </div>
+        <div className="flex items-center justify-center gap-2 pb-10 lg:hidden">
+          {featured.map((product, position) => (
+            <button
+              key={product.id}
+              type="button"
+              onClick={() => setIndex(position)}
+              aria-label={`Ver ${product.name}`}
+              aria-current={position === index}
+              className={`h-1.5 rounded-full transition-all duration-200 ${
+                position === index ? 'w-7 bg-white' : 'w-1.5 bg-white/30 hover:bg-white/60'
+              }`}
+            />
+          ))}
         </div>
       </div>
     </section>
