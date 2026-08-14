@@ -58,12 +58,12 @@ export const business: BusinessConfig = {
   preLaunchMessage: 'Oi! Quero ser avisado quando a Açaiteria MR abrir, dia 05/09.',
   instagramHandle: 'acaiteriamr',
   address: {
-    street: 'Rua Exemplo, 123',
-    district: 'Centro',
-    city: 'Sua Cidade',
-    state: 'SP',
-    zip: '00000-000',
-    mapsUrl: 'https://maps.google.com/?q=Açaiteria+MR',
+    street: '',
+    district: '',
+    city: 'Cariacica',
+    state: 'ES',
+    zip: '',
+    mapsUrl: 'https://maps.google.com/?q=Açaiteria+MR+Cariacica+ES',
   },
   hours: [
     { label: 'Segunda a sexta', days: ['seg', 'ter', 'qua', 'qui', 'sex'], opensAt: '13:00', closesAt: '22:00' },

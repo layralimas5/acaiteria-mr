@@ -1,11 +1,9 @@
 import { business } from '../config/business'
-import { openStatus, whatsappUrl } from '../lib/order'
+import { locationLabel, whatsappUrl } from '../lib/order'
 import { Logo } from './Logo'
 
 export function Footer() {
   const year = new Date().getFullYear()
-  const status = openStatus(new Date())
-  const { address } = business
 
   return (
     <footer className="relative isolate overflow-hidden bg-acai-950 text-white">
@@ -16,18 +14,8 @@ export function Footer() {
 
       <div className="relative mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div className="sm:col-span-2 lg:col-span-2">
-          <div className="flex items-center gap-3">
-            <Logo className="size-12" />
-            <span className="text-base font-bold">{business.name}</span>
-          </div>
+          <Logo className="size-16" />
           <p className="mt-4 max-w-xs text-sm text-acai-100/70">{business.tagline}</p>
-          <span className="mt-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-acai-100 ring-1 ring-white/15">
-            <span
-              aria-hidden="true"
-              className={`size-1.5 rounded-full ${status.isOpen ? 'bg-green-400' : 'bg-acai-300'}`}
-            />
-            {status.label}
-          </span>
         </div>
 
         <nav aria-label="Links do rodapé">
@@ -79,7 +67,7 @@ export function Footer() {
                 <br />
               </>
             )}
-            {address.district} — {address.city}/{address.state}
+            {locationLabel()}
           </address>
         </div>
       </div>

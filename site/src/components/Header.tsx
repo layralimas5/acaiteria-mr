@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { business } from '../config/business'
-import { openStatus } from '../lib/order'
+import { locationLabel } from '../lib/order'
 import { Logo } from './Logo'
 import { OrderButton } from './OrderButton'
 
@@ -14,7 +14,6 @@ const links = [
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const status = openStatus(new Date())
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -34,12 +33,8 @@ export function Header() {
       }`}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5 sm:h-20">
-        <a href="#topo" className="flex items-center gap-3">
-          <Logo priority className="size-11 sm:size-12" />
-          <span className="flex flex-col leading-tight">
-            <span className="text-base font-bold text-white">Açaiteria MR</span>
-            <span className="text-xs font-medium text-acai-200">{status.label}</span>
-          </span>
+        <a href="#topo" aria-label={`${business.name}, ir para o topo`} className="flex items-center">
+          <Logo priority className="size-12 sm:size-14" />
         </a>
 
         <nav aria-label="Navegação principal" className="hidden items-center gap-1 lg:flex">
@@ -92,9 +87,7 @@ export function Header() {
             <li className="py-3">
               <OrderButton variant="light" className="w-full" />
             </li>
-            <li className="pb-3 text-xs text-acai-200">
-              {business.address.district} — {business.address.city}
-            </li>
+            <li className="pb-3 text-xs text-acai-200">{locationLabel()}</li>
           </ul>
         </nav>
       )}

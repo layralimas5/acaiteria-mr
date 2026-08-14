@@ -1,5 +1,5 @@
 import { business } from '../config/business'
-import { isPreLaunch, launchLabel, openStatus, whatsappUrl } from '../lib/order'
+import { isPreLaunch, launchLabel, locationLabel, openStatus, whatsappUrl } from '../lib/order'
 
 export function Location() {
   const { address, hours, deliveryOnly } = business
@@ -19,20 +19,20 @@ export function Location() {
 
           {deliveryOnly && (
             <p className="mt-4 max-w-md text-base leading-relaxed text-muted">
-              Trabalhamos só com entrega, sem atendimento no balcão. Saímos de{' '}
-              {address.district}, em {address.city}, e atendemos os bairros da região.
+              Trabalhamos só com entrega, sem atendimento no balcão. Atendemos{' '}
+              {address.city} e região.
             </p>
           )}
 
           <address className="mt-6 not-italic text-base leading-relaxed text-muted">
-            {address.district} — {address.city}/{address.state}
+            {locationLabel()}
           </address>
 
           <a
             href={whatsappUrl(
               preLaunch
                 ? business.preLaunchMessage
-                : 'Oi! Vocês entregam no meu endereço? Fico em...',
+                : `Oi! Vocês entregam no meu endereço em ${business.address.city}? Fico em...`,
             )}
             target="_blank"
             rel="noopener noreferrer"

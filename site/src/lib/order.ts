@@ -54,6 +54,12 @@ export const orderUrl = (product?: Product): string => {
 
 export const orderChannel = (): OrderChannel => (hasIfood() ? 'ifood' : 'whatsapp')
 
+/** Localização em texto, omitindo o bairro enquanto ele não estiver definido. */
+export const locationLabel = (): string => {
+  const { district, city, state } = business.address
+  return [district, `${city}/${state}`].filter((part) => part.length > 0).join(' — ')
+}
+
 export interface OpenStatus {
   readonly isOpen: boolean
   readonly label: string
