@@ -66,7 +66,7 @@ cd site
 npm run images
 ```
 
-Isso produz `public/imagem/`: foto do produto em WebP 900px, logo em WebP
+Isso produz `public/imagem/`: fotos de produto em WebP 900px (com o fundo roxo do estúdio, exibidas em quadro `object-cover`), logo em WebP
 256px, ícone PNG 192px e a imagem de compartilhamento `og.jpg` (1200x630).
 Para adicionar a foto de um novo produto, jogue o original em
 `assets-originais/`, registre em `scripts/optimize-images.mjs` e aponte o campo

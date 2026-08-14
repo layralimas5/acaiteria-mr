@@ -32,25 +32,20 @@ export function SizeSelector({ sizes, selected, onSelect }: SizeSelectorProps) {
           >
             {isSelected && <SelectedCheck />}
 
-            <span
-              className={`grid size-20 shrink-0 place-items-center overflow-hidden rounded-2xl transition-colors sm:size-auto sm:aspect-square sm:w-full ${
-                isSelected ? 'bg-acai-900' : 'bg-acai-50 group-hover:bg-acai-100'
-              }`}
-            >
+            {/* A foto preenche o quadro: o fundo roxo do estúdio vira o fundo do card. */}
+            <span className="grid aspect-square size-24 shrink-0 place-items-center overflow-hidden rounded-2xl bg-acai-900 sm:size-auto sm:w-full">
               {size.image ? (
                 <img
                   src={size.image}
                   alt=""
                   loading="lazy"
                   decoding="async"
-                  className={`size-full object-contain transition-transform duration-300 ${
-                    isSelected ? 'scale-105' : 'group-hover:scale-105'
+                  className={`size-full object-cover transition-transform duration-500 ${
+                    isSelected ? 'scale-[1.06]' : 'group-hover:scale-[1.06]'
                   }`}
                 />
               ) : (
-                <span className={`text-lg font-extrabold ${isSelected ? 'text-white' : 'text-acai-700'}`}>
-                  {size.volume}
-                </span>
+                <span className="text-xl font-extrabold text-white/90">{size.volume}</span>
               )}
             </span>
 

@@ -10,17 +10,17 @@ import { mkdir, readdir } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
-import { cutoutBackground } from './cutout.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const sourceDir = resolve(root, '../assets-originais')
 const outputDir = join(root, 'public/imagem')
 
-/** @type {{ source: string, output: string, width: number, height?: number, format: 'webp' | 'png' | 'jpeg', quality: number, cutout?: boolean }[]} */
+/** @type {{ source: string, output: string, width: number, height?: number, format: 'webp' | 'png' | 'jpeg', quality: number }[]} */
 const targets = [
-  // Fotos de produto: fundo recortado para funcionar sobre qualquer cor.
-  { source: 'poto-300ml.png', output: 'poto-300ml.webp', width: 900, format: 'webp', quality: 84, cutout: true },
-  { source: 'pote-500ml.png', output: 'pote-500ml.webp', width: 900, format: 'webp', quality: 84, cutout: true },
+  // Fotos de produto com o fundo roxo do estúdio. Elas são exibidas dentro de
+  // um quadro (object-cover), então o fundo da foto vira o fundo do quadro.
+  { source: 'poto-300ml.png', output: 'poto-300ml.webp', width: 900, format: 'webp', quality: 84 },
+  { source: 'pote-500ml.png', output: 'pote-500ml.webp', width: 900, format: 'webp', quality: 84 },
   // Arte de fundo do banner, em duas larguras (celular e desktop).
   { source: 'banner.png', output: 'banner.webp', width: 1830, format: 'webp', quality: 80 },
   { source: 'banner.png', output: 'banner-960.webp', width: 960, format: 'webp', quality: 78 },
@@ -40,11 +40,7 @@ const run = async () => {
       continue
     }
 
-    const input = target.cutout
-      ? await cutoutBackground(join(sourceDir, target.source))
-      : join(sourceDir, target.source)
-
-    const pipeline = sharp(input).resize({
+    const pipeline = sharp(join(sourceDir, target.source)).resize({
       width: target.width,
       height: target.height,
       fit: target.height ? 'cover' : 'inside',
