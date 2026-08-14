@@ -11,10 +11,15 @@ Painel onde a Açaiteria MR acompanha os pedidos feitos no site e dá baixa.
 
 ## O que o painel mostra
 
-- **Resumo do dia**: pedidos, quantos estão em aberto e faturamento
-- **Filtros por status**: em aberto, novos, preparando, em entrega, concluídos, cancelados
-- **Cartão de cada pedido**: número, horário, cliente, itens com complementos,
-  endereço com referência, telefone, forma de pagamento (e troco), observações e total
+Barra lateral roxa (no celular ela vira topo compacto) com:
+
+- **Navegação por status**: em aberto, novos, preparando, em entrega, concluídos, cancelados, cada um com contador
+- **Resumo do dia**: pedidos e faturamento
+- **Chave "Avisar cliente ao mudar status"**
+
+E na área principal, o cartão de cada pedido: número, horário, cliente, itens
+com complementos, endereço com referência, telefone, forma de pagamento (e
+troco), observações e total.
 
 ## Fluxo de trabalho
 
@@ -25,7 +30,21 @@ Cada pedido anda por quatro estados, um clique de cada vez:
 Também dá para **Cancelar** um pedido em andamento e **Arquivar** os já
 concluídos ou cancelados, tirando-os da tela.
 
-O botão **WhatsApp** abre a conversa direto com o telefone do cliente.
+## Aviso de status para o cliente
+
+A cada mudança de status o painel abre o WhatsApp do cliente com a mensagem
+pronta daquele momento ("já está sendo preparado", "saiu para entrega"…). Isso
+é controlado pela chave **Avisar cliente ao mudar status** na barra lateral;
+desligada, o aviso só sai quando alguém clicar em **Avisar cliente** no cartão.
+
+Os textos ficam em `src/orders/messages.ts`.
+
+**Por que não é automático:** notificação que chega sozinha (push no celular ou
+mensagem disparada pelo sistema) precisa de servidor — o site é estático e não
+tem de onde disparar. Com o Supabase no lugar, dá para: (a) push web de
+verdade, (b) mensagem automática via API oficial do WhatsApp (Meta Cloud API,
+que cobra por conversa) e (c) uma página de acompanhamento onde o cliente vê o
+status atualizar sozinho, que costuma ser o melhor custo-benefício.
 
 ## Como o pedido chega
 

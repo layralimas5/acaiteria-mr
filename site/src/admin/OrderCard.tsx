@@ -1,11 +1,12 @@
 import { formatPrice } from '../lib/order'
+import { notifyUrl } from '../orders/messages'
 import type { Order, OrderStatus } from '../orders/types'
 import { nextStatus, paymentLabels, statusLabels } from '../orders/types'
 
 interface OrderCardProps {
   readonly order: Order
-  readonly onAdvance: (id: string, status: OrderStatus) => void
-  readonly onCancel: (id: string) => void
+  readonly onAdvance: (order: Order, status: OrderStatus) => void
+  readonly onCancel: (order: Order) => void
   readonly onRemove: (id: string) => void
 }
 
@@ -23,9 +24,10 @@ const time = (iso: string): string =>
 export function OrderCard({ order, onAdvance, onCancel, onRemove }: OrderCardProps) {
   const next = nextStatus(order.status)
   const { customer } = order
+  const closed = order.status === 'concluido' || order.status === 'cancelado'
 
   return (
-    <article className="rounded-card border border-acai-100 bg-white p-4 shadow-sm">
+    <article className="rounded-card bg-white p-4 shadow-lg shadow-acai-950/30">
       <header className="flex items-start justify-between gap-3">
         <div>
           <p className="text-base font-extrabold text-ink">#{order.code}</p>
@@ -79,48 +81,59 @@ export function OrderCard({ order, onAdvance, onCancel, onRemove }: OrderCardPro
         )}
       </dl>
 
-      <div className="mt-3 flex items-center justify-between gap-3 border-t border-acai-100 pt-3">
-        <span className="text-lg font-extrabold text-acai-800">{formatPrice(order.total)}</span>
+      <div className="mt-3 border-t border-acai-100 pt-3">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-lg font-extrabold text-acai-800">{formatPrice(order.total)}</span>
 
-        <div className="flex items-center gap-2">
-          <a
-            href={`https://wa.me/55${customer.phone.replace(/\D/g, '').replace(/^55/, '')}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-full border border-acai-200 px-3 py-2 text-xs font-bold text-acai-800 transition-colors hover:bg-acai-50"
-          >
-            WhatsApp
-          </a>
+          <div className="flex items-center gap-2">
+            {closed ? (
+              <button
+                type="button"
+                onClick={() => onRemove(order.id)}
+                className="rounded-full px-3 py-2 text-xs font-semibold text-muted transition-colors hover:text-acai-800"
+              >
+                Arquivar
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onCancel(order)}
+                className="rounded-full px-3 py-2 text-xs font-semibold text-muted transition-colors hover:text-acai-800"
+              >
+                Cancelar
+              </button>
+            )}
 
-          {order.status === 'cancelado' || order.status === 'concluido' ? (
-            <button
-              type="button"
-              onClick={() => onRemove(order.id)}
-              className="rounded-full px-3 py-2 text-xs font-semibold text-muted transition-colors hover:text-acai-800"
-            >
-              Arquivar
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => onCancel(order.id)}
-              className="rounded-full px-3 py-2 text-xs font-semibold text-muted transition-colors hover:text-acai-800"
-            >
-              Cancelar
-            </button>
-          )}
-
-          {next && (
-            <button
-              type="button"
-              onClick={() => onAdvance(order.id, next)}
-              className="rounded-full bg-acai-800 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-acai-900"
-            >
-              {next === 'concluido' ? 'Dar baixa' : statusLabels[next]}
-            </button>
-          )}
+            {next && (
+              <button
+                type="button"
+                onClick={() => onAdvance(order, next)}
+                className="rounded-full bg-acai-800 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-acai-900"
+              >
+                {next === 'concluido' ? 'Dar baixa' : statusLabels[next]}
+              </button>
+            )}
+          </div>
         </div>
+
+        <a
+          href={notifyUrl(order, order.status)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-acai-200 px-4 py-2.5 text-xs font-bold text-acai-800 transition-colors hover:bg-acai-50"
+        >
+          <WhatsAppIcon />
+          Avisar cliente ({statusLabels[order.status].toLowerCase()})
+        </a>
       </div>
     </article>
+  )
+}
+
+function WhatsAppIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4 fill-current">
+      <path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3.1.8.8-3-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.5.3-.4.8-1.4.1-.2 0-.4 0-.5s-.6-1.4-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.8.8-1 1.9-.6 3.1a11 11 0 0 0 4.6 5c1.6.7 2.3.8 3.1.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2Z" />
+    </svg>
   )
 }
