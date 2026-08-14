@@ -5,7 +5,7 @@ import { AcaiCup } from './AcaiCup'
 interface ProductVisualProps {
   readonly product: Product
   readonly className?: string
-  /** Gira o produto em torno do próprio eixo. Usado só no banner. */
+  /** Faz o produto virar de um lado para o outro. Usado só no banner. */
   readonly spin?: boolean
   readonly priority?: boolean
   /** Força a ilustração vetorial mesmo quando existe foto (fundos claros). */
@@ -45,7 +45,7 @@ export function ProductVisual({
       decoding="async"
       fetchPriority={priority ? 'high' : 'auto'}
       style={fadeEdges}
-      className={`select-none object-contain ${spin ? 'animate-spin-y [transform-style:preserve-3d]' : ''} ${className}`}
+      className={`select-none object-contain ${spin ? 'animate-sway-y [transform-style:preserve-3d]' : ''} ${className}`}
     />
   )
 }

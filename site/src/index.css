@@ -22,27 +22,23 @@
 
   --animate-marquee: marquee 26s linear infinite;
   --animate-pulse-soft: pulse-soft 1.6s ease-in-out infinite;
-  /* Gira o produto em torno do próprio eixo vertical, como girar o pote na mão. */
-  --animate-spin-y: spin-y 14s linear infinite;
-  /* Alternativa sem espelhamento: troque --animate-spin-y por esta no ProductVisual. */
-  --animate-sway-y: sway-y 6s ease-in-out infinite;
-
-  @keyframes spin-y {
-    from {
-      transform: perspective(1400px) rotateY(0deg);
-    }
-    to {
-      transform: perspective(1400px) rotateY(360deg);
-    }
-  }
+  /*
+   * O produto vira para um lado, pausa, e volta para o outro — como se fosse
+   * dar a volta completa mas parasse no meio do caminho.
+   */
+  --animate-sway-y: sway-y 7s ease-in-out infinite;
 
   @keyframes sway-y {
     0%,
-    100% {
-      transform: perspective(1400px) rotateY(-16deg);
+    10% {
+      transform: perspective(1400px) rotateY(-34deg);
     }
-    50% {
-      transform: perspective(1400px) rotateY(16deg);
+    50%,
+    60% {
+      transform: perspective(1400px) rotateY(34deg);
+    }
+    100% {
+      transform: perspective(1400px) rotateY(-34deg);
     }
   }
 
