@@ -8,7 +8,7 @@ const links = [
   { href: '#produtos', label: 'Cardápio' },
   { href: '#montar', label: 'Complementos' },
   { href: '#entrega', label: 'Entrega' },
-  { href: '#onde-estamos', label: 'Onde estamos' },
+  { href: '#onde-estamos', label: 'Área de entrega' },
 ] as const
 
 export function Header() {
@@ -93,7 +93,7 @@ export function Header() {
               <OrderButton variant="light" className="w-full" />
             </li>
             <li className="pb-3 text-xs text-acai-200">
-              {business.address.street} — {business.address.district}
+              {business.address.district} — {business.address.city}
             </li>
           </ul>
         </nav>

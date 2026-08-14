@@ -73,8 +73,12 @@ export function Footer() {
             </li>
           </ul>
           <address className="mt-4 not-italic text-sm leading-relaxed text-acai-100/70">
-            {address.street}
-            <br />
+            {business.deliveryOnly && (
+              <>
+                Só delivery
+                <br />
+              </>
+            )}
             {address.district} — {address.city}/{address.state}
           </address>
         </div>

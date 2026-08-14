@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Product } from '../data/products'
-import { hasIfood, orderUrl } from '../lib/order'
+import { orderLabel, orderUrl } from '../lib/order'
 
 type Variant = 'primary' | 'outline' | 'light' | 'outlineLight'
 
@@ -19,14 +19,14 @@ const styles: Record<Variant, string> = {
 }
 
 export function OrderButton({ product, variant = 'primary', className = '', children }: OrderButtonProps) {
-  const label = children ?? (hasIfood() ? 'Peça no iFood' : 'Pedir no WhatsApp')
+  const label = children ?? orderLabel()
 
   return (
     <a
       href={orderUrl(product)}
       target="_blank"
       rel="noopener noreferrer"
-      className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-colors duration-200 ${styles[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-colors duration-200 hover:animate-pulse-soft ${styles[variant]} ${className}`}
     >
       {label}
       <svg viewBox="0 0 20 20" aria-hidden="true" className="size-4 fill-none stroke-current stroke-2">

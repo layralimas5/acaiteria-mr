@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { hasIfood, orderUrl } from '../lib/order'
+import { orderLabel, orderUrl } from '../lib/order'
 
 /** CTA fixo no rodapé em telas pequenas — aparece depois do hero. */
 export function FloatingOrder() {
@@ -26,7 +26,7 @@ export function FloatingOrder() {
         aria-hidden={!visible}
         className="flex w-full items-center justify-center rounded-full bg-acai-800 px-6 py-3.5 text-sm font-bold text-white"
       >
-        {hasIfood() ? 'Peça no iFood' : 'Pedir no WhatsApp'}
+        {orderLabel()}
       </a>
     </div>
   )

@@ -21,6 +21,17 @@
   --radius-card: 1.5rem;
 
   --animate-marquee: marquee 26s linear infinite;
+  --animate-pulse-soft: pulse-soft 1.6s ease-in-out infinite;
+
+  @keyframes pulse-soft {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.035);
+    }
+  }
 
   @keyframes marquee {
     from {

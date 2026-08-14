@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { business } from '../config/business'
 import { products } from '../data/products'
 import type { Product } from '../data/products'
-import { formatPrice, hasIfood, openStatus } from '../lib/order'
+import { daysToLaunch, formatPrice, hasIfood, isPreLaunch, launchLabel, openStatus } from '../lib/order'
 import { AcaiCup } from './AcaiCup'
 import { OrderButton } from './OrderButton'
 
@@ -17,6 +17,8 @@ export function Hero() {
   const [index, setIndex] = useState(1)
   const total = featured.length
   const status = openStatus(new Date())
+  const preLaunch = isPreLaunch()
+  const countdown = daysToLaunch()
 
   const go = useCallback((step: number) => setIndex((current) => (current + step + total) % total), [total])
 
@@ -50,6 +52,11 @@ export function Hero() {
                   />
                   {status.label}
                 </span>
+                {business.deliveryOnly && (
+                  <span className="inline-flex items-center rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-acai-100 ring-1 ring-white/15">
+                    Só delivery
+                  </span>
+                )}
                 {business.delivery.freeShippingFrom !== null && (
                   <span className="inline-flex items-center rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-acai-100 ring-1 ring-white/15">
                     Frete grátis acima de {formatPrice(business.delivery.freeShippingFrom)}
@@ -61,6 +68,17 @@ export function Hero() {
                 Açaí de verdade,
                 <span className="block text-acai-200">do jeito que você monta</span>
               </h1>
+
+              {preLaunch && (
+                <p className="mt-5 inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-sm">
+                  <span className="font-bold text-white">Inauguramos {launchLabel()}</span>
+                  <span className="text-acai-100/75">
+                    {countdown === 0
+                      ? 'é hoje!'
+                      : `faltam ${countdown} ${countdown === 1 ? 'dia' : 'dias'} — entre na lista e peça primeiro`}
+                  </span>
+                </p>
+              )}
 
               <p className="mt-5 max-w-md text-pretty text-base leading-relaxed text-acai-100/80">
                 {business.description}
@@ -104,11 +122,15 @@ export function Hero() {
 
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <OrderButton product={active} variant="light" className="w-full sm:w-auto">
-                  {hasIfood() ? `Pedir ${active.size} no iFood` : `Pedir ${active.size} agora`}
+                  {preLaunch
+                    ? `Garantir meu ${active.size}`
+                    : hasIfood()
+                      ? `Pedir ${active.size} no iFood`
+                      : `Pedir ${active.size} agora`}
                 </OrderButton>
                 <a
                   href="#produtos"
-                  className="inline-flex w-full items-center justify-center rounded-full border border-white/25 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-white/50 hover:bg-white/10 sm:w-auto"
+                  className="inline-flex w-full items-center justify-center rounded-full border border-white/25 px-6 py-3 text-sm font-semibold text-white transition-colors hover:animate-pulse-soft hover:border-white/50 hover:bg-white/10 sm:w-auto"
                 >
                   Ver cardápio completo
                 </a>
