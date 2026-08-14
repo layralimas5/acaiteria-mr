@@ -5,7 +5,7 @@ import { products } from '../data/products'
 import type { Product } from '../data/products'
 import { daysToLaunch, formatPrice, hasIfood, isPreLaunch, launchLabel, openStatus } from '../lib/order'
 import { OrderButton } from './OrderButton'
-import { ProductVisual } from './ProductVisual'
+import { ProductStage } from './ProductStage'
 
 const featuredIds = ['copo-300', 'copo-500', 'copo-700', 'barca-1l'] as const
 
@@ -43,7 +43,7 @@ export function Hero() {
 
       <div className="relative mx-auto max-w-6xl px-5">
         <div className="grid gap-10 pb-14 pt-28 sm:pb-16 sm:pt-36 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-14">
-            <div className="order-2 lg:order-1">
+            <div className="order-2 min-w-0 lg:order-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-acai-100 ring-1 ring-white/15">
                   <span
@@ -138,10 +138,10 @@ export function Hero() {
 
             </div>
 
-            <div className="order-1 flex items-center justify-center gap-2 sm:gap-4 lg:order-2">
+            <div className="order-1 flex min-w-0 items-center justify-center gap-1 sm:gap-4 lg:order-2">
               <CarouselArrow direction="prev" onClick={() => go(-1)} />
 
-              <div className="relative flex w-full items-center justify-center">
+              <div className="relative flex min-w-0 flex-1 items-center justify-center">
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={active.id}
@@ -149,18 +149,16 @@ export function Hero() {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.92, y: -12 }}
                     transition={{ duration: 0.3, ease: 'easeOut' }}
-                    className="relative flex w-full flex-col items-center"
+                    className="relative flex w-full min-w-0 flex-col items-center"
                   >
                     {active.highlight && (
                       <span className="mb-3 rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-acai-900">
                         {active.highlight}
                       </span>
                     )}
-                    <ProductVisual
+                    <ProductStage
                       product={active}
-                      priority
-                      spin={Boolean(active.image)}
-                      className="h-[clamp(15rem,42vw,26rem)] w-auto max-w-full drop-shadow-2xl"
+                      className="h-[clamp(16rem,44vw,28rem)] w-full min-w-0"
                     />
                   </motion.div>
                 </AnimatePresence>

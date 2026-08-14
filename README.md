@@ -71,3 +71,16 @@ Isso produz `public/imagem/`: foto do produto em WebP 900px, logo em WebP
 Para adicionar a foto de um novo produto, jogue o original em
 `assets-originais/`, registre em `scripts/optimize-images.mjs` e aponte o campo
 `image` do produto em `src/data/products.ts`.
+
+## Copo 3D do banner
+
+O produto do banner não é imagem: é um copo modelado em tempo real com
+Three.js (`src/components/AcaiCup3D.tsx`). A textura do copo é desenhada em
+canvas a partir da logo (`src/three/cupTextures.ts`), então o rótulo, o tamanho
+impresso e as camadas de açaí acompanham o tamanho selecionado. As proporções
+de cada tamanho ficam em `src/three/cupDimensions.ts`.
+
+Ele gira sozinho e o visitante pode arrastar para girar na mão. O carregamento
+é isolado num chunk separado e só acontece quando faz sentido: sem WebGL, em
+conexão lenta ou com economia de dados, o banner mostra a foto do produto no
+lugar. Com "reduzir movimento" ativo, o copo fica parado e só gira no arrasto.

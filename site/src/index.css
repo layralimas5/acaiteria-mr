@@ -22,25 +22,6 @@
 
   --animate-marquee: marquee 26s linear infinite;
   --animate-pulse-soft: pulse-soft 1.6s ease-in-out infinite;
-  /*
-   * O produto vira para um lado, pausa, e volta para o outro — como se fosse
-   * dar a volta completa mas parasse no meio do caminho.
-   */
-  --animate-sway-y: sway-y 7s ease-in-out infinite;
-
-  @keyframes sway-y {
-    0%,
-    10% {
-      transform: perspective(1400px) rotateY(-34deg);
-    }
-    50%,
-    60% {
-      transform: perspective(1400px) rotateY(34deg);
-    }
-    100% {
-      transform: perspective(1400px) rotateY(-34deg);
-    }
-  }
 
   @keyframes pulse-soft {
     0%,
