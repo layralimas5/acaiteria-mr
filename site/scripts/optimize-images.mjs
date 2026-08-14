@@ -10,18 +10,19 @@ import { mkdir, readdir } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
+import { normalizeProduct } from './normalize-product.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const sourceDir = resolve(root, '../assets-originais')
 const outputDir = join(root, 'public/imagem')
 
-/** @type {{ source: string, output: string, width: number, height?: number, format: 'webp' | 'png' | 'jpeg', quality: number }[]} */
+/** @type {{ source: string, output: string, width: number, height?: number, format: 'webp' | 'png' | 'jpeg', quality: number, product?: boolean }[]} */
 const targets = [
   // Fotos de produto com o fundo roxo do estúdio. Elas são exibidas dentro de
   // um quadro (object-cover), então o fundo da foto vira o fundo do quadro.
-  { source: 'poto-300ml.png', output: 'poto-300ml.webp', width: 900, format: 'webp', quality: 84 },
-  { source: 'pote-500ml.png', output: 'pote-500ml.webp', width: 900, format: 'webp', quality: 84 },
-  { source: 'copo-700ml.png', output: 'copo-700ml.webp', width: 900, format: 'webp', quality: 84 },
+  { source: 'poto-300ml.png', output: 'poto-300ml.webp', width: 900, format: 'webp', quality: 84, product: true },
+  { source: 'pote-500ml.png', output: 'pote-500ml.webp', width: 900, format: 'webp', quality: 84, product: true },
+  { source: 'copo-700ml.png', output: 'copo-700ml.webp', width: 900, format: 'webp', quality: 84, product: true },
   // Arte de fundo do banner, em duas larguras (celular e desktop).
   { source: 'banner.png', output: 'banner.webp', width: 1830, format: 'webp', quality: 80 },
   { source: 'banner.png', output: 'banner-960.webp', width: 960, format: 'webp', quality: 78 },
@@ -41,7 +42,12 @@ const run = async () => {
       continue
     }
 
-    const pipeline = sharp(join(sourceDir, target.source)).resize({
+    // Fotos de produto passam pela normalização de escala antes do resize.
+    const input = target.product
+      ? await normalizeProduct(join(sourceDir, target.source))
+      : join(sourceDir, target.source)
+
+    const pipeline = sharp(input).resize({
       width: target.width,
       height: target.height,
       fit: target.height ? 'cover' : 'inside',

@@ -66,6 +66,11 @@ cd site
 npm run images
 ```
 
+As fotos de produto (`product: true` no script) passam por
+`scripts/normalize-product.mjs`, que mede o copo dentro da foto e reenquadra
+todas na mesma escala — o produto sempre ocupa ~82% da altura. Isso resolve o
+fato de cada foto vir do estúdio com um zoom diferente.
+
 Isso produz `public/imagem/`: fotos de produto em WebP 900px (com o fundo roxo do estúdio, exibidas em quadro `object-cover`), logo em WebP
 256px, ícone PNG 192px e a imagem de compartilhamento `og.jpg` (1200x630).
 Para adicionar a foto de um novo produto, jogue o original em
