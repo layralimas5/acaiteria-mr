@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { CartProvider } from './cart/CartContext'
 import { AcaiBuilder } from './components/builder/AcaiBuilder'
 import { CartDrawer } from './components/CartDrawer'
+import { CupsShowcase } from './components/CupsShowcase'
 import { Delivery } from './components/Delivery'
 import { FloatingOrder } from './components/FloatingOrder'
 import { Footer } from './components/Footer'
@@ -13,6 +14,13 @@ import { Marquee } from './components/Marquee'
 export default function App() {
   const [cartOpen, setCartOpen] = useState(false)
   const [builderVisible, setBuilderVisible] = useState(false)
+  /** Tamanho escolhido na vitrine, aplicado no montador. */
+  const [presetSizeId, setPresetSizeId] = useState<string | null>(null)
+
+  const pickSize = useCallback((sizeId: string) => {
+    setPresetSizeId(sizeId)
+    document.getElementById('monte-seu-acai')?.scrollIntoView({ behavior: 'smooth' })
+  }, [])
 
   const openCart = useCallback(() => setCartOpen(true), [])
   const closeCart = useCallback(() => setCartOpen(false), [])
@@ -31,7 +39,13 @@ export default function App() {
       <main className="pb-20 sm:pb-0">
         <Hero />
         <Marquee />
-        <AcaiBuilder onOpenCart={openCart} onVisibilityChange={setBuilderVisible} />
+        <CupsShowcase onPick={pickSize} />
+        <AcaiBuilder
+          onOpenCart={openCart}
+          onVisibilityChange={setBuilderVisible}
+          presetSizeId={presetSizeId}
+          onPresetApplied={() => setPresetSizeId(null)}
+        />
         <Delivery />
         <Location />
       </main>

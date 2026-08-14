@@ -21,11 +21,19 @@ interface AcaiBuilderProps {
   readonly onOpenCart: () => void
   /** Avisa o App para esconder o CTA flutuante enquanto a barra do builder está no ar. */
   readonly onVisibilityChange: (visible: boolean) => void
+  /** Tamanho escolhido na vitrine dos copos, para começar já preenchido. */
+  readonly presetSizeId?: string | null
+  readonly onPresetApplied?: () => void
 }
 
 const LAST_STEP = 5
 
-export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps) {
+export function AcaiBuilder({
+  onOpenCart,
+  onVisibilityChange,
+  presetSizeId = null,
+  onPresetApplied,
+}: AcaiBuilderProps) {
   const { addBuild, count } = useCart()
   const [selection, setSelection] = useState<BuildSelection>(emptySelection)
   const [step, setStep] = useState(1)
@@ -50,6 +58,20 @@ export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps
     observer.observe(section)
     return () => observer.disconnect()
   }, [onVisibilityChange])
+
+  // A vitrine manda um tamanho: o montador entra já no produto certo e pula
+  // direto para a etapa da base.
+  useEffect(() => {
+    if (!presetSizeId) return
+
+    const owner = productKinds.find((kind) => kind.sizes.some((size) => size.id === presetSizeId))
+    const size = owner?.sizes.find((item) => item.id === presetSizeId)
+    if (!owner || !size) return
+
+    setSelection((current) => ({ ...current, product: owner, size, base: null }))
+    setStep(3)
+    onPresetApplied?.()
+  }, [presetSizeId, onPresetApplied])
 
   const pricing = useMemo(() => priceBuild(selection), [selection])
 

@@ -97,6 +97,14 @@ Arte recomendada: **1830x860 px** (proporção ~2,1:1), com o produto à direita
 o terço esquerdo livre. Coloque em `assets-originais/`, registre em
 `scripts/optimize-images.mjs` e rode `npm run images`.
 
+## Vitrine dos copos
+
+Antes do montador, `src/components/CupsShowcase.tsx` apresenta as fotos dos
+tamanhos com preço e cota grátis. O botão "Montar esse" leva direto ao
+montador já com produto e tamanho preenchidos, abrindo na etapa da base.
+A vitrine lê os mesmos dados de `productKinds`, então tamanho novo com foto
+aparece nela sozinho.
+
 ## Monte seu Açaí (configurador + carrinho)
 
 Configurador de produto em etapas na própria página, com preço em tempo real.
