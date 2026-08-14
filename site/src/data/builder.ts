@@ -70,6 +70,7 @@ export const cupSizes: readonly CupSize[] = [
     volume: '700ml',
     basePrice: 22.9,
     freeToppings: 7,
+    image: '/imagem/copo-700ml.webp',
     available: true,
   },
 ]
