@@ -24,7 +24,7 @@ export function FloatingOrder() {
         rel="noopener noreferrer"
         tabIndex={visible ? 0 : -1}
         aria-hidden={!visible}
-        className="flex w-full items-center justify-center rounded-full bg-acai-700 px-6 py-3.5 text-sm font-bold text-white"
+        className="flex w-full items-center justify-center rounded-full bg-acai-800 px-6 py-3.5 text-sm font-bold text-white"
       >
         {hasIfood() ? 'Peça no iFood' : 'Pedir no WhatsApp'}
       </a>

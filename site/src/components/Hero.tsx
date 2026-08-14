@@ -3,125 +3,178 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { business } from '../config/business'
 import { products } from '../data/products'
 import type { Product } from '../data/products'
-import { formatPrice, hasIfood } from '../lib/order'
+import { formatPrice, hasIfood, openStatus } from '../lib/order'
 import { AcaiCup } from './AcaiCup'
 import { OrderButton } from './OrderButton'
 
-const featuredIds = ['copo-500', 'pote-500', 'barca-1l'] as const
+const featuredIds = ['copo-300', 'copo-500', 'copo-700', 'barca-1l'] as const
 
 const featured: readonly Product[] = featuredIds
   .map((id) => products.find((product) => product.id === id))
   .filter((product): product is Product => product !== undefined)
 
-export function Hero() {
-  const [index, setIndex] = useState(0)
-  const total = featured.length
+const perks = [
+  'Batido na hora',
+  'Complemento à vontade de escolha',
+  `Entrega em ~${business.delivery.averageMinutes} min`,
+] as const
 
-  const go = useCallback(
-    (step: number) => setIndex((current) => (current + step + total) % total),
-    [total],
-  )
+export function Hero() {
+  const [index, setIndex] = useState(1)
+  const total = featured.length
+  const status = openStatus(new Date())
+
+  const go = useCallback((step: number) => setIndex((current) => (current + step + total) % total), [total])
 
   const active = featured[index]
 
   if (!active) return null
 
   return (
-    <section id="topo" className="relative overflow-hidden bg-white">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(60%_60%_at_50%_0%,var(--color-acai-100)_0%,transparent_70%)]"
-      />
+    <section id="topo" className="bg-white sm:px-5 sm:pt-6">
+      <div className="mx-auto max-w-6xl">
+        <div className="relative isolate overflow-hidden bg-acai-900 text-white sm:rounded-[2.5rem]">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -left-24 -top-32 size-[420px] rounded-full bg-acai-600/40 blur-3xl"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -bottom-40 right-0 size-[460px] rounded-full bg-acai-500/25 blur-3xl"
+          />
 
-      <div className="relative mx-auto max-w-6xl px-5 pb-16 pt-10 sm:pt-14">
-        <div className="flex flex-col items-center text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-acai-100 bg-acai-50 px-4 py-1.5 text-xs font-semibold text-acai-700">
-            <span className="size-1.5 rounded-full bg-acai-500" aria-hidden="true" />
-            Entrega em até {business.delivery.averageMinutes} min
-          </span>
+          <div className="relative grid gap-10 px-6 py-12 sm:px-12 sm:py-14 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-14">
+            <div className="order-2 lg:order-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-acai-100 ring-1 ring-white/15">
+                  <span
+                    aria-hidden="true"
+                    className={`size-1.5 rounded-full ${status.isOpen ? 'bg-green-400' : 'bg-acai-300'}`}
+                  />
+                  {status.label}
+                </span>
+                {business.delivery.freeShippingFrom !== null && (
+                  <span className="inline-flex items-center rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-acai-100 ring-1 ring-white/15">
+                    Frete grátis acima de {formatPrice(business.delivery.freeShippingFrom)}
+                  </span>
+                )}
+              </div>
 
-          <h1 className="mt-5 max-w-3xl text-balance text-4xl font-extrabold leading-[1.05] tracking-tight text-ink sm:text-6xl">
-            Açaí de verdade, <span className="text-acai-700">do jeito que você monta</span>
-          </h1>
+              <h1 className="mt-6 text-balance text-4xl font-extrabold leading-[1.03] tracking-tight sm:text-5xl lg:text-[3.5rem]">
+                Açaí de verdade,
+                <span className="block text-acai-200">do jeito que você monta</span>
+              </h1>
 
-          <p className="mt-5 max-w-xl text-pretty text-base leading-relaxed text-muted sm:text-lg">
-            {business.description}
-          </p>
+              <p className="mt-5 max-w-md text-pretty text-base leading-relaxed text-acai-100/80">
+                {business.description}
+              </p>
 
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
-            <OrderButton className="w-full sm:w-auto" />
-            <a
-              href="#produtos"
-              className="inline-flex w-full items-center justify-center rounded-full border border-acai-200 px-6 py-3 text-sm font-semibold text-acai-700 transition-colors hover:border-acai-400 hover:bg-acai-50 sm:w-auto"
-            >
-              Ver cardápio
-            </a>
-          </div>
-        </div>
+              <fieldset className="mt-8">
+                <legend className="text-xs font-bold uppercase tracking-[0.18em] text-acai-200">
+                  Escolha o tamanho
+                </legend>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {featured.map((product, position) => {
+                    const isActive = position === index
+                    return (
+                      <button
+                        key={product.id}
+                        type="button"
+                        onClick={() => setIndex(position)}
+                        aria-pressed={isActive}
+                        className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                          isActive
+                            ? 'bg-white text-acai-900'
+                            : 'bg-white/10 text-acai-100 ring-1 ring-white/15 hover:bg-white/20'
+                        }`}
+                      >
+                        {product.size}
+                      </button>
+                    )
+                  })}
+                </div>
+              </fieldset>
 
-        <div className="relative mt-14 sm:mt-16">
-          <div className="rounded-[2.5rem] border border-acai-100 bg-gradient-to-b from-acai-50 to-white px-4 py-10 sm:px-10 sm:py-12">
-            <div className="flex items-center justify-center gap-4 sm:gap-10">
+              <div aria-live="polite" className="mt-7 flex items-end gap-4">
+                <span className="text-4xl font-extrabold tracking-tight sm:text-5xl">
+                  {formatPrice(active.price)}
+                </span>
+                <span className="pb-1.5 text-sm text-acai-100/75">
+                  {active.name}
+                  {active.toppingsIncluded > 0 && ` · ${active.toppingsIncluded} complementos`}
+                </span>
+              </div>
+
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <OrderButton product={active} variant="light" className="w-full sm:w-auto">
+                  {hasIfood() ? `Pedir ${active.size} no iFood` : `Pedir ${active.size} agora`}
+                </OrderButton>
+                <a
+                  href="#produtos"
+                  className="inline-flex w-full items-center justify-center rounded-full border border-white/25 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-white/50 hover:bg-white/10 sm:w-auto"
+                >
+                  Ver cardápio completo
+                </a>
+              </div>
+
+              <ul className="mt-9 flex flex-wrap gap-x-6 gap-y-2 border-t border-white/10 pt-6">
+                {perks.map((perk) => (
+                  <li key={perk} className="flex items-center gap-2 text-sm text-acai-100/80">
+                    <svg viewBox="0 0 20 20" aria-hidden="true" className="size-4 fill-none stroke-acai-300 stroke-2">
+                      <path d="M4 10.5l4 4 8-9" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    {perk}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="order-1 flex items-center justify-center gap-2 sm:gap-4 lg:order-2">
               <CarouselArrow direction="prev" onClick={() => go(-1)} />
 
-              <div className="flex min-h-[300px] w-full max-w-md items-center justify-center sm:min-h-[340px]">
+              <div className="relative flex min-h-[290px] w-full max-w-xs items-center justify-center sm:min-h-[360px]">
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-x-6 bottom-6 top-10 rounded-[2rem] bg-white/5 ring-1 ring-white/10"
+                />
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={active.id}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -16 }}
-                    transition={{ duration: 0.28, ease: 'easeOut' }}
-                    className="flex flex-col items-center"
+                    initial={{ opacity: 0, scale: 0.92, y: 12 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.92, y: -12 }}
+                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                    className="relative flex flex-col items-center"
                   >
-                    <AcaiCup label={active.size} className="h-56 w-auto sm:h-64" />
-                    <p aria-live="polite" className="mt-6 text-center">
-                      <span className="block text-lg font-bold text-ink sm:text-xl">{active.name}</span>
-                      <span className="mt-1 block text-sm text-muted">{active.description}</span>
-                      <span className="mt-3 block text-2xl font-extrabold text-acai-700">
-                        {formatPrice(active.price)}
+                    {active.highlight && (
+                      <span className="mb-3 rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-acai-900">
+                        {active.highlight}
                       </span>
-                    </p>
-                    <OrderButton product={active} className="mt-5" />
+                    )}
+                    <AcaiCup label={active.size} className="h-56 w-auto drop-shadow-2xl sm:h-72" />
                   </motion.div>
                 </AnimatePresence>
               </div>
 
               <CarouselArrow direction="next" onClick={() => go(1)} />
             </div>
+          </div>
 
-            <div className="mt-8 flex items-center justify-center gap-2">
-              {featured.map((product, position) => (
-                <button
-                  key={product.id}
-                  type="button"
-                  onClick={() => setIndex(position)}
-                  aria-label={`Ver ${product.name}`}
-                  aria-current={position === index}
-                  className={`h-2 rounded-full transition-all duration-200 ${
-                    position === index ? 'w-8 bg-acai-700' : 'w-2 bg-acai-200 hover:bg-acai-400'
-                  }`}
-                />
-              ))}
-            </div>
+          <div className="relative flex items-center justify-center gap-2 pb-8 lg:hidden">
+            {featured.map((product, position) => (
+              <button
+                key={product.id}
+                type="button"
+                onClick={() => setIndex(position)}
+                aria-label={`Ver ${product.name}`}
+                aria-current={position === index}
+                className={`h-1.5 rounded-full transition-all duration-200 ${
+                  position === index ? 'w-7 bg-white' : 'w-1.5 bg-white/30 hover:bg-white/60'
+                }`}
+              />
+            ))}
           </div>
         </div>
-
-        <ul className="mt-10 grid gap-4 sm:grid-cols-3">
-          {[
-            { title: 'Batido na hora', text: 'Nada de açaí parado. Cada pedido sai fresco do balcão.' },
-            { title: 'Complemento generoso', text: 'Sem contar grama. Você monta e a gente capricha.' },
-            {
-              title: hasIfood() ? 'Pedido pelo iFood' : 'Pedido pelo WhatsApp',
-              text: `Entrega média de ${business.delivery.averageMinutes} minutos na região.`,
-            },
-          ].map((item) => (
-            <li key={item.title} className="rounded-2xl border border-acai-100 bg-white p-5">
-              <h2 className="text-sm font-bold text-ink">{item.title}</h2>
-              <p className="mt-1 text-sm text-muted">{item.text}</p>
-            </li>
-          ))}
-        </ul>
       </div>
     </section>
   )
@@ -139,8 +192,8 @@ function CarouselArrow({ direction, onClick }: CarouselArrowProps) {
     <button
       type="button"
       onClick={onClick}
-      aria-label={isPrev ? 'Produto anterior' : 'Próximo produto'}
-      className="grid size-11 shrink-0 place-items-center rounded-full border border-acai-200 bg-white text-acai-700 shadow-sm transition-colors hover:border-acai-400 hover:bg-acai-50 sm:size-12"
+      aria-label={isPrev ? 'Tamanho anterior' : 'Próximo tamanho'}
+      className="grid size-10 shrink-0 place-items-center rounded-full border border-white/20 bg-white/10 text-white transition-colors hover:border-white/40 hover:bg-white/20 sm:size-11"
     >
       <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5 fill-none stroke-current stroke-2">
         <path d={isPrev ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'} strokeLinecap="round" strokeLinejoin="round" />

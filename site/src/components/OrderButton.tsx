@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { Product } from '../data/products'
 import { hasIfood, orderUrl } from '../lib/order'
 
-type Variant = 'primary' | 'outline' | 'ghost'
+type Variant = 'primary' | 'outline' | 'light' | 'outlineLight'
 
 interface OrderButtonProps {
   readonly product?: Product
@@ -12,10 +12,10 @@ interface OrderButtonProps {
 }
 
 const styles: Record<Variant, string> = {
-  primary:
-    'bg-acai-700 text-white shadow-lg shadow-acai-700/20 hover:bg-acai-800 active:bg-acai-900',
-  outline: 'border border-acai-200 text-acai-700 hover:border-acai-400 hover:bg-acai-50',
-  ghost: 'text-acai-700 hover:bg-acai-50',
+  primary: 'bg-acai-800 text-white shadow-lg shadow-acai-900/25 hover:bg-acai-900 active:bg-acai-950',
+  outline: 'border border-acai-200 text-acai-800 hover:border-acai-400 hover:bg-acai-50',
+  light: 'bg-white text-acai-900 shadow-lg shadow-acai-950/30 hover:bg-acai-50',
+  outlineLight: 'border border-white/25 text-white hover:border-white/50 hover:bg-white/10',
 }
 
 export function OrderButton({ product, variant = 'primary', className = '', children }: OrderButtonProps) {

@@ -13,7 +13,7 @@ export function Delivery() {
   return (
     <section id="entrega" className="scroll-mt-24 bg-white py-20 sm:py-24">
       <div className="mx-auto max-w-6xl px-5">
-        <div className="overflow-hidden rounded-[2rem] bg-acai-800 text-white">
+        <div className="overflow-hidden rounded-[2rem] bg-acai-900 text-white">
           <div className="grid gap-10 p-8 sm:p-12 lg:grid-cols-2 lg:items-center">
             <div>
               <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-200">Entrega</span>
@@ -38,7 +38,7 @@ export function Delivery() {
                     href={business.delivery.ifoodUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-bold text-acai-800 transition-colors hover:bg-acai-50"
+                    className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-bold text-acai-900 transition-colors hover:bg-acai-50"
                   >
                     Pedir no iFood
                   </a>
@@ -57,7 +57,7 @@ export function Delivery() {
             <ol className="flex flex-col gap-4">
               {steps.map((step, index) => (
                 <li key={step.title} className="flex gap-4 rounded-2xl bg-white/5 p-5">
-                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-white text-sm font-extrabold text-acai-800">
+                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-white text-sm font-extrabold text-acai-900">
                     {index + 1}
                   </span>
                   <span>

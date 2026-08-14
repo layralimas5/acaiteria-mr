@@ -3,19 +3,20 @@
 @theme {
   --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
 
-  --color-acai-50: #f8f5fc;
-  --color-acai-100: #efe6f8;
-  --color-acai-200: #ddc9f0;
-  --color-acai-300: #c3a1e4;
-  --color-acai-400: #a476d3;
-  --color-acai-500: #8a51bf;
-  --color-acai-600: #7239a5;
-  --color-acai-700: #5c2c85;
-  --color-acai-800: #45215f;
-  --color-acai-900: #2e1640;
+  --color-acai-50: #f6f3f9;
+  --color-acai-100: #e9e1f1;
+  --color-acai-200: #d2c2e3;
+  --color-acai-300: #b193cf;
+  --color-acai-400: #8c63b4;
+  --color-acai-500: #6d4296;
+  --color-acai-600: #562f7b;
+  --color-acai-700: #422260;
+  --color-acai-800: #2c1642;
+  --color-acai-900: #1a0b29;
+  --color-acai-950: #100518;
 
-  --color-ink: #1b1220;
-  --color-muted: #6b6172;
+  --color-ink: #150c1c;
+  --color-muted: #675d70;
 
   --radius-card: 1.5rem;
 }

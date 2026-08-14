@@ -9,7 +9,7 @@ export function Location() {
     <section id="onde-estamos" className="scroll-mt-24 bg-acai-50 py-20 sm:py-24">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 lg:grid-cols-2 lg:items-center">
         <div>
-          <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-600">Onde estamos</span>
+          <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-700">Onde estamos</span>
           <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
             Passa na loja ou chama pelo delivery
           </h2>
@@ -26,7 +26,7 @@ export function Location() {
             href={address.mapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-acai-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-acai-800"
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-acai-800 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-acai-900"
           >
             Ver no mapa
           </a>
@@ -34,10 +34,10 @@ export function Location() {
 
         <div className="rounded-card border border-acai-100 bg-white p-6 sm:p-8">
           <div className="flex items-center justify-between gap-4">
-            <h3 className="text-sm font-bold uppercase tracking-wide text-acai-700">Horário</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wide text-acai-800">Horário</h3>
             <span
               className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold ${
-                status.isOpen ? 'bg-green-50 text-green-700' : 'bg-acai-50 text-acai-700'
+                status.isOpen ? 'bg-green-50 text-green-700' : 'bg-acai-50 text-acai-800'
               }`}
             >
               <span

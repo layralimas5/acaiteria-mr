@@ -23,7 +23,7 @@ export function Products() {
       <div className="mx-auto max-w-6xl px-5">
         <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
           <div>
-            <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-600">Cardápio</span>
+            <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-700">Cardápio</span>
             <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
               Escolha o seu tamanho
             </h2>
@@ -45,8 +45,8 @@ export function Products() {
                 onClick={() => setFilter(item.id)}
                 className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
                   isActive
-                    ? 'bg-acai-700 text-white'
-                    : 'border border-acai-100 text-muted hover:border-acai-300 hover:text-acai-700'
+                    ? 'bg-acai-800 text-white'
+                    : 'border border-acai-100 text-muted hover:border-acai-300 hover:text-acai-800'
                 }`}
               >
                 {item.label}

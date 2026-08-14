@@ -30,7 +30,7 @@ export function Header() {
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5 sm:h-20">
         <a href="#topo" className="flex items-center gap-3">
-          <span className="grid size-10 place-items-center rounded-xl bg-acai-700 text-sm font-extrabold tracking-widest text-white">
+          <span className="grid size-10 place-items-center rounded-xl bg-acai-800 text-sm font-extrabold tracking-widest text-white">
             MR
           </span>
           <span className="flex flex-col leading-tight">
@@ -44,7 +44,7 @@ export function Header() {
             <a
               key={link.href}
               href={link.href}
-              className="rounded-full px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-acai-50 hover:text-acai-700"
+              className="rounded-full px-4 py-2 text-sm font-medium text-muted transition-colors hover:bg-acai-50 hover:text-acai-800"
             >
               {link.label}
             </a>
@@ -59,7 +59,7 @@ export function Header() {
             aria-expanded={isOpen}
             aria-controls="menu-mobile"
             aria-label={isOpen ? 'Fechar menu' : 'Abrir menu'}
-            className="grid size-10 place-items-center rounded-xl border border-acai-100 text-acai-700 lg:hidden"
+            className="grid size-10 place-items-center rounded-xl border border-acai-100 text-acai-800 lg:hidden"
           >
             <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5 stroke-current stroke-2">
               {isOpen ? (

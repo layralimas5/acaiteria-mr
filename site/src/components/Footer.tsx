@@ -9,7 +9,7 @@ export function Footer() {
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-12 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <span className="grid size-10 place-items-center rounded-xl bg-acai-700 text-sm font-extrabold tracking-widest text-white">
+            <span className="grid size-10 place-items-center rounded-xl bg-acai-800 text-sm font-extrabold tracking-widest text-white">
               MR
             </span>
             <span className="text-base font-bold text-ink">{business.name}</span>
@@ -22,7 +22,7 @@ export function Footer() {
             href={`https://instagram.com/${business.instagramHandle}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-medium text-muted transition-colors hover:text-acai-700"
+            className="font-medium text-muted transition-colors hover:text-acai-800"
           >
             @{business.instagramHandle}
           </a>
@@ -30,11 +30,11 @@ export function Footer() {
             href={whatsappUrl()}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-medium text-muted transition-colors hover:text-acai-700"
+            className="font-medium text-muted transition-colors hover:text-acai-800"
           >
             WhatsApp
           </a>
-          <a href="#produtos" className="font-medium text-muted transition-colors hover:text-acai-700">
+          <a href="#produtos" className="font-medium text-muted transition-colors hover:text-acai-800">
             Cardápio
           </a>
         </nav>
@@ -51,7 +51,7 @@ export function Footer() {
               href="https://limadigitalstudio.com.br"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-semibold text-acai-700 hover:underline"
+              className="font-semibold text-acai-800 hover:underline"
             >
               Layra Lima
             </a>
