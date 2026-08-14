@@ -21,23 +21,19 @@ npm run preview  # serve o dist/
 | O que mudar | Arquivo |
 | --- | --- |
 | Telefone, endereço, horário, link do iFood, frete grátis | `site/src/config/business.ts` |
-| Data de inauguração e modo só delivery | `site/src/config/business.ts` (`launchDate`, `deliveryOnly`) |
+| Modo só delivery | `site/src/config/business.ts` (`deliveryOnly`) |
 | Produtos, preços, categorias, complementos | `site/src/data/products.ts` |
 | Regras de link de pedido (iFood vs WhatsApp) | `site/src/lib/order.ts` |
 | Cores e tipografia | `site/src/index.css` (bloco `@theme`) |
 
 Nenhum componente tem telefone, preço ou link hardcoded. Tudo vem desses arquivos.
 
-## Modo pré-inauguração
+## Sistema da loja
 
-A loja inaugura em **05/09** e opera **só delivery**. Enquanto a data não
-chega, o site entra sozinho em modo pré-lançamento: selo de inauguração com
-contagem de dias no banner, CTAs virando "entrar na lista" (WhatsApp com
-mensagem pronta) e a seção de endereço falando em área de entrega em vez de
-convidar pra loja. No dia 05/09 tudo isso troca automaticamente para o modo
-de pedido normal, sem precisar mexer no código: quem controla é `launchDate`.
-
-`deliveryOnly: false` reativa os textos de loja física, se um dia abrir balcão.
+O painel de pedidos fica em **`/sistema`** (ícone de monitor no menu). A loja
+acompanha os pedidos do site e dá baixa neles. Senha padrão `mr2026`, trocável
+por `VITE_ADMIN_PASSWORD`. Detalhes, fluxo de status e migração para banco em
+`docs/sistema.md`.
 
 ## Comportamento do botão de pedido
 

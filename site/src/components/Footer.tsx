@@ -38,7 +38,7 @@ export function Footer() {
             Segue a gente no Instagram
           </a>
           <p className="mt-2 text-xs text-acai-100/60">
-            Novidades, sabores e o dia da inauguração saem lá primeiro.
+            Novidades, sabores e promoções saem lá primeiro.
           </p>
         </div>
 

@@ -1,10 +1,9 @@
 import { business } from '../config/business'
-import { isPreLaunch, launchLabel, locationLabel, openStatus, whatsappUrl } from '../lib/order'
+import { locationLabel, openStatus, whatsappUrl } from '../lib/order'
 
 export function Location() {
   const { address, hours, deliveryOnly } = business
   const status = openStatus(new Date())
-  const preLaunch = isPreLaunch()
 
   return (
     <section id="onde-estamos" className="scroll-mt-24 bg-acai-50 py-20 sm:py-24">
@@ -30,22 +29,20 @@ export function Location() {
 
           <a
             href={whatsappUrl(
-              preLaunch
-                ? business.preLaunchMessage
-                : `Oi! Vocês entregam no meu endereço em ${business.address.city}? Fico em...`,
+              `Oi! Vocês entregam no meu endereço em ${business.address.city}? Fico em...`,
             )}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-6 inline-flex items-center gap-2 rounded-full bg-acai-800 px-6 py-3 text-sm font-semibold text-white transition-colors hover:animate-pulse-soft hover:bg-acai-900"
           >
-            {preLaunch ? 'Entrar na lista de inauguração' : 'Consultar se entregamos aí'}
+            Consultar se entregamos aí
           </a>
         </div>
 
         <div className="rounded-card border border-acai-100 bg-white p-6 sm:p-8">
           <div className="flex items-center justify-between gap-4">
             <h3 className="text-sm font-bold uppercase tracking-wide text-acai-800">
-              {preLaunch ? `Horário a partir de ${launchLabel()}` : 'Horário'}
+              Horário
             </h3>
             <span
               className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold ${

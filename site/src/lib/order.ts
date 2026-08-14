@@ -17,37 +17,14 @@ export const formatPrice = (value: number): string =>
 export const whatsappUrl = (message: string = business.whatsappMessage): string =>
   `https://wa.me/${business.whatsappNumber}?text=${encodeURIComponent(message)}`
 
-const launchAt = (): Date => new Date(`${business.launchDate}T00:00:00`)
-
-/** true enquanto a loja ainda não inaugurou. */
-export const isPreLaunch = (now: Date = new Date()): boolean => now < launchAt()
-
-/** Data de inauguração formatada como 05/09. */
-export const launchLabel = (): string =>
-  launchAt().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
-
-/** Dias que faltam para a inauguração (0 quando já abriu). */
-export const daysToLaunch = (now: Date = new Date()): number => {
-  const diff = launchAt().getTime() - now.getTime()
-  return diff <= 0 ? 0 : Math.ceil(diff / 86_400_000)
-}
-
 export const productMessage = (product: Product): string =>
-  isPreLaunch()
-    ? `Oi! Quero garantir meu *${product.name}* (${product.size}) na inauguração, dia ${launchLabel()}.`
-    : `Oi! Quero pedir *${product.name}* (${product.size}) — ${formatPrice(product.price)}.`
+  `Oi! Quero pedir *${product.name}* (${product.size}) — ${formatPrice(product.price)}.`
 
-/** Texto padrão do CTA de pedido, conforme o momento e o canal. */
-export const orderLabel = (): string => {
-  if (isPreLaunch()) return 'Avise-me na inauguração'
-  return hasIfood() ? 'Peça no iFood' : 'Pedir no WhatsApp'
-}
+/** Texto padrão do CTA de pedido, conforme o canal disponível. */
+export const orderLabel = (): string => (hasIfood() ? 'Peça no iFood' : 'Pedir no WhatsApp')
 
 /** Link de pedido para um produto, no canal disponível. */
 export const orderUrl = (product?: Product): string => {
-  if (isPreLaunch()) {
-    return whatsappUrl(product ? productMessage(product) : business.preLaunchMessage)
-  }
   if (hasIfood()) return business.delivery.ifoodUrl
   return whatsappUrl(product ? productMessage(product) : business.whatsappMessage)
 }
@@ -74,10 +51,6 @@ const toMinutes = (time: string): number => {
 
 /** Status de funcionamento com base no horário configurado. */
 export const openStatus = (now: Date): OpenStatus => {
-  if (isPreLaunch(now)) {
-    return { isOpen: false, label: `Inauguração ${launchLabel()}` }
-  }
-
   const dayKey = dayIndexToKey[now.getDay()]
   const current = now.getHours() * 60 + now.getMinutes()
 

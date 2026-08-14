@@ -1,12 +1,10 @@
 import { business } from '../config/business'
-import { isPreLaunch, launchLabel } from '../lib/order'
 
 const items: readonly string[] = [
   'Batido na hora',
   'Complemento à vontade de escolha',
   `Entrega em ~${business.delivery.averageMinutes} min`,
   ...(business.deliveryOnly ? ['Só delivery'] : []),
-  ...(isPreLaunch() ? [`Inauguração ${launchLabel()}`] : []),
 ]
 
 /**

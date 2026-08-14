@@ -3,13 +3,31 @@ import { business } from '../config/business'
 import { useCart } from '../cart/CartContext'
 import { locationLabel } from '../lib/order'
 import { Logo } from './Logo'
-import { OrderButton } from './OrderButton'
 
 const links = [
   { href: '#monte-seu-acai', label: 'Monte seu pedido' },
   { href: '#entrega', label: 'Entrega' },
   { href: '#onde-estamos', label: 'Área de entrega' },
 ] as const
+
+function CartIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5 fill-none stroke-current stroke-[1.8]">
+      <path d="M3 4h2l2.4 11.2a1.6 1.6 0 0 0 1.6 1.3h8.2a1.6 1.6 0 0 0 1.6-1.2L21 8H6" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="10" cy="20" r="1.4" />
+      <circle cx="17" cy="20" r="1.4" />
+    </svg>
+  )
+}
+
+function SystemIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5 fill-none stroke-current stroke-[1.8]">
+      <rect x="3" y="4" width="18" height="14" rx="2.5" />
+      <path d="M8 21h8M12 18v3M7 9h6M7 13h4" strokeLinecap="round" />
+    </svg>
+  )
+}
 
 interface HeaderProps {
   readonly onOpenCart: () => void
@@ -55,19 +73,28 @@ export function Header({ onOpenCart }: HeaderProps) {
         </nav>
 
         <div className="flex items-center gap-2">
-          {count > 0 && (
-            <button
-              type="button"
-              onClick={onOpenCart}
-              className="inline-flex items-center gap-2 rounded-full border border-white/25 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-            >
-              Pedido
-              <span className="grid size-5 place-items-center rounded-full bg-white text-xs font-extrabold text-acai-900">
+          <a
+            href="/sistema"
+            title="Sistema da loja"
+            aria-label="Abrir o sistema da loja"
+            className="grid size-10 place-items-center rounded-full border border-white/25 text-white transition-colors hover:bg-white/10"
+          >
+            <SystemIcon />
+          </a>
+
+          <button
+            type="button"
+            onClick={onOpenCart}
+            aria-label={count > 0 ? `Ver pedido com ${count} ${count === 1 ? 'item' : 'itens'}` : 'Ver pedido'}
+            className="relative grid size-10 place-items-center rounded-full border border-white/25 text-white transition-colors hover:bg-white/10"
+          >
+            <CartIcon />
+            {count > 0 && (
+              <span className="absolute -right-1 -top-1 grid size-5 place-items-center rounded-full bg-white text-[11px] font-extrabold text-acai-900">
                 {count}
               </span>
-            </button>
-          )}
-          <OrderButton variant="light" className="hidden sm:inline-flex" />
+            )}
+          </button>
           <button
             type="button"
             onClick={() => setIsOpen((value) => !value)}
@@ -102,7 +129,13 @@ export function Header({ onOpenCart }: HeaderProps) {
               </li>
             ))}
             <li className="py-3">
-              <OrderButton variant="light" className="w-full" />
+              <a
+                href="/sistema"
+                className="flex items-center justify-center gap-2 rounded-full border border-white/25 px-5 py-3 text-sm font-bold text-white"
+              >
+                <SystemIcon />
+                Sistema da loja
+              </a>
             </li>
             <li className="pb-3 text-xs text-acai-200">{locationLabel()}</li>
           </ul>

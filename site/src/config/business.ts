@@ -22,8 +22,6 @@ export interface BusinessConfig {
   /** Telefone só com dígitos, com DDI. Ex: 5511999999999 */
   readonly whatsappNumber: string
   readonly whatsappMessage: string
-  /** Mensagem usada nos CTAs antes da inauguração. */
-  readonly preLaunchMessage: string
   readonly instagramHandle: string
   readonly address: {
     readonly street: string
@@ -44,8 +42,6 @@ export interface BusinessConfig {
     readonly srcSmall: string
     readonly alt: string
   }
-  /** Data de inauguração no formato AAAA-MM-DD. Antes dela o site fica em modo pré-lançamento. */
-  readonly launchDate: string
   /** true enquanto a operação for só entrega, sem atendimento no balcão. */
   readonly deliveryOnly: boolean
   readonly delivery: {
@@ -65,7 +61,6 @@ export const business: BusinessConfig = {
   siteUrl: 'https://acaiteriamr.com.br',
   whatsappNumber: '5500000000000',
   whatsappMessage: 'Oi! Quero fazer um pedido na Açaiteria MR.',
-  preLaunchMessage: 'Oi! Quero ser avisado quando a Açaiteria MR abrir, dia 05/09.',
   instagramHandle: 'mracai9',
   address: {
     street: '',
@@ -84,7 +79,6 @@ export const business: BusinessConfig = {
     srcSmall: '/imagem/banner-960.webp',
     alt: 'Copos e potes de açaí da Açaiteria MR em vários tamanhos',
   },
-  launchDate: '2026-09-05',
   deliveryOnly: true,
   delivery: {
     ifoodUrl: '',

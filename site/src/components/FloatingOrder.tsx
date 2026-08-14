@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useCart } from '../cart/CartContext'
-import { orderLabel, orderUrl } from '../lib/order'
+import { formatPrice } from '../lib/order'
 
 interface FloatingOrderProps {
   readonly onOpenCart: () => void
@@ -34,18 +34,16 @@ export function FloatingOrder({ onOpenCart }: FloatingOrderProps) {
           aria-hidden={!visible}
           className="flex w-full items-center justify-center gap-2 rounded-full bg-acai-800 px-6 py-3.5 text-sm font-bold text-white"
         >
-          Ver pedido ({count}) • {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          Ver pedido ({count}) • {formatPrice(total)}
         </button>
       ) : (
         <a
-          href={orderUrl()}
-          target="_blank"
-          rel="noopener noreferrer"
+          href="#monte-seu-acai"
           tabIndex={visible ? 0 : -1}
           aria-hidden={!visible}
           className="flex w-full items-center justify-center rounded-full bg-acai-800 px-6 py-3.5 text-sm font-bold text-white"
         >
-          {orderLabel()}
+          Montar meu pedido
         </a>
       )}
     </div>

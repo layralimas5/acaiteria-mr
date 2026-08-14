@@ -1,5 +1,5 @@
 import { business } from '../config/business'
-import { formatPrice, hasIfood, isPreLaunch, launchLabel, whatsappUrl } from '../lib/order'
+import { formatPrice, hasIfood, whatsappUrl } from '../lib/order'
 
 const steps = [
   { title: 'Escolha o tamanho', text: 'Copo, pote ou barca. Do individual ao litro pra dividir.' },
@@ -9,7 +9,6 @@ const steps = [
 
 export function Delivery() {
   const { freeShippingFrom, averageMinutes } = business.delivery
-  const preLaunch = isPreLaunch()
 
   return (
     <section id="entrega" className="scroll-mt-24 bg-white py-20 sm:py-24">
@@ -21,14 +20,12 @@ export function Delivery() {
                 {business.deliveryOnly ? 'Só delivery' : 'Entrega'}
               </span>
               <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
-                {preLaunch ? `A partir de ${launchLabel()}, direto na sua casa` : `Pediu, chegou em ${averageMinutes} minutos`}
+                Pediu, chegou em {averageMinutes} minutos
               </h2>
               <p className="mt-4 max-w-md text-base leading-relaxed text-acai-100">
-                {preLaunch
-                  ? `A Açaiteria MR abre dia ${launchLabel()} e vai operar só por delivery, sem loja de balcão. Entra na lista pelo WhatsApp que a gente te avisa assim que os pedidos abrirem.`
-                  : hasIfood()
-                    ? 'Peça pelo iFood e acompanhe a entrega em tempo real pelo app. Prefere falar com a gente? O WhatsApp também tá aberto.'
-                    : 'O pedido sai pelo WhatsApp: você escolhe, a gente confirma e sai pra entrega.'}
+                {hasIfood()
+                  ? 'Peça pelo iFood e acompanhe a entrega em tempo real pelo app. Prefere falar com a gente? O WhatsApp também tá aberto.'
+                  : 'Monte seu pedido aqui no site: você escolhe, a gente confirma pelo WhatsApp e sai pra entrega.'}
               </p>
 
               {freeShippingFrom !== null && (
@@ -38,7 +35,7 @@ export function Delivery() {
               )}
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                {hasIfood() && !preLaunch && (
+                {hasIfood() && (
                   <a
                     href={business.delivery.ifoodUrl}
                     target="_blank"
@@ -49,12 +46,12 @@ export function Delivery() {
                   </a>
                 )}
                 <a
-                  href={whatsappUrl(preLaunch ? business.preLaunchMessage : business.whatsappMessage)}
+                  href={whatsappUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center rounded-full border border-white/30 px-6 py-3 text-sm font-bold text-white transition-colors hover:animate-pulse-soft hover:bg-white/10"
                 >
-                  {preLaunch ? 'Entrar na lista' : 'Pedir no WhatsApp'}
+                  Falar no WhatsApp
                 </a>
               </div>
             </div>
