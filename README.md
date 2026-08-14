@@ -50,9 +50,9 @@ e o botão de WhatsApp continua disponível na seção de entrega.
 
 - [ ] Dados reais em `business.ts` (telefone, endereço, horário, Instagram)
 - [ ] Preços e cardápio confirmados com o cliente
-- [ ] Fotos reais dos produtos (hoje é ilustração SVG em `AcaiCup.tsx`)
-- [ ] Logo oficial no lugar do selo "MR"
-- [ ] Imagem `public/og.png` (1200x630) pro compartilhamento
+- [ ] Fotos dos demais produtos (só o pote 300ml tem foto; o resto usa a ilustração `AcaiCup.tsx`)
+- [x] Logo oficial aplicada no menu, rodapé e favicon
+- [x] Imagem de compartilhamento (`public/imagem/og.jpg`)
 - [ ] Domínio + deploy (Netlify ou Vercel, build `npm run build`, pasta `dist`)
 - [ ] Loja aberta no iFood e link colado em `business.ts` — ver `docs/ifood.md`
 
