@@ -5,6 +5,8 @@ import { AcaiCup } from './AcaiCup'
 interface ProductVisualProps {
   readonly product: Product
   readonly className?: string
+  /** Faz o produto subir e descer de leve. Usado só no banner. */
+  readonly float?: boolean
   readonly priority?: boolean
   /** Força a ilustração vetorial mesmo quando existe foto (fundos claros). */
   readonly illustrationOnly?: boolean
@@ -25,6 +27,7 @@ const fadeEdges: CSSProperties = {
 export function ProductVisual({
   product,
   className = '',
+  float = false,
   priority = false,
   illustrationOnly = false,
 }: ProductVisualProps) {
@@ -42,7 +45,7 @@ export function ProductVisual({
       decoding="async"
       fetchPriority={priority ? 'high' : 'auto'}
       style={fadeEdges}
-      className={`select-none object-contain ${className}`}
+      className={`select-none object-contain ${float ? 'animate-float' : ''} ${className}`}
     />
   )
 }

@@ -22,6 +22,19 @@
 
   --animate-marquee: marquee 26s linear infinite;
   --animate-pulse-soft: pulse-soft 1.6s ease-in-out infinite;
+  /* Leve flutuação do produto no banner: sobe e desce. */
+  --animate-float: float 4.5s ease-in-out infinite;
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translate3d(0, -0.6rem, 0);
+    }
+    50% {
+      transform: translate3d(0, 0.6rem, 0);
+    }
+  }
+
 
   @keyframes pulse-soft {
     0%,

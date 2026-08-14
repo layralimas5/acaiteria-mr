@@ -5,7 +5,7 @@ import { products } from '../data/products'
 import type { Product } from '../data/products'
 import { daysToLaunch, formatPrice, hasIfood, isPreLaunch, launchLabel, openStatus } from '../lib/order'
 import { OrderButton } from './OrderButton'
-import { ProductStage } from './ProductStage'
+import { ProductVisual } from './ProductVisual'
 
 const featuredIds = ['copo-300', 'copo-500', 'copo-700', 'barca-1l'] as const
 
@@ -156,9 +156,11 @@ export function Hero() {
                         {active.highlight}
                       </span>
                     )}
-                    <ProductStage
+                    <ProductVisual
                       product={active}
-                      className="h-[clamp(16rem,44vw,28rem)] w-full min-w-0"
+                      float
+                      priority
+                      className="h-[clamp(15rem,42vw,26rem)] w-auto max-w-full drop-shadow-2xl"
                     />
                   </motion.div>
                 </AnimatePresence>
