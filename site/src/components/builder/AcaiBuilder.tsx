@@ -11,7 +11,9 @@ import { BaseSelector } from './BaseSelector'
 import { FreeToppingsMeter } from './FreeToppingsMeter'
 import { OrderSummary } from './OrderSummary'
 import { SizeSelector } from './SizeSelector'
-import { StepSection } from './StepSection'
+import { StepPanel } from './StepPanel'
+import { StepTabs } from './StepTabs'
+import type { StepInfo } from './StepTabs'
 import { ToppingCategory } from './ToppingCategory'
 
 interface AcaiBuilderProps {
@@ -20,12 +22,16 @@ interface AcaiBuilderProps {
   readonly onVisibilityChange: (visible: boolean) => void
 }
 
+const LAST_STEP = 4
+
 export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps) {
   const { addBuild, count } = useCart()
   const [selection, setSelection] = useState<BuildSelection>(emptySelection)
+  const [step, setStep] = useState(1)
   const [added, setAdded] = useState(false)
   const [inView, setInView] = useState(false)
   const sectionRef = useRef<HTMLElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const section = sectionRef.current
@@ -53,6 +59,18 @@ export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps
   const selectedIds = useMemo(() => selection.toppings.map((topping) => topping.id), [selection.toppings])
   const freeRemaining = Math.max(0, pricing.freeLimit - selection.toppings.length)
 
+  const goToStep = useCallback((next: number) => {
+    setStep(next)
+    // Ao trocar de etapa, sobe o painel deixando a trilha de etapas à vista
+    // logo abaixo do menu fixo.
+    window.requestAnimationFrame(() => {
+      const panel = panelRef.current
+      if (!panel) return
+      const top = panel.getBoundingClientRect().top + window.scrollY - 200
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+    })
+  }, [])
+
   const selectSize = useCallback((size: CupSize) => {
     setSelection((current) => ({ ...current, size }))
   }, [])
@@ -70,16 +88,32 @@ export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps
     if (!item) return
 
     setSelection(emptySelection)
+    setStep(1)
     setAdded(true)
     window.setTimeout(() => setAdded(false), 2600)
   }, [addBuild, selection])
 
-  const reset = useCallback(() => setSelection(emptySelection), [])
+  const reset = useCallback(() => {
+    setSelection(emptySelection)
+    setStep(1)
+  }, [])
 
   const sizeDone = Boolean(selection.size)
   const baseDone = Boolean(selection.base)
   const toppingsDone = selection.toppings.length > 0
-  const doneCount = [sizeDone, baseDone, toppingsDone].filter(Boolean).length
+  const canFinish = sizeDone && baseDone
+
+  const steps: readonly StepInfo[] = [
+    { id: 1, label: 'Tamanho', done: sizeDone, hint: selection.size?.volume ?? 'obrigatório' },
+    { id: 2, label: 'Base', done: baseDone, hint: selection.base?.name ?? 'obrigatório' },
+    {
+      id: 3,
+      label: 'Complementos',
+      done: toppingsDone,
+      hint: toppingsDone ? `${selection.toppings.length} escolhidos` : 'opcional',
+    },
+    { id: 4, label: 'Finalizar', done: false, hint: formatPrice(pricing.totalPrice) },
+  ]
 
   return (
     <section
@@ -88,138 +122,209 @@ export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps
       className="scroll-mt-24 bg-gradient-to-b from-acai-50 to-white py-20 sm:py-24"
     >
       <div className="mx-auto max-w-6xl px-5">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-          <div className="max-w-xl">
-            <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-700">Monte seu açaí</span>
-            <h2 className="mt-2 text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
-              Do seu jeito, do tamanho que você quiser
-            </h2>
-            <p className="mt-3 text-base text-muted">
-              Escolha o copo, a base e os complementos. O preço aparece na hora, sem surpresa no fim.
-            </p>
-          </div>
-
-          <div className="shrink-0 sm:text-right">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-acai-700">
-              {doneCount} de 3 escolhas
-            </p>
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-acai-100 sm:w-44">
-              <motion.div
-                className="h-full rounded-full bg-acai-800"
-                initial={false}
-                animate={{ width: `${(doneCount / 3) * 100}%` }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-              />
-            </div>
-          </div>
+        <div className="max-w-xl">
+          <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-700">Monte seu açaí</span>
+          <h2 className="mt-2 text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
+            Do seu jeito, do tamanho que você quiser
+          </h2>
+          <p className="mt-3 text-base text-muted">
+            Uma etapa por vez. Pode pular para qualquer uma tocando no nome aqui em cima.
+          </p>
         </div>
 
-        <div className="mt-10 grid gap-8 lg:grid-cols-[1.6fr_1fr] lg:items-start">
-          <div className="rounded-card border border-acai-100 bg-white p-5 pb-40 shadow-sm sm:p-8 lg:pb-8">
-            <StepSection
-              step={1}
-              title="Escolha seu tamanho"
-              subtitle={
-                sizeDone
-                  ? `${selection.size?.volume} · ${pricing.freeLimit} complementos grátis`
-                  : 'Cada tamanho já vem com uma cota de complementos grátis.'
-              }
-              done={sizeDone}
+        <div className="mt-8 grid gap-8 lg:grid-cols-[1.6fr_1fr] lg:items-start">
+          <div className="min-w-0">
+            <StepTabs steps={steps} active={step} onSelect={goToStep} />
+
+            <div
+              ref={panelRef}
+              className="mt-4 rounded-card border border-acai-100 bg-white p-5 pb-32 shadow-sm sm:p-8 lg:pb-8"
             >
-              <SizeSelector sizes={cupSizes} selected={selection.size} onSelect={selectSize} />
-            </StepSection>
-
-            <StepSection
-              step={2}
-              title="Escolha sua base"
-              subtitle={baseDone ? (selection.base?.name ?? '') : 'Uma base por copo.'}
-              done={baseDone}
-              locked={!sizeDone}
-            >
-              <BaseSelector bases={acaiBases} selected={selection.base} onSelect={selectBase} />
-            </StepSection>
-
-            <StepSection
-              step={3}
-              title="Escolha seus complementos"
-              subtitle={
-                sizeDone
-                  ? 'Os primeiros entram na cota grátis. Depois disso, cada um soma no total.'
-                  : 'Disponível depois que você escolher o tamanho.'
-              }
-              done={toppingsDone}
-              locked={!sizeDone}
-            >
-              {sizeDone ? (
-                <div className="mb-6 rounded-2xl border border-acai-100 bg-acai-50/60 px-4 py-3">
-                  <FreeToppingsMeter limit={pricing.freeLimit} chosen={selection.toppings.length} />
-                </div>
-              ) : (
-                <p className="mb-6 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
-                  Escolha o tamanho primeiro para saber quantos complementos entram de graça.
-                </p>
-              )}
-
-              <div className="space-y-8">
-                {toppingCategories.map((category) => (
-                  <ToppingCategory
-                    key={category.id}
-                    category={category}
-                    toppings={toppingsByCategory(category.id)}
-                    selectedIds={selectedIds}
-                    freeIds={freeIds}
-                    freeRemaining={freeRemaining}
-                    disabled={!sizeDone}
-                    onToggle={handleToggleTopping}
-                  />
-                ))}
-              </div>
-            </StepSection>
-
-            <StepSection
-              step={4}
-              title="Finalize seu açaí"
-              subtitle="Confira o resumo e mande pra cozinha."
-              done={false}
-              locked={!sizeDone || !baseDone}
-            >
-              <div className="rounded-card bg-acai-900 p-5 text-white">
-                <div className="flex items-end justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-acai-200">Total</p>
-                    <p className="mt-1 text-3xl font-extrabold tracking-tight">
-                      {formatPrice(pricing.totalPrice)}
-                    </p>
-                  </div>
-                  <p className="pb-1.5 text-right text-xs text-acai-100/75">
-                    {selection.size?.volume ?? 'tamanho'} ·{' '}
-                    {selection.toppings.length > 0
-                      ? `${selection.toppings.length} complementos`
-                      : 'sem complementos'}
-                  </p>
-                </div>
-
-                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-                  <button
-                    type="button"
-                    onClick={handleAdd}
-                    disabled={!sizeDone || !baseDone}
-                    className="flex-1 rounded-full bg-white px-6 py-3.5 text-sm font-bold text-acai-900 transition-colors hover:animate-pulse-soft hover:bg-acai-50 disabled:cursor-not-allowed disabled:bg-white/20 disabled:text-white/50"
+              <AnimatePresence mode="wait" initial={false}>
+                {step === 1 && (
+                  <StepPanel
+                    key="size"
+                    title="Escolha seu tamanho"
+                    subtitle={
+                      sizeDone
+                        ? `${selection.size?.volume} · ${pricing.freeLimit} complementos grátis`
+                        : 'Cada tamanho já vem com uma cota de complementos grátis.'
+                    }
+                    done={sizeDone}
+                    footer={
+                      <StepFooter
+                        onNext={() => goToStep(2)}
+                        nextLabel="Escolher a base"
+                        nextDisabled={!sizeDone}
+                        disabledHint="Escolha um tamanho para continuar"
+                      />
+                    }
                   >
-                    Adicionar ao carrinho
-                  </button>
+                    <SizeSelector sizes={cupSizes} selected={selection.size} onSelect={selectSize} />
+                  </StepPanel>
+                )}
 
-                  {count > 0 && (
-                    <button
-                      type="button"
-                      onClick={onOpenCart}
-                      className="rounded-full border border-white/25 px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/10"
-                    >
-                      Ver pedido ({count})
-                    </button>
-                  )}
-                </div>
-              </div>
+                {step === 2 && (
+                  <StepPanel
+                    key="base"
+                    title="Escolha sua base"
+                    subtitle={baseDone ? (selection.base?.name ?? '') : 'Uma base por copo.'}
+                    done={baseDone}
+                    footer={
+                      <StepFooter
+                        onBack={() => goToStep(1)}
+                        onNext={() => goToStep(3)}
+                        nextLabel="Escolher complementos"
+                        nextDisabled={!baseDone}
+                        disabledHint="Escolha uma base para continuar"
+                      />
+                    }
+                  >
+                    <BaseSelector bases={acaiBases} selected={selection.base} onSelect={selectBase} />
+                  </StepPanel>
+                )}
+
+                {step === 3 && (
+                  <StepPanel
+                    key="toppings"
+                    title="Escolha seus complementos"
+                    subtitle={
+                      sizeDone
+                        ? 'Os primeiros entram na cota grátis. Depois disso, cada um soma no total.'
+                        : 'Escolha o tamanho antes para saber quantos entram de graça.'
+                    }
+                    done={toppingsDone}
+                    footer={
+                      <StepFooter
+                        onBack={() => goToStep(2)}
+                        onNext={() => goToStep(4)}
+                        nextLabel={toppingsDone ? 'Ir para o resumo' : 'Pular complementos'}
+                      />
+                    }
+                  >
+                    {sizeDone ? (
+                      <div className="mb-6 rounded-2xl border border-acai-100 bg-acai-50/60 px-4 py-3">
+                        <FreeToppingsMeter limit={pricing.freeLimit} chosen={selection.toppings.length} />
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => goToStep(1)}
+                        className="mb-6 block w-full rounded-2xl bg-amber-50 px-4 py-3 text-left text-sm font-semibold text-amber-800"
+                      >
+                        Escolha o tamanho primeiro para liberar os complementos. Tocar aqui volta para a etapa 1.
+                      </button>
+                    )}
+
+                    <div className="space-y-8">
+                      {toppingCategories.map((category) => (
+                        <ToppingCategory
+                          key={category.id}
+                          category={category}
+                          toppings={toppingsByCategory(category.id)}
+                          selectedIds={selectedIds}
+                          freeIds={freeIds}
+                          freeRemaining={freeRemaining}
+                          disabled={!sizeDone}
+                          onToggle={handleToggleTopping}
+                        />
+                      ))}
+                    </div>
+                  </StepPanel>
+                )}
+
+                {step === 4 && (
+                  <StepPanel
+                    key="finish"
+                    title="Finalize seu açaí"
+                    subtitle={
+                      canFinish
+                        ? 'Confira a montagem e mande pra cozinha.'
+                        : 'Falta escolher o que está marcado abaixo.'
+                    }
+                    done={false}
+                  >
+                    <div className="space-y-3">
+                      <ReviewRow
+                        label="Tamanho"
+                        value={selection.size?.volume ?? null}
+                        onEdit={() => goToStep(1)}
+                      />
+                      <ReviewRow
+                        label="Base"
+                        value={selection.base?.name ?? null}
+                        onEdit={() => goToStep(2)}
+                      />
+                      <ReviewRow
+                        label="Complementos"
+                        value={
+                          selection.toppings.length > 0
+                            ? selection.toppings.map((topping) => topping.name).join(', ')
+                            : 'nenhum'
+                        }
+                        optional
+                        onEdit={() => goToStep(3)}
+                      />
+                    </div>
+
+                    <div className="mt-6 rounded-card bg-acai-900 p-5 text-white">
+                      <div className="flex items-end justify-between gap-4">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-acai-200">
+                            Total
+                          </p>
+                          <p className="mt-1 text-3xl font-extrabold tracking-tight">
+                            {formatPrice(pricing.totalPrice)}
+                          </p>
+                        </div>
+                        <p className="pb-1.5 text-right text-xs text-acai-100/75">
+                          {formatPrice(pricing.basePrice)} base
+                          {pricing.additionalPrice > 0 &&
+                            ` + ${formatPrice(pricing.additionalPrice)} adicionais`}
+                        </p>
+                      </div>
+
+                      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                        <button
+                          type="button"
+                          onClick={handleAdd}
+                          disabled={!canFinish}
+                          className="flex-1 rounded-full bg-white px-6 py-3.5 text-sm font-bold text-acai-900 transition-colors hover:animate-pulse-soft hover:bg-acai-50 disabled:cursor-not-allowed disabled:bg-white/20 disabled:text-white/50"
+                        >
+                          Adicionar ao carrinho
+                        </button>
+
+                        {count > 0 && (
+                          <button
+                            type="button"
+                            onClick={onOpenCart}
+                            className="rounded-full border border-white/25 px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/10"
+                          >
+                            Ver pedido ({count})
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between gap-4">
+                      <button
+                        type="button"
+                        onClick={() => goToStep(3)}
+                        className="text-sm font-semibold text-muted transition-colors hover:text-acai-800"
+                      >
+                        Voltar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={reset}
+                        className="text-xs font-semibold text-muted transition-colors hover:text-acai-800"
+                      >
+                        Começar de novo
+                      </button>
+                    </div>
+                  </StepPanel>
+                )}
+              </AnimatePresence>
 
               <AnimatePresence>
                 {added && (
@@ -229,13 +334,13 @@ export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="mt-3 rounded-xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-800"
+                    className="mt-5 rounded-xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-800"
                   >
                     Açaí adicionado ao pedido. Quer montar outro?
                   </motion.p>
                 )}
               </AnimatePresence>
-            </StepSection>
+            </div>
           </div>
 
           <div className="hidden lg:block">
@@ -249,10 +354,86 @@ export function AcaiBuilder({ onOpenCart, onVisibilityChange }: AcaiBuilderProps
           selection={selection}
           pricing={pricing}
           cartCount={count}
-          onAdd={handleAdd}
+          onAdd={step === LAST_STEP ? handleAdd : () => goToStep(LAST_STEP)}
+          addLabel={step === LAST_STEP ? 'Adicionar' : 'Finalizar'}
           onOpenCart={onOpenCart}
         />
       )}
     </section>
+  )
+}
+
+interface StepFooterProps {
+  readonly onBack?: () => void
+  readonly onNext: () => void
+  readonly nextLabel: string
+  readonly nextDisabled?: boolean
+  readonly disabledHint?: string
+}
+
+function StepFooter({ onBack, onNext, nextLabel, nextDisabled = false, disabledHint }: StepFooterProps) {
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-3">
+        {onBack ? (
+          <button
+            type="button"
+            onClick={onBack}
+            className="rounded-full border border-acai-200 px-5 py-3 text-sm font-bold text-acai-800 transition-colors hover:bg-acai-50"
+          >
+            Voltar
+          </button>
+        ) : (
+          <span />
+        )}
+
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={nextDisabled}
+          className="rounded-full bg-acai-800 px-6 py-3 text-sm font-bold text-white transition-colors hover:animate-pulse-soft hover:bg-acai-900 disabled:cursor-not-allowed disabled:bg-acai-100 disabled:text-acai-300"
+        >
+          {nextLabel}
+        </button>
+      </div>
+
+      {nextDisabled && disabledHint && (
+        <p className="text-right text-xs font-semibold text-muted">{disabledHint}</p>
+      )}
+    </div>
+  )
+}
+
+interface ReviewRowProps {
+  readonly label: string
+  readonly value: string | null
+  readonly optional?: boolean
+  readonly onEdit: () => void
+}
+
+function ReviewRow({ label, value, optional = false, onEdit }: ReviewRowProps) {
+  const missing = value === null
+
+  return (
+    <div
+      className={`flex items-start justify-between gap-4 rounded-2xl border px-4 py-3 ${
+        missing ? 'border-amber-200 bg-amber-50' : 'border-acai-100 bg-white'
+      }`}
+    >
+      <div className="min-w-0">
+        <p className="text-xs font-bold uppercase tracking-[0.14em] text-acai-700">{label}</p>
+        <p className={`mt-0.5 text-sm font-semibold ${missing ? 'text-amber-800' : 'text-ink'}`}>
+          {value ?? (optional ? 'nenhum' : 'falta escolher')}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        onClick={onEdit}
+        className="shrink-0 text-xs font-bold text-acai-800 underline-offset-4 hover:underline"
+      >
+        {missing ? 'Escolher' : 'Trocar'}
+      </button>
+    </div>
   )
 }

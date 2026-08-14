@@ -10,6 +10,8 @@ interface MobileOrderBarProps {
   readonly pricing: BuildPricing
   readonly cartCount: number
   readonly onAdd: () => void
+  /** Muda conforme a etapa: leva ao resumo ou fecha o pedido. */
+  readonly addLabel?: string
   readonly onOpenCart: () => void
 }
 
@@ -17,7 +19,14 @@ interface MobileOrderBarProps {
  * Barra fixa do celular. Fechada mostra preço e ação; ao tocar no resumo ela
  * sobe e revela a montagem inteira, sem sair da página.
  */
-export function MobileOrderBar({ selection, pricing, cartCount, onAdd, onOpenCart }: MobileOrderBarProps) {
+export function MobileOrderBar({
+  selection,
+  pricing,
+  cartCount,
+  onAdd,
+  addLabel = 'Adicionar',
+  onOpenCart,
+}: MobileOrderBarProps) {
   const [expanded, setExpanded] = useState(false)
   const missing = missingSteps(selection)
   const blocked = missing.length > 0
@@ -156,7 +165,7 @@ export function MobileOrderBar({ selection, pricing, cartCount, onAdd, onOpenCar
             whileTap={blocked ? undefined : { scale: 0.96 }}
             className="shrink-0 rounded-full bg-acai-800 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-acai-900/20 disabled:bg-acai-100 disabled:text-acai-300 disabled:shadow-none"
           >
-            Adicionar
+            {addLabel}
           </motion.button>
         </div>
       </div>
