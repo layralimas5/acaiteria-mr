@@ -48,8 +48,25 @@ e o botão de WhatsApp continua disponível na seção de entrega.
 - [ ] Fotos dos demais produtos (só o pote 300ml tem foto; o resto usa a ilustração `AcaiCup.tsx`)
 - [x] Logo oficial aplicada no menu, rodapé e favicon
 - [x] Imagem de compartilhamento (`public/imagem/og.jpg`)
-- [ ] Domínio + deploy (Netlify ou Vercel, build `npm run build`, pasta `dist`)
+- [x] Deploy configurado no `netlify.toml` — ver seção abaixo
+- [ ] Domínio apontado
 - [ ] Loja aberta no iFood e link colado em `business.ts` — ver `docs/ifood.md`
+
+## Deploy
+
+O `netlify.toml` na raiz já traz tudo: é só conectar o repositório no Netlify e
+publicar, sem configurar nada na interface.
+
+O site fica em `site/`, não na raiz, então o arquivo define `base = "site"` e
+`publish = "site/dist"` (caminhos relativos à raiz do repositório). O Node está
+fixado na 22 porque o Vite 7 exige 20.19+ ou 22.12+.
+
+O roteamento fica em `site/public/_redirects`: `/sistema` é resolvido no
+navegador, então toda rota cai no `index.html`. Deixei fora do `netlify.toml`
+de propósito, para a regra não existir em dois lugares.
+
+Os assets levam hash no nome e recebem cache permanente; o HTML revalida
+sempre, que é o que faz uma publicação nova aparecer na hora para o cliente.
 
 ## Imagens
 
