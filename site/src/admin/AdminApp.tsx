@@ -4,48 +4,61 @@ import { formatPrice } from '../lib/order'
 import { notifyUrl } from '../orders/messages'
 import { listOrders, removeOrder, subscribeToOrders, updateOrderStatus } from '../orders/store'
 import type { Order, OrderStatus } from '../orders/types'
-import { statusLabels } from '../orders/types'
 import { Logo } from '../components/Logo'
-import { OrderCard } from './OrderCard'
+import type { InventoryItem } from '../inventory/store'
+import { listItems, needsRestock, subscribeToInventory } from '../inventory/store'
+import { useCustomItems, useSoldOut } from '../stock/useCatalog'
+import { AccountView } from './AccountView'
+import { Dashboard } from './Dashboard'
+import { DeliveriesView } from './DeliveriesView'
+import { FinanceView } from './FinanceView'
+import { InventoryView } from './InventoryView'
+import { OrdersView } from './OrdersView'
+import { SettingsView } from './SettingsView'
+import { SiteView } from './SiteView'
+import { UserMenu } from './UserMenu'
 
 /**
  * Painel da loja: acompanha os pedidos que entram pelo site e dá baixa.
  *
- * A senha é uma trava simples de balcão, não segurança de verdade — ela vive
- * no navegador. Quando os pedidos passarem para o Supabase, a autenticação
- * passa a ser feita lá (ver docs/sistema.md).
+ * O painel está aberto, sem login. A autenticação de verdade entra quando os
+ * pedidos passarem para o Supabase (ver docs/sistema.md).
  */
 
-const PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD ?? 'mr2026'
-const SESSION_KEY = 'acaiteria-mr:admin'
 const NOTIFY_KEY = 'acaiteria-mr:admin-notify'
 
-type Filter = OrderStatus | 'ativos'
-
-const filters: readonly { readonly id: Filter; readonly label: string }[] = [
-  { id: 'ativos', label: 'Em aberto' },
-  { id: 'novo', label: 'Novos' },
-  { id: 'preparando', label: 'Preparando' },
-  { id: 'entrega', label: 'Em entrega' },
-  { id: 'concluido', label: 'Concluídos' },
-  { id: 'cancelado', label: 'Cancelados' },
-]
+type Section =
+  | 'dashboard'
+  | 'pedidos'
+  | 'entregas'
+  | 'estoque'
+  | 'site'
+  | 'financeiro'
+  | 'conta'
+  | 'config'
 
 export default function AdminApp() {
-  const [authorized, setAuthorized] = useState(() => window.sessionStorage.getItem(SESSION_KEY) === 'ok')
   const [orders, setOrders] = useState<readonly Order[]>([])
-  const [filter, setFilter] = useState<Filter>('ativos')
+  const [section, setSection] = useState<Section>('dashboard')
   const [autoNotify, setAutoNotify] = useState(
     () => window.localStorage.getItem(NOTIFY_KEY) !== 'off',
   )
 
+  const soldOut = useSoldOut()
+  const customItems = useCustomItems()
+  const [supplies, setSupplies] = useState<readonly InventoryItem[]>([])
   const refresh = useCallback(() => setOrders(listOrders()), [])
 
   useEffect(() => {
-    if (!authorized) return
     refresh()
     return subscribeToOrders(refresh)
-  }, [authorized, refresh])
+  }, [refresh])
+
+  useEffect(() => {
+    const sync = () => setSupplies(listItems())
+    sync()
+    return subscribeToInventory(sync)
+  }, [])
 
   useEffect(() => {
     window.localStorage.setItem(NOTIFY_KEY, autoNotify ? 'on' : 'off')
@@ -62,24 +75,15 @@ export default function AdminApp() {
     [autoNotify],
   )
 
-  const counts = useMemo(() => {
-    const byStatus = (status: OrderStatus) => orders.filter((order) => order.status === status).length
-    return {
-      ativos: orders.filter((order) => order.status !== 'concluido' && order.status !== 'cancelado').length,
-      novo: byStatus('novo'),
-      preparando: byStatus('preparando'),
-      entrega: byStatus('entrega'),
-      concluido: byStatus('concluido'),
-      cancelado: byStatus('cancelado'),
-    } satisfies Record<Filter, number>
-  }, [orders])
-
-  const visible = useMemo(() => {
-    if (filter === 'ativos') {
-      return orders.filter((order) => order.status !== 'concluido' && order.status !== 'cancelado')
-    }
-    return orders.filter((order) => order.status === filter)
-  }, [orders, filter])
+  /** Só o que a navegação precisa mostrar como contador. */
+  const counts = useMemo(
+    () => ({
+      ativos: orders.filter((order) => order.status !== 'concluido' && order.status !== 'cancelado')
+        .length,
+      entrega: orders.filter((order) => order.status === 'entrega').length,
+    }),
+    [orders],
+  )
 
   const today = useMemo(() => {
     const start = new Date()
@@ -93,230 +97,223 @@ export default function AdminApp() {
     }
   }, [orders])
 
-  if (!authorized) {
-    return <Login onAuthorized={() => setAuthorized(true)} />
-  }
+  const nav = useMemo(
+    () => [
+      { id: 'dashboard' as const, label: 'Dashboard', icon: <ChartIcon />, badge: 0 },
+      { id: 'pedidos' as const, label: 'Pedidos', icon: <ReceiptIcon />, badge: counts.ativos },
+      { id: 'entregas' as const, label: 'Entregas', icon: <ScooterIcon />, badge: counts.entrega },
+      {
+        id: 'estoque' as const,
+        label: 'Estoque',
+        icon: <BoxIcon />,
+        // Insumos no mínimo ou zerados: é o que precisa de compra.
+        badge: supplies.filter(needsRestock).length,
+      },
+      {
+        id: 'site' as const,
+        label: 'Site',
+        icon: <GlobeIcon />,
+        // Tudo que está fora do ar agora: esgotado ou item criado e escondido.
+        badge: Object.keys(soldOut).length + customItems.filter((item) => !item.visible).length,
+      },
+      { id: 'financeiro' as const, label: 'Financeiro', icon: <MoneyIcon />, badge: 0 },
+    ],
+    [counts, soldOut, customItems, supplies],
+  )
 
-  const sidebar = (
-    <>
-      <div className="flex items-center gap-3">
-        <Logo className="size-12 shrink-0" />
-        <div className="min-w-0">
-          <p className="truncate text-sm font-extrabold text-white">{business.name}</p>
-          <p className="text-xs text-acai-200">Sistema de pedidos</p>
-        </div>
-      </div>
-
-      <nav aria-label="Filtrar pedidos" className="mt-6">
-        <p className="px-3 text-[11px] font-bold uppercase tracking-[0.16em] text-acai-300">Pedidos</p>
-        <ul className="mt-2 space-y-1">
-          {filters.map((item) => {
-            const active = filter === item.id
-            return (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  onClick={() => setFilter(item.id)}
-                  aria-current={active ? 'page' : undefined}
-                  className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
-                    active ? 'bg-white text-acai-900' : 'text-acai-100/80 hover:bg-white/10 hover:text-white'
-                  }`}
-                >
-                  {item.label}
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                      active ? 'bg-acai-100 text-acai-900' : 'bg-white/10 text-acai-100'
-                    }`}
-                  >
-                    {counts[item.id]}
-                  </span>
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      </nav>
-
-      <div className="mt-6 space-y-2">
-        <p className="px-3 text-[11px] font-bold uppercase tracking-[0.16em] text-acai-300">Hoje</p>
-        <div className="rounded-xl bg-white/5 px-3 py-2.5 ring-1 ring-white/10">
-          <p className="text-xs text-acai-200">Pedidos</p>
-          <p className="text-lg font-extrabold text-white">{today.count}</p>
-        </div>
-        <div className="rounded-xl bg-white/5 px-3 py-2.5 ring-1 ring-white/10">
-          <p className="text-xs text-acai-200">Faturamento</p>
-          <p className="text-lg font-extrabold text-white">{formatPrice(today.revenue)}</p>
-        </div>
-      </div>
-
-      <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-xl bg-white/5 px-3 py-3 ring-1 ring-white/10">
-        <input
-          type="checkbox"
-          checked={autoNotify}
-          onChange={(event) => setAutoNotify(event.target.checked)}
-          className="mt-0.5 size-4 shrink-0 accent-white"
-        />
-        <span className="min-w-0">
-          <span className="block text-xs font-bold text-white">Avisar cliente ao mudar status</span>
-          <span className="mt-0.5 block text-[11px] leading-snug text-acai-200">
-            Abre o WhatsApp com a mensagem pronta.
-          </span>
-        </span>
-      </label>
-
-      <div className="mt-auto space-y-2 pt-6">
-        <a
-          href="/"
-          className="block rounded-xl px-3 py-2.5 text-sm font-semibold text-acai-100/80 transition-colors hover:bg-white/10 hover:text-white"
-        >
-          Ver site
-        </a>
-        <button
-          type="button"
-          onClick={() => {
-            window.sessionStorage.removeItem(SESSION_KEY)
-            setAuthorized(false)
-          }}
-          className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-acai-100/80 transition-colors hover:bg-white/10 hover:text-white"
-        >
-          Sair
-        </button>
-      </div>
-    </>
+  const userMenu = (
+    <UserMenu
+      tone="dark"
+      onOpenAccount={() => setSection('conta')}
+      onOpenSettings={() => setSection('config')}
+    />
   )
 
   return (
-    <div className="min-h-screen bg-acai-950 text-white lg:flex">
-      <aside className="hidden w-72 shrink-0 flex-col border-r border-white/10 bg-acai-950 p-5 lg:flex lg:h-screen lg:sticky lg:top-0">
-        {sidebar}
-      </aside>
-
-      {/* No celular a mesma navegação vira topo compacto. */}
-      <header className="border-b border-white/10 px-5 py-4 lg:hidden">
+    <div className="min-h-screen bg-white text-ink lg:flex">
+      <aside className="hidden w-64 shrink-0 flex-col border-r border-white/10 bg-acai-950 p-5 lg:flex lg:h-screen lg:sticky lg:top-0">
         <div className="flex items-center gap-3">
-          <Logo className="size-11 shrink-0" />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-extrabold">{business.name}</p>
-            <p className="text-xs text-acai-200">
-              {today.count} pedidos hoje · {formatPrice(today.revenue)}
-            </p>
+          <Logo className="size-12 shrink-0" />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-extrabold text-white">{business.name}</p>
+            <p className="text-xs text-acai-200">Sistema da loja</p>
           </div>
-          <a href="/" className="rounded-full border border-white/25 px-3 py-1.5 text-xs font-bold">
-            Site
+        </div>
+
+        <nav aria-label="Seções do painel" className="mt-6">
+          <ul className="space-y-1">
+            {nav.map((item) => {
+              const active = section === item.id
+              return (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    onClick={() => setSection(item.id)}
+                    aria-current={active ? 'page' : undefined}
+                    className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
+                      active ? 'bg-white text-acai-900' : 'text-acai-100/80 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    {item.icon}
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {item.badge > 0 && (
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                          active ? 'bg-acai-100 text-acai-900' : 'bg-white/10 text-acai-100'
+                        }`}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </nav>
+
+        <div className="mt-6 space-y-2">
+          <p className="px-3 text-[11px] font-bold uppercase tracking-[0.16em] text-acai-300">Hoje</p>
+          <div className="rounded-xl bg-white/5 px-3 py-2.5 ring-1 ring-white/10">
+            <p className="text-xs text-acai-200">Pedidos</p>
+            <p className="text-lg font-extrabold text-white">{today.count}</p>
+          </div>
+          <div className="rounded-xl bg-white/5 px-3 py-2.5 ring-1 ring-white/10">
+            <p className="text-xs text-acai-200">Faturamento</p>
+            <p className="text-lg font-extrabold text-white">{formatPrice(today.revenue)}</p>
+          </div>
+        </div>
+
+        <div className="mt-auto pt-6">
+          <a
+            href="/"
+            className="block rounded-xl px-3 py-2.5 text-sm font-semibold text-acai-100/80 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            Ver site
           </a>
         </div>
+      </aside>
 
-        <div className="mt-3 grid grid-cols-3 gap-1.5">
-          {filters.map((item) => {
-            const active = filter === item.id
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setFilter(item.id)}
-                className={`rounded-lg px-2 py-2 text-[11px] font-bold transition-colors ${
-                  active ? 'bg-white text-acai-900' : 'bg-white/10 text-acai-100'
-                }`}
-              >
-                {item.label}
-                <span className="ml-1 opacity-70">{counts[item.id]}</span>
-              </button>
-            )
-          })}
-        </div>
-
-        <label className="mt-3 flex items-center gap-2 text-[11px] font-semibold text-acai-200">
-          <input
-            type="checkbox"
-            checked={autoNotify}
-            onChange={(event) => setAutoNotify(event.target.checked)}
-            className="size-4 accent-white"
-          />
-          Avisar cliente no WhatsApp ao mudar status
-        </label>
-      </header>
-
-      <main className="min-w-0 flex-1 px-5 py-6">
-        <h1 className="text-lg font-extrabold">
-          {filter === 'ativos' ? 'Pedidos em aberto' : statusLabels[filter as OrderStatus]}
-          <span className="ml-2 text-sm font-semibold text-acai-300">{visible.length}</span>
-        </h1>
-
-        {visible.length === 0 ? (
-          <p className="mt-6 rounded-card border border-dashed border-white/20 p-10 text-center text-sm text-acai-200">
-            {filter === 'ativos'
-              ? 'Nenhum pedido em aberto agora. Os novos aparecem aqui sozinhos.'
-              : `Nenhum pedido em "${statusLabels[filter as OrderStatus]}".`}
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Topo do desktop: mesma cor da lateral, com a conta à direita. */}
+        <header className="sticky top-0 z-20 hidden items-center justify-between gap-4 border-b border-white/10 bg-acai-950 px-6 py-2.5 text-white lg:flex">
+          <p className="text-xs text-acai-200">
+            <span className="font-bold text-white">{today.count}</span> pedidos hoje ·{' '}
+            <span className="font-bold text-white">{formatPrice(today.revenue)}</span>
           </p>
-        ) : (
-          <div className="mt-5 grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
-            {visible.map((order) => (
-              <OrderCard
-                key={order.id}
-                order={order}
-                onAdvance={advance}
-                onCancel={(target) => advance(target, 'cancelado')}
-                onRemove={removeOrder}
-              />
-            ))}
+          {userMenu}
+        </header>
+
+        {/* No celular a lateral vira topo compacto, com a mesma navegação. */}
+        <header className="sticky top-0 z-20 bg-acai-950 px-5 py-4 text-white lg:hidden">
+          <div className="flex items-center gap-3">
+            <Logo className="size-11 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-extrabold">{business.name}</p>
+              <p className="text-xs text-acai-200">
+                {today.count} pedidos hoje · {formatPrice(today.revenue)}
+              </p>
+            </div>
+            {userMenu}
           </div>
-        )}
-      </main>
+
+          <nav aria-label="Seções do painel" className="-mx-5 mt-3 overflow-x-auto px-5">
+            <ul className="flex w-max gap-1.5">
+              {nav.map((item) => {
+                const active = section === item.id
+                return (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSection(item.id)}
+                      aria-current={active ? 'page' : undefined}
+                      className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition-colors ${
+                        active ? 'bg-white text-acai-900' : 'bg-white/10 text-acai-100'
+                      }`}
+                    >
+                      {item.icon}
+                      {item.label}
+                      {item.badge > 0 && <span className="opacity-70">{item.badge}</span>}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          </nav>
+        </header>
+
+        <main className="min-w-0 flex-1 px-5 py-6 lg:px-6">
+          {section === 'dashboard' && (
+            <Dashboard
+              orders={orders}
+              onAdvance={advance}
+              autoNotify={autoNotify}
+              onOpenSettings={() => setSection('config')}
+            />
+          )}
+
+          {section === 'pedidos' && (
+            <OrdersView orders={orders} onAdvance={advance} onRemove={removeOrder} />
+          )}
+
+          {section === 'entregas' && <DeliveriesView orders={orders} onAdvance={advance} />}
+          {section === 'estoque' && <InventoryView />}
+          {section === 'site' && <SiteView />}
+          {section === 'financeiro' && <FinanceView orders={orders} />}
+          {section === 'conta' && <AccountView />}
+          {section === 'config' && (
+            <SettingsView autoNotify={autoNotify} onAutoNotifyChange={setAutoNotify} />
+          )}
+        </main>
+      </div>
     </div>
   )
 }
 
-function Login({ onAuthorized }: { readonly onAuthorized: () => void }) {
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState(false)
-
+function ChartIcon() {
   return (
-    <div className="grid min-h-screen place-items-center bg-acai-950 px-5">
-      <form
-        onSubmit={(event) => {
-          event.preventDefault()
-          if (password === PASSWORD) {
-            window.sessionStorage.setItem(SESSION_KEY, 'ok')
-            onAuthorized()
-            return
-          }
-          setError(true)
-        }}
-        className="w-full max-w-sm rounded-card border border-white/10 bg-white/5 p-6 text-white backdrop-blur-sm"
-      >
-        <div className="flex flex-col items-center text-center">
-          <Logo className="size-20" />
-          <h1 className="mt-4 text-xl font-extrabold">Sistema da loja</h1>
-          <p className="mt-1 text-sm text-acai-200">Entre para ver os pedidos do site.</p>
-        </div>
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4 shrink-0 fill-current">
+      <path d="M4 20a1 1 0 0 1-1-1V5a1 1 0 1 1 2 0v13h15a1 1 0 1 1 0 2H4Zm4-3a1 1 0 0 1-1-1v-4a1 1 0 1 1 2 0v4a1 1 0 0 1-1 1Zm4.5 0a1 1 0 0 1-1-1V8a1 1 0 1 1 2 0v8a1 1 0 0 1-1 1Zm4.5 0a1 1 0 0 1-1-1v-5.5a1 1 0 1 1 2 0V16a1 1 0 0 1-1 1Z" />
+    </svg>
+  )
+}
 
-        <label className="mt-6 block">
-          <span className="text-xs font-bold uppercase tracking-[0.14em] text-acai-300">Senha</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => {
-              setPassword(event.target.value)
-              setError(false)
-            }}
-            autoFocus
-            className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-3 py-2.5 text-sm text-white outline-none placeholder:text-acai-300 focus:border-white/50"
-          />
-        </label>
+function ReceiptIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4 shrink-0 fill-current">
+      <path d="M6 2a1 1 0 0 0-1 1v18a1 1 0 0 0 1.5.9l2-1.2 2 1.2a1 1 0 0 0 1 0l2-1.2 2 1.2a1 1 0 0 0 1.5-.9V3a1 1 0 0 0-1-1H6Zm2.5 5h7a1 1 0 1 1 0 2h-7a1 1 0 0 1 0-2Zm0 4h7a1 1 0 1 1 0 2h-7a1 1 0 1 1 0-2Zm0 4h4a1 1 0 1 1 0 2h-4a1 1 0 1 1 0-2Z" />
+    </svg>
+  )
+}
 
-        {error && <p className="mt-2 text-xs font-semibold text-amber-300">Senha incorreta.</p>}
+function ScooterIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4 shrink-0 fill-current">
+      <path d="M14 4a1 1 0 0 1 1-1h2.6a2 2 0 0 1 2 1.7l1.3 8.8a3.5 3.5 0 1 1-2 .3l-.2-1.3h-2.4a5 5 0 0 1-4.7 5H8.9a3.5 3.5 0 1 1-.4-2h2.7a3 3 0 0 0 2.8-3V5h-1a1 1 0 0 1-1-1Zm-8.5 12a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm13 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3ZM16 5.6l.7 4.9h2.1l-.7-4.9H16ZM3 8a1 1 0 0 1 1-1h5a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1Zm1 3.5a1 1 0 0 1 1-1h4a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Z" />
+    </svg>
+  )
+}
 
-        <button
-          type="submit"
-          className="mt-5 w-full rounded-full bg-white px-6 py-3.5 text-sm font-bold text-acai-900 transition-colors hover:bg-acai-50"
-        >
-          Entrar
-        </button>
+function BoxIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4 shrink-0 fill-current">
+      <path d="M12 2.2a1 1 0 0 0-.5.1l-8 4A1 1 0 0 0 3 7.2v9.6a1 1 0 0 0 .5.9l8 4a1 1 0 0 0 1 0l8-4a1 1 0 0 0 .5-.9V7.2a1 1 0 0 0-.5-.9l-8-4a1 1 0 0 0-.5-.1Zm0 2.1 5.8 2.9L12 10.1 6.2 7.2 12 4.3ZM5 8.8l6 3v7.1l-6-3V8.8Zm8 10.1v-7.1l6-3v7.1l-6 3Z" />
+    </svg>
+  )
+}
 
-        <a href="/" className="mt-3 block text-center text-xs font-semibold text-acai-300 hover:text-white">
-          Voltar para o site
-        </a>
-      </form>
-    </div>
+function GlobeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4 shrink-0 fill-current">
+      <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm6.9 9h-3a15.5 15.5 0 0 0-1.3-5.6A8 8 0 0 1 18.9 11ZM12 4.2c.8 1.1 1.7 3.3 1.9 6.8h-3.8c.2-3.5 1.1-5.7 1.9-6.8ZM9.4 5.4A15.5 15.5 0 0 0 8.1 11h-3a8 8 0 0 1 4.3-5.6ZM5.1 13h3a15.5 15.5 0 0 0 1.3 5.6A8 8 0 0 1 5.1 13Zm6.9 6.8c-.8-1.1-1.7-3.3-1.9-6.8h3.8c-.2 3.5-1.1 5.7-1.9 6.8Zm2.6-1.2a15.5 15.5 0 0 0 1.3-5.6h3a8 8 0 0 1-4.3 5.6Z" />
+    </svg>
+  )
+}
+
+function MoneyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4 shrink-0 fill-current">
+      <path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6Zm2 0v2a2 2 0 0 0 2-2H5Zm14 0h-2a2 2 0 0 0 2 2V6Zm0 12v-2a2 2 0 0 0-2 2h2ZM5 18h2a2 2 0 0 0-2-2v2Zm7-9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" />
+    </svg>
   )
 }
