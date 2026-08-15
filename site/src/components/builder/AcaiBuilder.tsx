@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useCart } from '../../cart/CartContext'
-import { productKinds, toppingCategories, toppingsByCategory } from '../../data/builder'
+import { toppingCategories } from '../../data/builder'
 import type { AcaiBase, CupSize, ProductKind, Topping } from '../../data/builder'
+import { useCatalog } from '../../stock/useCatalog'
 import type { BuildSelection } from '../../lib/builder'
 import { emptySelection, priceBuild, toggleTopping } from '../../lib/builder'
 import { formatPrice } from '../../lib/order'
@@ -35,6 +36,8 @@ export function AcaiBuilder({
   onPresetApplied,
 }: AcaiBuilderProps) {
   const { addBuild, count } = useCart()
+  /** Catálogo já sem o que a loja marcou como esgotado no painel. */
+  const { products: productKinds, toppingsByCategory } = useCatalog()
   const [selection, setSelection] = useState<BuildSelection>(emptySelection)
   const [step, setStep] = useState(1)
   const [added, setAdded] = useState(false)

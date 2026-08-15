@@ -31,9 +31,8 @@ Nenhum componente tem telefone, preço ou link hardcoded. Tudo vem desses arquiv
 ## Sistema da loja
 
 O painel de pedidos fica em **`/sistema`** (ícone de monitor no menu). A loja
-acompanha os pedidos do site e dá baixa neles. Senha padrão `mr2026`, trocável
-por `VITE_ADMIN_PASSWORD`. Detalhes, fluxo de status e migração para banco em
-`docs/sistema.md`.
+acompanha os pedidos do site e dá baixa neles. Sem senha por enquanto, entra
+direto. Detalhes, fluxo de status e migração para banco em `docs/sistema.md`.
 
 ## Comportamento do botão de pedido
 
