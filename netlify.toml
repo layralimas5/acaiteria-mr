@@ -1,8 +1,11 @@
 # Deploy da Açaiteria MR no Netlify.
 #
-# O site fica em site/, não na raiz do repositório, por isso o `base`. Os
-# caminhos deste arquivo são relativos à raiz do repositório, então `publish`
-# repete o prefixo site/.
+# O site fica em site/, não na raiz do repositório, por isso o `base`.
+#
+# ATENÇÃO ao `publish`: com `base` definido, o Netlify entra nessa pasta antes
+# de tudo e resolve o publish a partir dela. Por isso é "dist" e não
+# "site/dist" — este último vira site/site/dist e o deploy falha com
+# "Deploy directory does not exist".
 #
 # O roteamento do SPA (/sistema resolvido no cliente) fica em
 # site/public/_redirects, para não haver duas fontes da mesma regra.
@@ -10,7 +13,7 @@
 [build]
   base = "site"
   command = "npm run build"
-  publish = "site/dist"
+  publish = "dist"
 
 [build.environment]
   # Vite 7 exige Node 20.19+ ou 22.12+. Fixado para o deploy não mudar sozinho.
