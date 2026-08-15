@@ -1,0 +1,46 @@
+# Deploy da Açaiteria MR no Netlify.
+#
+# O site fica em site/, não na raiz do repositório, por isso o `base`. Os
+# caminhos deste arquivo são relativos à raiz do repositório, então `publish`
+# repete o prefixo site/.
+#
+# O roteamento do SPA (/sistema resolvido no cliente) fica em
+# site/public/_redirects, para não haver duas fontes da mesma regra.
+
+[build]
+  base = "site"
+  command = "npm run build"
+  publish = "site/dist"
+
+[build.environment]
+  # Vite 7 exige Node 20.19+ ou 22.12+. Fixado para o deploy não mudar sozinho.
+  NODE_VERSION = "22"
+
+# Deploy de preview nas pull requests, com o mesmo build da produção.
+[context.deploy-preview]
+  command = "npm run build"
+
+[context.branch-deploy]
+  command = "npm run build"
+
+# Segurança em tudo. Sem Cache-Control aqui de propósito: o padrão do Netlify
+# para HTML já é revalidar sempre, e definir nas duas regras entraria em
+# conflito com o cache dos assets abaixo.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Os assets levam hash no nome, então podem ser cacheados para sempre.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/imagem/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
