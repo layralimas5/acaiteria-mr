@@ -58,8 +58,10 @@ O `netlify.toml` na raiz já traz tudo: é só conectar o repositório no Netlif
 publicar, sem configurar nada na interface.
 
 O site fica em `site/`, não na raiz, então o arquivo define `base = "site"` e
-`publish = "site/dist"` (caminhos relativos à raiz do repositório). O Node está
-fixado na 22 porque o Vite 7 exige 20.19+ ou 22.12+.
+`publish = "dist"`. Atenção nesse ponto: com `base` definido, o Netlify resolve
+o `publish` a partir dele — escrever `site/dist` vira `site/site/dist` e o
+deploy falha com *Deploy directory does not exist*. O Node está fixado na 22
+porque o Vite 7 exige 20.19+ ou 22.12+.
 
 O roteamento fica em `site/public/_redirects`: `/sistema` é resolvido no
 navegador, então toda rota cai no `index.html`. Deixei fora do `netlify.toml`
