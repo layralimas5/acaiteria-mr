@@ -1,0 +1,10 @@
+# Documentos comerciais do cliente (contrato assinado, propostas).
+# São da relação com a loja, não do código, e não têm por que viver no
+# repositório do site.
+Contrato*.docx
+Contrato*.pdf
+
+# Lixo do sistema
+.DS_Store
+Thumbs.db
+desktop.ini
