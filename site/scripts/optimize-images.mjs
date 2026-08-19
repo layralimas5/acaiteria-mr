@@ -26,6 +26,10 @@ const targets = [
   // Arte de fundo do banner, em duas larguras (celular e desktop).
   { source: 'banner.png', output: 'banner.webp', width: 1830, format: 'webp', quality: 80 },
   { source: 'banner.png', output: 'banner-960.webp', width: 960, format: 'webp', quality: 78 },
+  { source: 'banner-2.png', output: 'banner-2.webp', width: 1830, format: 'webp', quality: 80 },
+  { source: 'banner-2.png', output: 'banner-2-960.webp', width: 960, format: 'webp', quality: 78 },
+  { source: 'banner-3.png', output: 'banner-3.webp', width: 1830, format: 'webp', quality: 80 },
+  { source: 'banner-3.png', output: 'banner-3-960.webp', width: 960, format: 'webp', quality: 78 },
   { source: 'logo-oficial.png', output: 'logo-oficial.webp', width: 256, format: 'webp', quality: 86 },
   { source: 'logo-oficial.png', output: 'logo-192.png', width: 192, format: 'png', quality: 90 },
   // Imagem de compartilhamento (WhatsApp, Instagram, Google).
