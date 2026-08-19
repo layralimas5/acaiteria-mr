@@ -1,8 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react'
 import type { ReactNode } from 'react'
-import type { AcaiBase, CupSize, ProductKind, Topping } from '../data/builder'
+import type { AcaiBase, CupSize, ProductKind, Topping } from '../catalog/types'
 import type { BuildSelection } from '../lib/builder'
-import { priceBuild } from '../lib/builder'
 
 /**
  * Carrinho da loja. O projeto não usa biblioteca de estado global, então aqui
@@ -13,17 +12,21 @@ import { priceBuild } from '../lib/builder'
 export interface CartItem {
   /** Identidade da montagem: mesma combinação agrupa, combinação diferente não. */
   readonly id: string
-  readonly productType: 'custom-acai' | 'custom-sorvete'
+  /** Nome do produto no momento do pedido, para o histórico não depender do cardápio. */
+  readonly productName: string
   readonly product: ProductKind
   readonly size: CupSize
   readonly base: AcaiBase
   readonly toppings: readonly Topping[]
   readonly quantity: number
   readonly unitPrice: number
+  /** Observação que o cliente escreveu para esse item. */
+  readonly notes?: string
 }
 
 type CartAction =
   | { type: 'add'; item: CartItem }
+  | { type: 'add-many'; items: readonly CartItem[] }
   | { type: 'increment'; id: string }
   | { type: 'decrement'; id: string }
   | { type: 'remove'; id: string }
@@ -32,9 +35,10 @@ type CartAction =
 
 const STORAGE_KEY = 'acaiteria-mr:cart'
 
-const buildId = (selection: BuildSelection): string => {
+/** Montagens iguais agrupam; observação diferente vira item diferente. */
+export const cartItemId = (selection: BuildSelection, notes = ''): string => {
   const toppingIds = selection.toppings.map((topping) => topping.id).sort()
-  return [selection.product?.id, selection.size?.id, selection.base?.id, ...toppingIds].join('|')
+  return [selection.product?.id, selection.size?.id, selection.base?.id, ...toppingIds, notes].join('|')
 }
 
 const reducer = (state: readonly CartItem[], action: CartAction): readonly CartItem[] => {
@@ -49,6 +53,12 @@ const reducer = (state: readonly CartItem[], action: CartAction): readonly CartI
         item.id === action.item.id ? { ...item, quantity: item.quantity + action.item.quantity } : item,
       )
     }
+
+    case 'add-many':
+      return action.items.reduce(
+        (current, item) => reducer(current, { type: 'add', item }),
+        state,
+      )
 
     case 'increment':
       return state.map((item) => (item.id === action.id ? { ...item, quantity: item.quantity + 1 } : item))
@@ -70,7 +80,9 @@ interface CartValue {
   readonly items: readonly CartItem[]
   readonly count: number
   readonly total: number
-  readonly addBuild: (selection: BuildSelection) => CartItem | null
+  readonly addBuild: (selection: BuildSelection, unitPrice: number, notes?: string) => CartItem | null
+  /** Repõe itens de um pedido anterior, somando ao que já estiver no carrinho. */
+  readonly addItems: (items: readonly CartItem[]) => void
   readonly increment: (id: string) => void
   readonly decrement: (id: string) => void
   readonly remove: (id: string) => void
@@ -106,22 +118,33 @@ export function CartProvider({ children }: { readonly children: ReactNode }) {
     }
   }, [items])
 
-  const addBuild = useCallback((selection: BuildSelection): CartItem | null => {
-    if (!selection.product || !selection.size || !selection.base) return null
+  const addBuild = useCallback(
+    (selection: BuildSelection, unitPrice: number, notes = ''): CartItem | null => {
+      if (!selection.product || !selection.size || !selection.base) return null
 
-    const item: CartItem = {
-      id: buildId(selection),
-      productType: selection.product.id === 'sorvete' ? 'custom-sorvete' : 'custom-acai',
-      product: selection.product,
-      size: selection.size,
-      base: selection.base,
-      toppings: selection.toppings,
-      quantity: 1,
-      unitPrice: priceBuild(selection).totalPrice,
-    }
+      const trimmed = notes.trim()
 
-    dispatch({ type: 'add', item })
-    return item
+      const item: CartItem = {
+        id: cartItemId(selection, trimmed),
+        productName: selection.product.name,
+        product: selection.product,
+        size: selection.size,
+        base: selection.base,
+        toppings: selection.toppings,
+        quantity: 1,
+        unitPrice,
+        ...(trimmed ? { notes: trimmed } : {}),
+      }
+
+      dispatch({ type: 'add', item })
+      return item
+    },
+    [],
+  )
+
+  const addItems = useCallback((items: readonly CartItem[]) => {
+    if (items.length === 0) return
+    dispatch({ type: 'add-many', items })
   }, [])
 
   const value = useMemo<CartValue>(
@@ -130,12 +153,13 @@ export function CartProvider({ children }: { readonly children: ReactNode }) {
       count: items.reduce((total, item) => total + item.quantity, 0),
       total: items.reduce((total, item) => total + item.unitPrice * item.quantity, 0),
       addBuild,
+      addItems,
       increment: (id: string) => dispatch({ type: 'increment', id }),
       decrement: (id: string) => dispatch({ type: 'decrement', id }),
       remove: (id: string) => dispatch({ type: 'remove', id }),
       clear: () => dispatch({ type: 'clear' }),
     }),
-    [items, addBuild],
+    [items, addBuild, addItems],
   )
 
   return <CartContext value={value}>{children}</CartContext>

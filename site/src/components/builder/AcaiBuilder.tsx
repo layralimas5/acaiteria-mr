@@ -1,25 +1,31 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
 import { useCart } from '../../cart/CartContext'
-import { toppingCategories } from '../../data/builder'
-import type { AcaiBase, CupSize, ProductKind, Topping } from '../../data/builder'
-import { useCatalog } from '../../stock/useCatalog'
+import type { AcaiBase, CupSize, ProductKind, Topping } from '../../catalog/types'
+import { useCatalog } from '../../catalog/useCatalog'
+import type { Customer } from '../../orders/types'
 import type { BuildSelection } from '../../lib/builder'
-import { emptySelection, priceBuild, toggleTopping } from '../../lib/builder'
+import { canAddTopping, emptySelection, priceBuild, toggleTopping } from '../../lib/builder'
 import { formatPrice } from '../../lib/order'
 import { MobileOrderBar } from './MobileOrderBar'
 import { BaseSelector } from './BaseSelector'
-import { FreeToppingsMeter } from './FreeToppingsMeter'
 import { OrderSummary } from './OrderSummary'
 import { ProductSelector } from './ProductSelector'
 import { SizeSelector } from './SizeSelector'
 import { StepPanel } from './StepPanel'
 import { StepTabs } from './StepTabs'
 import type { StepInfo } from './StepTabs'
+import { OrderPanel } from './OrderPanel'
 import { ToppingCategory } from './ToppingCategory'
 
 interface AcaiBuilderProps {
-  readonly onOpenCart: () => void
+  /**
+   * Sobe a cada pedido externo (menu, CTA flutuante, repetir pedido) para o
+   * painel abrir na sacola em vez da montagem.
+   */
+  readonly cartRequest: number
+  /** Dados de quem já pediu daqui, repassados ao checkout. */
+  readonly knownCustomer: Customer | null
   /** Avisa o App para esconder o CTA flutuante enquanto a barra do builder está no ar. */
   readonly onVisibilityChange: (visible: boolean) => void
   /** Tamanho escolhido na vitrine dos copos, para começar já preenchido. */
@@ -30,17 +36,22 @@ interface AcaiBuilderProps {
 const LAST_STEP = 5
 
 export function AcaiBuilder({
-  onOpenCart,
+  cartRequest,
+  knownCustomer,
   onVisibilityChange,
   presetSizeId = null,
   onPresetApplied,
 }: AcaiBuilderProps) {
   const { addBuild, count } = useCart()
-  /** Catálogo já sem o que a loja marcou como esgotado no painel. */
-  const { products: productKinds, toppingsByCategory } = useCatalog()
+  /** Cardápio que a loja cadastrou no painel, com o que está no ar hoje. */
+  const { catalog, loading: loadingCatalog, error: catalogError } = useCatalog()
+  const { products: productKinds, categories, toppingsByCategory, rules } = catalog
   const [selection, setSelection] = useState<BuildSelection>(emptySelection)
+  const [notes, setNotes] = useState('')
   const [step, setStep] = useState(1)
   const [added, setAdded] = useState(false)
+  /** O painel alterna entre montar um item e cuidar do pedido inteiro. */
+  const [view, setView] = useState<'build' | 'order'>('build')
   const [inView, setInView] = useState(false)
   const sectionRef = useRef<HTMLElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -74,16 +85,27 @@ export function AcaiBuilder({
     setSelection((current) => ({ ...current, product: owner, size, base: null }))
     setStep(3)
     onPresetApplied?.()
-  }, [presetSizeId, onPresetApplied])
+  }, [presetSizeId, onPresetApplied, productKinds])
 
-  const pricing = useMemo(() => priceBuild(selection), [selection])
+  // Pedido externo de ver a sacola: menu, CTA flutuante ou repetir pedido.
+  useEffect(() => {
+    if (cartRequest > 0) setView('order')
+  }, [cartRequest])
 
+  const pricing = useMemo(() => priceBuild(selection, categories), [selection, categories])
+
+  // A cota é por categoria: dentro de cada uma, os primeiros escolhidos entram.
   const freeIds = useMemo(
-    () => selection.toppings.slice(0, pricing.freeLimit).map((topping) => topping.id),
-    [selection.toppings, pricing.freeLimit],
+    () =>
+      categories.flatMap((category) =>
+        selection.toppings
+          .filter((topping) => topping.categoryId === category.id)
+          .slice(0, category.rule.free)
+          .map((topping) => topping.id),
+      ),
+    [selection.toppings, categories],
   )
   const selectedIds = useMemo(() => selection.toppings.map((topping) => topping.id), [selection.toppings])
-  const freeRemaining = Math.max(0, pricing.freeLimit - selection.toppings.length)
 
   const goToStep = useCallback((next: number) => {
     setStep(next)
@@ -114,25 +136,49 @@ export function AcaiBuilder({
     setSelection((current) => ({ ...current, base }))
   }, [])
 
-  const handleToggleTopping = useCallback((topping: Topping) => {
-    setSelection((current) => ({ ...current, toppings: toggleTopping(current.toppings, topping) }))
-  }, [])
+  const handleToggleTopping = useCallback(
+    (topping: Topping) => {
+      setSelection((current) =>
+        canAddTopping(current, topping, rules)
+          ? { ...current, toppings: toggleTopping(current.toppings, topping) }
+          : current,
+      )
+    },
+    [rules],
+  )
 
   const handleAdd = useCallback(() => {
-    const item = addBuild(selection)
+    const item = addBuild(selection, pricing.totalPrice, notes)
     if (!item) return
 
     setSelection(emptySelection)
+    setNotes('')
     setStep(1)
     setAdded(true)
-    window.setTimeout(() => setAdded(false), 2600)
-  }, [addBuild, selection])
+    setView('order')
+  }, [addBuild, selection, pricing.totalPrice, notes])
+
+  /** Volta do pedido para a montagem, com o painel limpo. */
+  const buildMore = useCallback(() => {
+    setAdded(false)
+    setView('build')
+    window.requestAnimationFrame(() => {
+      const panel = panelRef.current
+      if (!panel) return
+      const top = panel.getBoundingClientRect().top + window.scrollY - 200
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+    })
+  }, [])
 
   const reset = useCallback(() => {
     setSelection(emptySelection)
+    setNotes('')
     setStep(1)
+    setAdded(false)
+    setView('build')
   }, [])
 
+  const isBuilding = view === 'build'
   const product = selection.product
   const productDone = Boolean(product)
   const sizeDone = Boolean(selection.size)
@@ -154,6 +200,33 @@ export function AcaiBuilder({
     { id: 5, label: 'Finalizar', done: false, hint: formatPrice(pricing.totalPrice) },
   ]
 
+  const sellable = productKinds.filter(
+    (kind) => kind.available && kind.sizes.some((size) => size.available),
+  )
+
+  if (loadingCatalog || sellable.length === 0) {
+    return (
+      <section
+        ref={sectionRef}
+        id="monte-seu-acai"
+        className="scroll-mt-24 bg-gradient-to-b from-acai-50 to-white py-20 sm:py-24"
+      >
+        <div className="mx-auto max-w-xl px-5 text-center">
+          <h2 className="text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
+            {loadingCatalog ? 'Carregando o cardápio...' : 'Cardápio em montagem'}
+          </h2>
+          <p className="mt-3 text-base text-muted">
+            {loadingCatalog
+              ? 'Só um instante.'
+              : catalogError
+                ? 'Não conseguimos carregar o cardápio agora. Chame a gente no WhatsApp que a gente anota seu pedido.'
+                : 'Estamos ajustando os itens do site. Enquanto isso, é só chamar no WhatsApp que a gente monta seu pedido.'}
+          </p>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section
       ref={sectionRef}
@@ -161,26 +234,34 @@ export function AcaiBuilder({
       className="scroll-mt-24 bg-gradient-to-b from-acai-50 to-white py-20 sm:py-24"
     >
       <div className="mx-auto max-w-6xl px-5">
-        <div className="max-w-xl">
-          <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-700">Monte seu pedido</span>
+        <div className={isBuilding ? 'max-w-xl' : 'mx-auto max-w-xl text-center'}>
+          <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-700">
+            {isBuilding ? 'Monte seu pedido' : 'Seu pedido'}
+          </span>
           <h2 className="mt-2 text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
-            Açaí ou sorvete, do jeito que você monta
+            {isBuilding ? 'Açaí ou sorvete, do jeito que você monta' : 'Falta pouco para receber'}
           </h2>
           <p className="mt-3 text-base text-muted">
-            Uma etapa por vez. Pode pular para qualquer uma tocando no nome aqui em cima.
+            {isBuilding
+              ? 'Uma etapa por vez. Pode pular para qualquer uma tocando no nome aqui em cima.'
+              : 'Confira os itens, escolha como pagar e a gente sai para a entrega.'}
           </p>
         </div>
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[1.6fr_1fr] lg:items-start">
-          <div className="min-w-0">
-            <StepTabs steps={steps} active={step} onSelect={goToStep} />
+        <div className={`mt-8 ${isBuilding ? 'grid gap-8 lg:grid-cols-[1.6fr_1fr] lg:items-start' : ''}`}>
+          <div className={isBuilding ? 'min-w-0' : 'mx-auto w-full max-w-2xl'}>
+            {isBuilding && <StepTabs steps={steps} active={step} onSelect={goToStep} />}
 
             <div
               ref={panelRef}
-              className="mt-4 rounded-card border border-acai-100 bg-white p-5 pb-32 shadow-sm sm:p-8 lg:pb-8"
+              className="mt-4 rounded-card border border-acai-100 bg-white p-5 shadow-sm sm:p-8"
             >
+              {!isBuilding && (
+                <OrderPanel onBuildMore={buildMore} knownCustomer={knownCustomer} justAdded={added} />
+              )}
+
               <AnimatePresence mode="wait" initial={false}>
-                {step === 1 && (
+                {isBuilding && step === 1 && (
                   <StepPanel
                     key="product"
                     title="O que você quer hoje?"
@@ -196,21 +277,21 @@ export function AcaiBuilder({
                     }
                   >
                     <ProductSelector
-                      products={productKinds}
+                      products={sellable}
                       selected={selection.product}
                       onSelect={selectProduct}
                     />
                   </StepPanel>
                 )}
 
-                {step === 2 && (
+                {isBuilding && step === 2 && (
                   <StepPanel
                     key="size"
                     title="Escolha seu tamanho"
                     subtitle={
                       sizeDone
                         ? `${selection.size?.volume} · ${pricing.freeLimit} complementos grátis`
-                        : `Todo tamanho vem com ${product?.sizes[0]?.freeToppings ?? 3} complementos grátis.`
+                        : `Todo tamanho vem com ${pricing.freeLimit} complementos grátis inclusos.`
                     }
                     done={sizeDone}
                     footer={
@@ -224,14 +305,19 @@ export function AcaiBuilder({
                     }
                   >
                     {product ? (
-                      <SizeSelector sizes={product.sizes} selected={selection.size} onSelect={selectSize} />
+                      <SizeSelector
+                        sizes={product.sizes}
+                        freeToppings={pricing.freeLimit}
+                        selected={selection.size}
+                        onSelect={selectSize}
+                      />
                     ) : (
                       <StepBlocked onGo={() => goToStep(1)} label="Escolha primeiro entre açaí e sorvete." />
                     )}
                   </StepPanel>
                 )}
 
-                {step === 3 && (
+                {isBuilding && step === 3 && (
                   <StepPanel
                     key="base"
                     title={product?.baseStepTitle ?? 'Escolha sua base'}
@@ -255,13 +341,13 @@ export function AcaiBuilder({
                   </StepPanel>
                 )}
 
-                {step === 4 && (
+                {isBuilding && step === 4 && (
                   <StepPanel
                     key="toppings"
                     title="Escolha seus complementos"
                     subtitle={
                       sizeDone
-                        ? `Os ${pricing.freeLimit} primeiros são grátis. A partir daí, cada um soma no total.`
+                        ? `Cada categoria tem a própria cota grátis. Passou dela, o item soma no total.`
                         : 'Escolha o tamanho antes para liberar os complementos.'
                     }
                     done={toppingsDone}
@@ -275,7 +361,22 @@ export function AcaiBuilder({
                   >
                     {sizeDone ? (
                       <div className="mb-6 rounded-2xl border border-acai-100 bg-acai-50/60 px-4 py-3">
-                        <FreeToppingsMeter limit={pricing.freeLimit} chosen={selection.toppings.length} />
+                        <p className="text-sm font-semibold text-muted">
+                          <span className="text-ink">{pricing.freeUsed}</span> de {pricing.freeLimit}{' '}
+                          grátis usados
+                          {pricing.additionalPrice > 0 && (
+                            <span className="text-acai-800">
+                              {' '}
+                              · {formatPrice(pricing.additionalPrice)} em adicionais
+                            </span>
+                          )}
+                        </p>
+                        <p className="mt-1 text-xs text-muted">
+                          A cota é por categoria: {categories
+                            .map((category) => `${category.rule.free} ${category.title.toLowerCase()}`)
+                            .join(', ')}
+                          .
+                        </p>
                       </div>
                     ) : (
                       <StepBlocked
@@ -285,23 +386,28 @@ export function AcaiBuilder({
                     )}
 
                     <div className="space-y-8">
-                      {toppingCategories.map((category) => (
-                        <ToppingCategory
-                          key={category.id}
-                          category={category}
-                          toppings={toppingsByCategory(category.id)}
-                          selectedIds={selectedIds}
-                          freeIds={freeIds}
-                          freeRemaining={freeRemaining}
-                          disabled={!sizeDone}
-                          onToggle={handleToggleTopping}
-                        />
-                      ))}
+                      {categories.map((category) => {
+                        const usage = pricing.byCategory[category.id]
+                        if (!usage) return null
+
+                        return (
+                          <ToppingCategory
+                            key={category.id}
+                            category={category}
+                            toppings={toppingsByCategory(category.id)}
+                            selectedIds={selectedIds}
+                            freeIds={freeIds}
+                            usage={usage}
+                            disabled={!sizeDone}
+                            onToggle={handleToggleTopping}
+                          />
+                        )
+                      })}
                     </div>
                   </StepPanel>
                 )}
 
-                {step === 5 && (
+                {isBuilding && step === 5 && (
                   <StepPanel
                     key="finish"
                     title="Finalize seu pedido"
@@ -336,6 +442,23 @@ export function AcaiBuilder({
                       />
                     </div>
 
+                    <label className="mt-4 block">
+                      <span className="text-xs font-bold uppercase tracking-[0.14em] text-acai-700">
+                        Alguma observação?
+                      </span>
+                      <span className="mt-1 block text-xs text-muted">
+                        Opcional. Vale pedir mais calda, tirar algum complemento ou avisar de alergia.
+                      </span>
+                      <textarea
+                        value={notes}
+                        onChange={(event) => setNotes(event.target.value)}
+                        rows={2}
+                        maxLength={200}
+                        placeholder="Ex.: capricha na granola e manda o leite condensado à parte"
+                        className="mt-2 w-full resize-none rounded-xl border border-acai-200 px-3 py-2.5 text-sm text-ink outline-none focus:border-acai-700"
+                      />
+                    </label>
+
                     <div className="mt-6 rounded-card bg-acai-900 p-5 text-white">
                       <div className="flex items-end justify-between gap-4">
                         <div>
@@ -366,7 +489,7 @@ export function AcaiBuilder({
                         {count > 0 && (
                           <button
                             type="button"
-                            onClick={onOpenCart}
+                            onClick={() => setView('order')}
                             className="rounded-full border border-white/25 px-6 py-3.5 text-sm font-bold text-white transition-colors hover:bg-white/10"
                           >
                             Ver pedido ({count})
@@ -395,37 +518,28 @@ export function AcaiBuilder({
                 )}
               </AnimatePresence>
 
-              <AnimatePresence>
-                {added && (
-                  <motion.p
-                    role="status"
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="mt-5 rounded-xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-800"
-                  >
-                    Adicionado ao pedido. Quer montar outro?
-                  </motion.p>
-                )}
-              </AnimatePresence>
             </div>
           </div>
 
-          <div className="hidden lg:block">
-            <OrderSummary selection={selection} pricing={pricing} onAdd={handleAdd} onReset={reset} />
-          </div>
+          {isBuilding && (
+            <div className="hidden lg:block">
+              <OrderSummary selection={selection} pricing={pricing} onAdd={handleAdd} onReset={reset} />
+            </div>
+          )}
         </div>
       </div>
 
-      {inView && (
+      {/* Respiro só enquanto a barra fixa do celular está no ar. */}
+      {isBuilding && inView && <div aria-hidden="true" className="h-20 lg:hidden" />}
+
+      {isBuilding && inView && (
         <MobileOrderBar
           selection={selection}
           pricing={pricing}
           cartCount={count}
           onAdd={step === LAST_STEP ? handleAdd : () => goToStep(LAST_STEP)}
           addLabel={step === LAST_STEP ? 'Adicionar' : 'Finalizar'}
-          onOpenCart={onOpenCart}
+          onOpenCart={() => setView('order')}
         />
       )}
     </section>

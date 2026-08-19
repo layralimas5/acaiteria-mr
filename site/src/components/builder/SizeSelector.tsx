@@ -1,15 +1,17 @@
 import { motion } from 'framer-motion'
-import type { CupSize } from '../../data/builder'
+import type { CupSize } from '../../catalog/types'
 import { formatPrice } from '../../lib/order'
 import { SelectedCheck } from './SelectedCheck'
 
 interface SizeSelectorProps {
   readonly sizes: readonly CupSize[]
+  /** Total de complementos inclusos, somando a cota de cada categoria. */
+  readonly freeToppings: number
   readonly selected: CupSize | null
   readonly onSelect: (size: CupSize) => void
 }
 
-export function SizeSelector({ sizes, selected, onSelect }: SizeSelectorProps) {
+export function SizeSelector({ sizes, freeToppings, selected, onSelect }: SizeSelectorProps) {
   return (
     <div role="radiogroup" aria-label="Tamanho do copo" className="grid gap-3 sm:grid-cols-3">
       {sizes.map((size) => {
@@ -24,7 +26,7 @@ export function SizeSelector({ sizes, selected, onSelect }: SizeSelectorProps) {
             disabled={!size.available}
             onClick={() => onSelect(size)}
             whileTap={size.available ? { scale: 0.98 } : undefined}
-            className={`group relative flex items-center gap-4 overflow-hidden rounded-card border p-3 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-45 sm:flex-col sm:items-stretch sm:p-4 ${
+            className={`group relative flex items-center gap-3 overflow-hidden rounded-card border p-2.5 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-45 sm:flex-col sm:items-stretch sm:gap-4 sm:p-4 ${
               isSelected
                 ? 'border-acai-800 bg-white shadow-xl shadow-acai-900/10 ring-2 ring-acai-800'
                 : 'border-acai-100 bg-white hover:-translate-y-0.5 hover:border-acai-300 hover:shadow-lg hover:shadow-acai-900/5'
@@ -33,7 +35,7 @@ export function SizeSelector({ sizes, selected, onSelect }: SizeSelectorProps) {
             {isSelected && <SelectedCheck />}
 
             {/* A foto preenche o quadro: o fundo roxo do estúdio vira o fundo do card. */}
-            <span className="grid aspect-square size-24 shrink-0 place-items-center overflow-hidden rounded-2xl bg-acai-900 sm:size-auto sm:w-full">
+            <span className="grid aspect-square size-20 shrink-0 place-items-center overflow-hidden rounded-2xl bg-acai-900 sm:size-auto sm:w-full">
               {size.image ? (
                 <img
                   src={size.image}
@@ -51,20 +53,20 @@ export function SizeSelector({ sizes, selected, onSelect }: SizeSelectorProps) {
 
             <span className="min-w-0 sm:mt-3">
               <span className="flex items-baseline gap-2">
-                <span className="text-lg font-extrabold tracking-tight text-ink">{size.volume}</span>
+                <span className="text-base font-extrabold tracking-tight text-ink sm:text-lg">{size.volume}</span>
                 {size.highlight && (
-                  <span className="rounded-full bg-acai-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-acai-800">
+                  <span className="rounded-full bg-acai-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-acai-800">
                     {size.highlight}
                   </span>
                 )}
               </span>
 
-              <span className="mt-0.5 block text-base font-bold text-acai-800">
+              <span className="mt-0.5 block text-sm font-bold text-acai-800 sm:text-base">
                 {formatPrice(size.basePrice)}
               </span>
 
-              <span className="mt-2 inline-block whitespace-nowrap rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-bold text-green-700">
-                {size.freeToppings} complementos grátis
+              <span className="mt-1.5 inline-block whitespace-nowrap rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700 sm:mt-2 sm:px-2.5 sm:py-1 sm:text-[11px]">
+                {freeToppings} complementos grátis
               </span>
 
               {!size.available && (

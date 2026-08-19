@@ -30,10 +30,11 @@ function SystemIcon() {
 }
 
 interface HeaderProps {
-  readonly onOpenCart: () => void
+  /** Leva o cliente até a seção do pedido, que fica na própria página. */
+  readonly onGoToCart: () => void
 }
 
-export function Header({ onOpenCart }: HeaderProps) {
+export function Header({ onGoToCart }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { count } = useCart()
@@ -84,7 +85,7 @@ export function Header({ onOpenCart }: HeaderProps) {
 
           <button
             type="button"
-            onClick={onOpenCart}
+            onClick={onGoToCart}
             aria-label={count > 0 ? `Ver pedido com ${count} ${count === 1 ? 'item' : 'itens'}` : 'Ver pedido'}
             className="relative grid size-10 place-items-center rounded-full border border-white/25 text-white transition-colors hover:bg-white/10"
           >

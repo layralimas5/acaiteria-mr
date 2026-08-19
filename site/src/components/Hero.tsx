@@ -1,31 +1,49 @@
+import { AnimatePresence, motion } from 'framer-motion'
 import { business } from '../config/business'
+import { useRotation } from '../hooks/useRotation'
 import { openStatus } from '../lib/order'
 
 export function Hero() {
   const status = openStatus(new Date())
-  const { heroImage } = business
+  const images = business.heroImages
+  const { index: current, goTo, paused } = useRotation(images.length, business.heroRotationMs)
 
   return (
     <section
       id="topo"
-      className="relative isolate flex min-h-[34rem] items-center overflow-hidden bg-acai-900 text-white sm:min-h-[36rem] lg:min-h-[40rem]"
+      className="relative isolate flex min-h-[40rem] items-start overflow-hidden bg-acai-900 text-white sm:min-h-[38rem] sm:items-center lg:min-h-[40rem]"
     >
-      {heroImage.src && (
+      {images.length > 0 && (
         <div aria-hidden="true" className="absolute inset-0 -z-10">
-          <picture>
-            <source media="(min-width: 768px)" srcSet={heroImage.src} />
-            <img
-              src={heroImage.srcSmall}
-              alt={heroImage.alt}
-              loading="eager"
-              decoding="async"
-              fetchPriority="high"
-              className="size-full object-cover object-[92%_center] lg:object-right"
-            />
-          </picture>
+          <AnimatePresence initial={false}>
+            <motion.div
+              key={current}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: paused ? 0 : 0.9, ease: 'easeInOut' }}
+              className="absolute inset-0"
+            >
+              <picture>
+                <source media="(min-width: 768px)" srcSet={images[current]?.src} />
+                <img
+                  src={images[current]?.srcSmall}
+                  alt={images[current]?.alt}
+                  loading={current === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                  fetchPriority={current === 0 ? 'high' : 'low'}
+                  className="size-full object-cover object-[88%_bottom] sm:object-[92%_center] lg:object-right"
+                />
+              </picture>
+            </motion.div>
+          </AnimatePresence>
 
-          {/* Escurece o lado do texto sem apagar os copos do outro lado. */}
-          <div className="absolute inset-0 bg-gradient-to-b from-acai-950 from-16% via-acai-950/82 via-58% to-acai-950/25 lg:bg-gradient-to-r lg:from-acai-950 lg:from-12% lg:via-acai-950/78 lg:via-42% lg:to-transparent lg:to-68%" />
+          {/*
+            No celular o escurecimento termina antes do fim: o texto fica no
+            terço de cima e a arte aparece limpa embaixo. No desktop ele é
+            horizontal, escuro à esquerda e limpo do lado dos copos.
+          */}
+          <div className="absolute inset-0 bg-gradient-to-b from-acai-950 from-2% via-acai-950/80 via-34% to-transparent to-70% sm:via-acai-950/82 sm:via-58% sm:to-acai-950/25 sm:to-100% lg:bg-gradient-to-r lg:from-acai-950 lg:from-12% lg:via-acai-950/78 lg:via-42% lg:to-transparent lg:to-68%" />
         </div>
       )}
 
@@ -34,7 +52,7 @@ export function Hero() {
         className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"
       />
 
-      <div className="relative mx-auto w-full max-w-6xl px-5 pb-16 pt-28 sm:pb-20 sm:pt-36">
+      <div className="relative mx-auto w-full max-w-6xl px-5 pb-56 pt-24 sm:pb-20 sm:pt-36">
         <div className="max-w-xl">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-acai-100 ring-1 ring-white/15 backdrop-blur-sm">
@@ -42,7 +60,7 @@ export function Hero() {
               {status.label}
             </span>
             {business.deliveryOnly && (
-              <span className="inline-flex items-center rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-acai-100 ring-1 ring-white/15 backdrop-blur-sm">
+              <span className="inline-flex items-center rounded-full bg-white px-3.5 py-1.5 text-xs font-bold text-acai-900 shadow-sm">
                 Só delivery
               </span>
             )}
@@ -53,9 +71,26 @@ export function Hero() {
             <span className="block text-acai-200">do jeito que você monta</span>
           </h1>
 
-          <p className="mt-5 max-w-md text-pretty text-base leading-relaxed text-acai-100/85">
+          <p className="mt-5 max-w-md text-pretty text-sm leading-relaxed text-acai-100/85 sm:text-base">
             {business.description}
           </p>
+
+          {images.length > 1 && (
+            <div className="mt-7 flex items-center gap-2">
+              {images.map((image, index) => (
+                <button
+                  key={image.src}
+                  type="button"
+                  onClick={() => goTo(index)}
+                  aria-label={`Ver arte ${index + 1} de ${images.length}`}
+                  aria-current={index === current}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    index === current ? 'w-7 bg-white' : 'w-3 bg-white/40 hover:bg-white/70'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>

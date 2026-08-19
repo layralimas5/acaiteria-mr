@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { formatPrice } from '../lib/order'
 import type { FinanceEntry } from '../finance/store'
 import { addEntry, listEntries, removeEntry, subscribeToEntries } from '../finance/store'
+import { errorMessage } from '../lib/supabase'
 import type { Order, PaymentMethod } from '../orders/types'
 import { paymentLabels, statusLabels } from '../orders/types'
 import { EntryForm } from './EntryForm'
@@ -37,12 +38,25 @@ export function FinanceView({ orders }: FinanceViewProps) {
   const [period, setPeriod] = useState<Period>({ id: 'semana' })
   const [entries, setEntries] = useState<readonly FinanceEntry[]>([])
   const [adding, setAdding] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const sync = () => setEntries(listEntries())
+    const sync = () => {
+      void listEntries()
+        .then((list) => {
+          setEntries(list)
+          setError(null)
+        })
+        .catch((cause: unknown) => setError(errorMessage(cause)))
+    }
     sync()
     return subscribeToEntries(sync)
   }, [])
+
+  /** Toda gravacao passa por aqui, para erro do banco virar aviso na tela. */
+  const run = (action: () => Promise<void>) => {
+    void action().catch((cause: unknown) => setError(errorMessage(cause)))
+  }
 
   const scoped = useMemo(() => inPeriod(orders, period), [orders, period])
   const money = useMemo(() => moneyOf(scoped), [scoped])
@@ -84,6 +98,15 @@ export function FinanceView({ orders }: FinanceViewProps) {
 
         <PeriodFilter value={period} onChange={setPeriod} />
       </div>
+
+      {error && (
+        <p
+          role="alert"
+          className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-xs font-semibold text-red-700"
+        >
+          {error}
+        </p>
+      )}
 
       <section aria-label="Resultado" className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Money
@@ -133,7 +156,7 @@ export function FinanceView({ orders }: FinanceViewProps) {
         {adding && (
           <EntryForm
             onSave={(draft) => {
-              addEntry(draft)
+              run(() => addEntry(draft))
               setAdding(false)
             }}
             onCancel={() => setAdding(false)}
@@ -186,7 +209,7 @@ export function FinanceView({ orders }: FinanceViewProps) {
 
                 <button
                   type="button"
-                  onClick={() => removeEntry(entry.id)}
+                  onClick={() => run(() => removeEntry(entry.id))}
                   aria-label={`Excluir lançamento ${entry.description}`}
                   className="shrink-0 rounded-full p-1.5 text-muted transition-colors hover:bg-acai-50 hover:text-red-700"
                 >

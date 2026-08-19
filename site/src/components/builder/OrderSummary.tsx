@@ -43,7 +43,11 @@ export function OrderSummary({ selection, pricing, onAdd, onReset }: OrderSummar
 
           {selection.size ? (
             <div className="mt-3">
-              <FreeToppingsMeter limit={pricing.freeLimit} chosen={selection.toppings.length} />
+              <FreeToppingsMeter
+                limit={pricing.freeLimit}
+                freeUsed={pricing.freeUsed}
+                paid={pricing.paidToppings.length}
+              />
             </div>
           ) : (
             <p className="mt-2 text-xs text-muted">Escolha o tamanho para liberar a cota grátis.</p>

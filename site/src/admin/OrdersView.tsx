@@ -129,7 +129,7 @@ export function OrdersView({ orders, onAdvance, onRemove }: OrdersViewProps) {
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Buscar por número, nome, telefone…"
             aria-label="Buscar pedidos"
-            className="w-full rounded-full border border-acai-200 bg-white py-2.5 pl-10 pr-4 text-sm text-ink outline-none placeholder:text-muted focus:border-acai-500"
+            className="w-full rounded-full border border-acai-200 bg-white py-3 pl-11 pr-4 text-base text-ink outline-none placeholder:text-muted focus:border-acai-500"
           />
         </div>
 
@@ -157,7 +157,7 @@ export function OrdersView({ orders, onAdvance, onRemove }: OrdersViewProps) {
       <div
         role="group"
         aria-label="Filtrar por etapa"
-        className="-mx-5 mt-3 flex gap-1.5 overflow-x-auto px-5 pb-1 lg:mx-0 lg:flex-wrap lg:px-0"
+        className="-mx-5 mt-4 flex gap-2 overflow-x-auto px-5 pb-1 lg:mx-0 lg:flex-wrap lg:px-0"
       >
         {filters.map((item) => {
           const active = filter === item.id
@@ -167,12 +167,16 @@ export function OrdersView({ orders, onAdvance, onRemove }: OrdersViewProps) {
               type="button"
               onClick={() => setFilter(item.id)}
               aria-pressed={active}
-              className={`flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition-colors ${
+              className={`flex shrink-0 items-center gap-2.5 rounded-full px-5 py-3 text-sm font-bold transition-colors ${
                 active ? 'bg-acai-800 text-white' : 'bg-acai-50 text-acai-700 hover:bg-acai-100'
               }`}
             >
               {item.label}
-              <span className={active ? 'text-acai-200' : 'text-muted'}>{counts[item.id]}</span>
+              <span
+                className={`text-base font-extrabold ${active ? 'text-acai-200' : 'text-acai-800'}`}
+              >
+                {counts[item.id]}
+              </span>
             </button>
           )
         })}
@@ -279,7 +283,7 @@ function Toggle<T extends string>({
             type="button"
             onClick={() => onChange(option.id)}
             aria-pressed={active}
-            className={`rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
+            className={`rounded-full px-4 py-2 text-sm font-bold transition-colors ${
               active ? 'bg-white text-acai-900 shadow-sm' : 'text-acai-700 hover:text-acai-900'
             }`}
           >
@@ -296,7 +300,7 @@ function SearchIcon() {
     <svg
       viewBox="0 0 24 24"
       aria-hidden="true"
-      className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 fill-muted"
+      className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 fill-muted"
     >
       <path d="M10.5 3a7.5 7.5 0 1 0 4.55 13.46l4.24 4.25a1 1 0 0 0 1.42-1.42l-4.25-4.24A7.5 7.5 0 0 0 10.5 3Zm0 2a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11Z" />
     </svg>

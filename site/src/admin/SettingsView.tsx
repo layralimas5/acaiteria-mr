@@ -2,7 +2,13 @@ import { statusMessage } from '../orders/messages'
 import type { Order, OrderStatus } from '../orders/types'
 import { statusLabels } from '../orders/types'
 
-/** Preferências do painel. Ficam salvas no navegador da loja. */
+/**
+ * Preferências do painel.
+ *
+ * O que é regra de cardápio (cota grátis, limite por categoria, preço) vive na
+ * aba Cardápio, junto do item a que pertence. Aqui fica só o comportamento do
+ * painel, que é preferência de quem atende e mora neste navegador.
+ */
 
 interface SettingsViewProps {
   readonly autoNotify: boolean
@@ -35,7 +41,9 @@ export function SettingsView({ autoNotify, onAutoNotifyChange }: SettingsViewPro
   return (
     <>
       <h1 className="text-xl font-extrabold text-ink">Configurações</h1>
-      <p className="mt-1 text-sm text-muted">Preferências salvas neste navegador.</p>
+      <p className="mt-1 text-sm text-muted">
+        Preferências deste navegador. Preços e cotas de complemento ficam na aba Cardápio.
+      </p>
 
       <section className="mt-5 max-w-2xl rounded-card border border-acai-100 bg-white p-5 shadow-sm">
         <h2 className="text-sm font-extrabold text-ink">Aviso ao cliente</h2>
@@ -49,11 +57,11 @@ export function SettingsView({ autoNotify, onAutoNotifyChange }: SettingsViewPro
           />
           <span className="min-w-0">
             <span className="block text-sm font-bold text-ink">
-              Avisar o cliente ao dar baixa no pedido
+              Avisar o cliente ao mudar a etapa do pedido
             </span>
             <span className="mt-1 block text-xs leading-relaxed text-muted">
-              A cada mudança de etapa, o WhatsApp do cliente abre em uma aba nova com a mensagem
-              já escrita. Basta enviar.
+              A cada mudança de etapa, o WhatsApp do cliente abre em uma aba nova com a mensagem já
+              escrita. Basta enviar.
             </span>
           </span>
         </label>

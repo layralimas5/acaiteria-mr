@@ -1,6 +1,14 @@
 import { business } from '../config/business'
-import { locationLabel, whatsappUrl } from '../lib/order'
+import { locationLabel, whatsappDisplay, whatsappUrl } from '../lib/order'
 import { Logo } from './Logo'
+
+function WhatsAppIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5 fill-current">
+      <path d="M12.04 2C6.6 2 2.2 6.4 2.2 11.84c0 1.94.53 3.76 1.46 5.32L2 22l4.98-1.6a9.8 9.8 0 0 0 5.06 1.4h.01c5.43 0 9.84-4.4 9.84-9.84 0-2.63-1.03-5.1-2.89-6.96A9.77 9.77 0 0 0 12.04 2Zm0 17.96h-.01a8.2 8.2 0 0 1-4.16-1.14l-.3-.18-3.1 1 1.02-3.02-.2-.31a8.13 8.13 0 0 1-1.25-4.35c0-4.5 3.68-8.17 8.2-8.17 2.19 0 4.25.86 5.8 2.4a8.13 8.13 0 0 1 2.4 5.78c0 4.51-3.68 8.18-8.2 8.18Zm4.5-6.12c-.25-.13-1.46-.72-1.68-.8-.23-.08-.39-.12-.55.13s-.64.8-.78.96c-.14.16-.29.18-.53.06a6.7 6.7 0 0 1-3.35-2.92c-.25-.43.25-.4.72-1.33.08-.16.04-.3-.02-.43-.06-.12-.55-1.33-.76-1.82-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.43.06-.65.3-.22.25-.85.84-.85 2.04s.88 2.36 1 2.53c.12.16 1.72 2.63 4.18 3.69 1.55.67 2.16.73 2.94.61.47-.07 1.46-.6 1.66-1.18.21-.58.21-1.07.15-1.18-.06-.11-.22-.17-.46-.29Z" />
+    </svg>
+  )
+}
 
 function InstagramIcon() {
   return (
@@ -48,6 +56,8 @@ export function Footer() {
             {[
               { href: '#monte-seu-acai', label: 'Monte seu pedido' },
               { href: '#entrega', label: 'Entrega' },
+              { href: '#a-marca', label: 'A marca' },
+              { href: '#depoimentos', label: 'Depoimentos' },
               { href: '#onde-estamos', label: 'Área de entrega' },
             ].map((link) => (
               <li key={link.href}>
@@ -67,19 +77,10 @@ export function Footer() {
                 href={whatsappUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-acai-100/70 transition-colors hover:text-white"
+                className="inline-flex items-center gap-2 text-acai-100/70 transition-colors hover:text-white"
               >
-                WhatsApp
-              </a>
-            </li>
-            <li>
-              <a
-                href={instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-acai-100/70 transition-colors hover:text-white"
-              >
-                @{business.instagramHandle}
+                <WhatsAppIcon />
+                {whatsappDisplay()}
               </a>
             </li>
           </ul>

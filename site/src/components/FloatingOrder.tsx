@@ -3,11 +3,11 @@ import { useCart } from '../cart/CartContext'
 import { formatPrice } from '../lib/order'
 
 interface FloatingOrderProps {
-  readonly onOpenCart: () => void
+  readonly onGoToCart: () => void
 }
 
-/** CTA fixo no rodapé em telas pequenas — aparece depois do hero. */
-export function FloatingOrder({ onOpenCart }: FloatingOrderProps) {
+/** CTA fixo no rodapé em telas pequenas, aparece depois do hero. */
+export function FloatingOrder({ onGoToCart }: FloatingOrderProps) {
   const [visible, setVisible] = useState(false)
   const { count, total } = useCart()
 
@@ -29,7 +29,7 @@ export function FloatingOrder({ onOpenCart }: FloatingOrderProps) {
       {hasItems ? (
         <button
           type="button"
-          onClick={onOpenCart}
+          onClick={onGoToCart}
           tabIndex={visible ? 0 : -1}
           aria-hidden={!visible}
           className="flex w-full items-center justify-center gap-2 rounded-full bg-acai-800 px-6 py-3.5 text-sm font-bold text-white"

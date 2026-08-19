@@ -11,10 +11,10 @@ export function Delivery() {
   const { freeShippingFrom, averageMinutes } = business.delivery
 
   return (
-    <section id="entrega" className="scroll-mt-24 bg-white py-20 sm:py-24">
-      <div className="mx-auto max-w-6xl px-5">
-        <div className="overflow-hidden rounded-[2rem] bg-acai-900 text-white">
-          <div className="grid gap-10 p-8 sm:p-12 lg:grid-cols-2 lg:items-center">
+    <section id="entrega" className="scroll-mt-24 bg-acai-900 text-white">
+      <div className="mx-auto max-w-6xl px-5 py-16 sm:py-20">
+        <div>
+          <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
             <div>
               <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-200">
                 {business.deliveryOnly ? 'Só delivery' : 'Entrega'}

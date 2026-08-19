@@ -1,17 +1,16 @@
+import { createEmitter } from '../lib/emitter'
+import { supabase } from '../lib/supabase'
+
 /**
  * Estoque interno: o que a loja tem para produzir.
  *
- * Nada aqui aparece no site. Isto é a despensa — polpa, granola, copo, colher
- * — com quantidade, mínimo de segurança e o histórico de tudo que entrou e
- * saiu. O que o cliente vê fica em `src/stock/` (aba Site).
+ * Nada aqui aparece no site. Isto é a despensa (polpa, granola, copo, colher)
+ * com quantidade, mínimo de segurança e o histórico de tudo que entrou e saiu.
+ * O que o cliente vê é o cardápio, em `src/catalog/`.
  *
- * Como o resto, hoje mora no navegador; a interface é a que o Supabase vai
- * implementar depois.
+ * Vive no Supabase e só quem entrou no painel enxerga: o RLS não libera nem
+ * leitura para visitante.
  */
-
-const ITEMS_KEY = 'acaiteria-mr:inventory'
-const MOVES_KEY = 'acaiteria-mr:inventory-moves'
-const CHANGED_EVENT = 'acaiteria-mr:inventory-changed'
 
 export type Unit = 'kg' | 'g' | 'l' | 'ml' | 'un' | 'cx' | 'pct'
 
@@ -66,81 +65,133 @@ export const movementReasons: Readonly<Record<MovementType, readonly string[]>> 
   saida: ['Produção', 'Perda ou quebra', 'Vencimento', 'Ajuste de contagem'],
 }
 
-const read = <T,>(key: string): T[] => {
-  try {
-    const raw = window.localStorage.getItem(key)
-    if (!raw) return []
-    const parsed: unknown = JSON.parse(raw)
-    return Array.isArray(parsed) ? (parsed as T[]) : []
-  } catch {
-    return []
-  }
+interface ItemRow {
+  id: string
+  name: string
+  category: string
+  unit: Unit
+  quantity: number
+  min_quantity: number
+  created_at: string
+  updated_at: string
 }
 
-const write = (key: string, value: unknown): void => {
-  try {
-    window.localStorage.setItem(key, JSON.stringify(value))
-  } catch {
-    // Sem storage disponível: vale só para a sessão atual.
-  }
-  window.dispatchEvent(new CustomEvent(CHANGED_EVENT))
+interface MovementRow {
+  id: string
+  item_id: string
+  item_name: string
+  type: MovementType
+  quantity: number
+  unit: Unit
+  reason: string
+  cost: number | null
+  created_at: string
 }
 
-export const listItems = (): readonly InventoryItem[] =>
-  read<InventoryItem>(ITEMS_KEY)
-    .slice()
-    .sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name))
+const changed = createEmitter()
 
-export const listMovements = (): readonly Movement[] =>
-  read<Movement>(MOVES_KEY)
-    .slice()
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+const toItem = (row: ItemRow): InventoryItem => ({
+  id: row.id,
+  name: row.name,
+  category: row.category,
+  unit: row.unit,
+  quantity: Number(row.quantity),
+  minQuantity: Number(row.min_quantity),
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+})
 
-const slug = (name: string): string =>
-  name
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
+const toMovement = (row: MovementRow): Movement => ({
+  id: row.id,
+  itemId: row.item_id,
+  itemName: row.item_name,
+  type: row.type,
+  quantity: Number(row.quantity),
+  unit: row.unit,
+  reason: row.reason,
+  ...(row.cost !== null && { cost: Number(row.cost) }),
+  createdAt: row.created_at,
+})
 
-export type NewInventoryItem = Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>
+export const listItems = async (): Promise<readonly InventoryItem[]> => {
+  const { data, error } = await supabase
+    .from('inventory_items')
+    .select('*')
+    .order('category')
+    .order('name')
 
-export const addItem = (draft: NewInventoryItem): InventoryItem => {
-  const items = read<InventoryItem>(ITEMS_KEY)
-  const now = new Date().toISOString()
-
-  const base = `insumo-${slug(draft.name) || 'item'}`
-  let id = base
-  let suffix = 2
-  while (items.some((item) => item.id === id)) {
-    id = `${base}-${suffix}`
-    suffix += 1
-  }
-
-  const item: InventoryItem = { ...draft, id, createdAt: now, updatedAt: now }
-  write(ITEMS_KEY, [...items, item])
-  return item
+  if (error) throw error
+  return ((data ?? []) as ItemRow[]).map(toItem)
 }
 
-export const updateItem = (id: string, patch: Partial<NewInventoryItem>): void => {
-  write(
-    ITEMS_KEY,
-    read<InventoryItem>(ITEMS_KEY).map((item) =>
-      item.id === id ? { ...item, ...patch, updatedAt: new Date().toISOString() } : item,
-    ),
+export const listMovements = async (): Promise<readonly Movement[]> => {
+  const { data, error } = await supabase
+    .from('inventory_movements')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(300)
+
+  if (error) throw error
+  return ((data ?? []) as MovementRow[]).map(toMovement)
+}
+
+export interface NewInventoryItem {
+  readonly name: string
+  readonly category: string
+  readonly unit: Unit
+  readonly quantity: number
+  readonly minQuantity: number
+}
+
+export const addItem = async (draft: NewInventoryItem): Promise<void> => {
+  const { error } = await supabase.from('inventory_items').insert({
+    name: draft.name.trim(),
+    category: draft.category,
+    unit: draft.unit,
+    quantity: draft.quantity,
+    min_quantity: draft.minQuantity,
+  })
+  if (error) throw error
+  changed.emit()
+}
+
+/** Cadastra vários de uma vez, para a lista sugerida de quem está começando. */
+export const addItems = async (drafts: readonly NewInventoryItem[]): Promise<void> => {
+  if (drafts.length === 0) return
+
+  const { error } = await supabase.from('inventory_items').insert(
+    drafts.map((draft) => ({
+      name: draft.name.trim(),
+      category: draft.category,
+      unit: draft.unit,
+      quantity: draft.quantity,
+      min_quantity: draft.minQuantity,
+    })),
   )
+  if (error) throw error
+  changed.emit()
 }
 
-export const removeItem = (id: string): void => {
-  write(
-    ITEMS_KEY,
-    read<InventoryItem>(ITEMS_KEY).filter((item) => item.id !== id),
-  )
-  write(
-    MOVES_KEY,
-    read<Movement>(MOVES_KEY).filter((move) => move.itemId !== id),
-  )
+export const updateItem = async (id: string, patch: Partial<NewInventoryItem>): Promise<void> => {
+  const { error } = await supabase
+    .from('inventory_items')
+    .update({
+      ...(patch.name !== undefined && { name: patch.name.trim() }),
+      ...(patch.category !== undefined && { category: patch.category }),
+      ...(patch.unit !== undefined && { unit: patch.unit }),
+      ...(patch.quantity !== undefined && { quantity: patch.quantity }),
+      ...(patch.minQuantity !== undefined && { min_quantity: patch.minQuantity }),
+    })
+    .eq('id', id)
+
+  if (error) throw error
+  changed.emit()
+}
+
+export const removeItem = async (id: string): Promise<void> => {
+  const { error } = await supabase.from('inventory_items').delete().eq('id', id)
+  if (error) throw error
+  changed.emit()
 }
 
 export interface NewMovement {
@@ -152,39 +203,23 @@ export interface NewMovement {
 }
 
 /**
- * Registra a movimentação e já ajusta o saldo do insumo. Saída nunca deixa o
- * saldo negativo: quem chama valida antes, e aqui o piso é zero por garantia.
+ * Registra a movimentação e ajusta o saldo do insumo.
+ *
+ * As duas coisas acontecem dentro de uma função do banco, numa transação só:
+ * não existe movimentação sem saldo novo nem saldo novo sem movimentação.
  */
-export const registerMovement = (draft: NewMovement): Movement | null => {
-  const items = read<InventoryItem>(ITEMS_KEY)
-  const item = items.find((current) => current.id === draft.itemId)
-  if (!item) return null
+export const registerMovement = async (draft: NewMovement): Promise<Movement | null> => {
+  const { data, error } = await supabase.rpc('register_movement', {
+    p_item_id: draft.itemId,
+    p_type: draft.type,
+    p_quantity: draft.quantity,
+    p_reason: draft.reason,
+    p_cost: draft.cost ?? null,
+  })
 
-  const delta = draft.type === 'entrada' ? draft.quantity : -draft.quantity
-  const quantity = Math.max(0, Number((item.quantity + delta).toFixed(3)))
-  const createdAt = new Date().toISOString()
-
-  const movement: Movement = {
-    id: `${createdAt}-${item.id}`,
-    itemId: item.id,
-    itemName: item.name,
-    type: draft.type,
-    quantity: draft.quantity,
-    unit: item.unit,
-    reason: draft.reason,
-    ...(draft.cost !== undefined && { cost: draft.cost }),
-    createdAt,
-  }
-
-  write(
-    ITEMS_KEY,
-    items.map((current) =>
-      current.id === item.id ? { ...current, quantity, updatedAt: createdAt } : current,
-    ),
-  )
-  write(MOVES_KEY, [movement, ...read<Movement>(MOVES_KEY)])
-
-  return movement
+  if (error) throw error
+  changed.emit()
+  return data ? toMovement(data as MovementRow) : null
 }
 
 /** Precisa de reposição: acabou ou está no limite mínimo. */
@@ -205,17 +240,6 @@ export const starterItems: readonly NewInventoryItem[] = [
   { name: 'Sacola de entrega', category: 'Embalagens', unit: 'un', quantity: 0, minQuantity: 50 },
 ]
 
-/** Avisa quando o estoque mudar, inclusive em outra aba do navegador. */
-export const subscribeToInventory = (listener: () => void): (() => void) => {
-  const onStorage = (event: StorageEvent) => {
-    if (event.key === ITEMS_KEY || event.key === MOVES_KEY) listener()
-  }
-
-  window.addEventListener(CHANGED_EVENT, listener)
-  window.addEventListener('storage', onStorage)
-
-  return () => {
-    window.removeEventListener(CHANGED_EVENT, listener)
-    window.removeEventListener('storage', onStorage)
-  }
-}
+/** Avisa as telas abertas quando o estoque mudar. */
+export const subscribeToInventory = (listener: () => void): (() => void) =>
+  changed.subscribe(listener)

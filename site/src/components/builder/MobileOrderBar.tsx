@@ -76,7 +76,11 @@ export function MobileOrderBar({
 
                 {selection.size && (
                   <div className="mt-4 border-t border-acai-100 pt-4">
-                    <FreeToppingsMeter limit={pricing.freeLimit} chosen={selection.toppings.length} />
+                    <FreeToppingsMeter
+                limit={pricing.freeLimit}
+                freeUsed={pricing.freeUsed}
+                paid={pricing.paidToppings.length}
+              />
                   </div>
                 )}
 

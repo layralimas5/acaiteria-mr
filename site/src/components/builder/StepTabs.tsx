@@ -14,7 +14,7 @@ interface StepTabsProps {
 /**
  * Trilha de etapas, sempre inteira na tela: no celular vira uma régua de
  * números conectados; a partir de sm, abas com nome e resumo da escolha.
- * Toda etapa é clicável — quem quiser pular direto para o fim, pode.
+ * Toda etapa é clicável: quem quiser pular direto para o fim, pode.
  */
 export function StepTabs({ steps, active, onSelect }: StepTabsProps) {
   const current = steps.find((step) => step.id === active)
