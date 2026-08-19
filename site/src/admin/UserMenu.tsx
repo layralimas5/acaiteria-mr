@@ -1,22 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
 import { business } from '../config/business'
 
-/**
- * Menu da conta no topo do painel.
- *
- * Enquanto não existe login, "Sair" apenas devolve a administradora para o
- * site. Quando a autenticação entrar (ver docs/sistema.md), é só trocar o
- * `onSignOut` por encerrar a sessão de verdade.
- */
+/** Menu da conta no topo do painel. */
 
 interface UserMenuProps {
   readonly onOpenAccount: () => void
   readonly onOpenSettings: () => void
+  /** Encerra a sessão da loja e volta para a tela de login. */
+  readonly onSignOut: () => void
+  /** E-mail de quem está logado, para não haver dúvida de qual conta é. */
+  readonly email: string
   /** Variante do topo escuro do celular. */
   readonly tone?: 'light' | 'dark'
 }
 
-export function UserMenu({ onOpenAccount, onOpenSettings, tone = 'light' }: UserMenuProps) {
+export function UserMenu({
+  onOpenAccount,
+  onOpenSettings,
+  onSignOut,
+  email,
+  tone = 'light',
+}: UserMenuProps) {
   const [open, setOpen] = useState(false)
   const container = useRef<HTMLDivElement>(null)
 
@@ -76,7 +80,7 @@ export function UserMenu({ onOpenAccount, onOpenSettings, tone = 'light' }: User
         >
           <div className="border-b border-acai-100 px-4 pb-2.5 pt-1.5">
             <p className="text-sm font-extrabold">{business.name}</p>
-            <p className="text-xs text-muted">Administradora da loja</p>
+            <p className="truncate text-xs text-muted">{email}</p>
           </div>
 
           <MenuItem icon={<UserIcon />} onClick={() => select(onOpenAccount)}>
@@ -92,9 +96,18 @@ export function UserMenu({ onOpenAccount, onOpenSettings, tone = 'light' }: User
               role="menuitem"
               className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-muted transition-colors hover:bg-acai-50 hover:text-acai-800"
             >
+              <SiteIcon />
+              Ver site
+            </a>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => select(onSignOut)}
+              className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-semibold text-muted transition-colors hover:bg-acai-50 hover:text-acai-800"
+            >
               <ExitIcon />
               Sair
-            </a>
+            </button>
           </div>
         </div>
       )}
@@ -152,6 +165,14 @@ function ExitIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4 fill-current">
       <path d="M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5a1 1 0 1 0 0-2H5V5h5a1 1 0 1 0 0-2Zm6.3 4.3a1 1 0 0 0 0 1.4L17.6 10H10a1 1 0 1 0 0 2h7.6l-1.3 1.3a1 1 0 1 0 1.4 1.4l3-3a1 1 0 0 0 0-1.4l-3-3a1 1 0 0 0-1.4 0Z" />
+    </svg>
+  )
+}
+
+function SiteIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4 fill-current">
+      <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm6.9 9h-3a15 15 0 0 0-1.2-5.3A8 8 0 0 1 18.9 11ZM12 4.2c.8 1.1 1.6 3.3 1.8 6.8h-3.6c.2-3.5 1-5.7 1.8-6.8ZM5.1 11a8 8 0 0 1 4.2-5.3A15 15 0 0 0 8.1 11h-3Zm0 2h3a15 15 0 0 0 1.2 5.3A8 8 0 0 1 5.1 13ZM12 19.8c-.8-1.1-1.6-3.3-1.8-6.8h3.6c-.2 3.5-1 5.7-1.8 6.8Zm2.7-1.5a15 15 0 0 0 1.2-5.3h3a8 8 0 0 1-4.2 5.3Z" />
     </svg>
   )
 }

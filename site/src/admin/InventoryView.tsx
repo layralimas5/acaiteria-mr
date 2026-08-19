@@ -3,6 +3,7 @@ import { addEntry } from '../finance/store'
 import type { InventoryItem, Movement } from '../inventory/store'
 import {
   addItem,
+  addItems,
   listItems,
   listMovements,
   needsRestock,
@@ -13,6 +14,7 @@ import {
   unitLabels,
 } from '../inventory/store'
 import { formatPrice } from '../lib/order'
+import { errorMessage } from '../lib/supabase'
 import { formatTime, normalize } from './metrics'
 import { MovementForm } from './MovementForm'
 import { NewSupplyForm } from './NewSupplyForm'
@@ -28,15 +30,26 @@ export function InventoryView() {
   const [creating, setCreating] = useState(false)
   const [moving, setMoving] = useState<string | null>(null)
   const [search, setSearch] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const sync = () => {
-      setItems(listItems())
-      setMoves(listMovements())
+      void Promise.all([listItems(), listMovements()])
+        .then(([nextItems, nextMoves]) => {
+          setItems(nextItems)
+          setMoves(nextMoves)
+          setError(null)
+        })
+        .catch((cause: unknown) => setError(errorMessage(cause)))
     }
     sync()
     return subscribeToInventory(sync)
   }, [])
+
+  /** Toda gravação passa por aqui, para erro do banco virar aviso na tela. */
+  const run = (action: () => Promise<unknown>) => {
+    void action().catch((cause: unknown) => setError(errorMessage(cause)))
+  }
 
   const term = search.trim()
 
@@ -69,17 +82,20 @@ export function InventoryView() {
 
   const save = (itemId: string, quantity: number, type: 'entrada' | 'saida', reason: string, cost: number | undefined, alsoInFinance: boolean) => {
     const item = items.find((current) => current.id === itemId)
-    registerMovement({ itemId, type, quantity, reason, ...(cost !== undefined && { cost }) })
 
-    if (alsoInFinance && cost !== undefined && item) {
-      addEntry({
-        date: new Date().toISOString().slice(0, 10),
-        type: 'saida',
-        description: `${reason} · ${item.name} (${quantity} ${unitLabels[item.unit]})`,
-        category: 'Insumos',
-        amount: cost,
-      })
-    }
+    run(async () => {
+      await registerMovement({ itemId, type, quantity, reason, ...(cost !== undefined && { cost }) })
+
+      if (alsoInFinance && cost !== undefined && item) {
+        await addEntry({
+          date: new Date().toISOString().slice(0, 10),
+          type: 'saida',
+          description: `${reason} · ${item.name} (${quantity} ${unitLabels[item.unit]})`,
+          category: 'Insumos',
+          amount: cost,
+        })
+      }
+    })
 
     setMoving(null)
   }
@@ -90,7 +106,7 @@ export function InventoryView() {
         <div>
           <h1 className="text-xl font-extrabold text-ink">Estoque</h1>
           <p className="mt-1 text-sm text-muted">
-            O que a loja tem para produzir. Nada aqui aparece no site — isso é a aba Site.
+            O que a loja tem para produzir. Nada aqui aparece no site: isso é a aba Cardápio.
           </p>
         </div>
 
@@ -104,10 +120,19 @@ export function InventoryView() {
         </button>
       </div>
 
+      {error && (
+        <p
+          role="alert"
+          className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-xs font-semibold text-red-700"
+        >
+          {error}
+        </p>
+      )}
+
       {creating && (
         <NewSupplyForm
           onCreate={(draft) => {
-            addItem(draft)
+            run(() => addItem(draft))
             setCreating(false)
           }}
           onCancel={() => setCreating(false)}
@@ -123,7 +148,7 @@ export function InventoryView() {
           </p>
           <button
             type="button"
-            onClick={() => starterItems.forEach(addItem)}
+            onClick={() => run(() => addItems(starterItems))}
             className="mt-4 rounded-full border border-acai-200 px-5 py-2.5 text-xs font-bold text-acai-800 transition-colors hover:bg-acai-50"
           >
             Começar com uma lista pronta de açaiteria
@@ -229,7 +254,7 @@ export function InventoryView() {
 
                           <button
                             type="button"
-                            onClick={() => removeItem(item.id)}
+                            onClick={() => run(() => removeItem(item.id))}
                             aria-label={`Excluir ${item.name}`}
                             className="shrink-0 rounded-full p-1.5 text-muted transition-colors hover:bg-acai-50 hover:text-red-700"
                           >

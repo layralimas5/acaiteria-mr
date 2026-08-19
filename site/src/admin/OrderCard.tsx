@@ -74,6 +74,12 @@ export function OrderCard({
 
       <StatusSteps status={order.status} />
 
+      {order.confirmedAt && (
+        <p className="mt-3 rounded-2xl bg-green-50 px-4 py-2 text-center text-xs font-bold text-green-700">
+          Cliente confirmou o recebimento às {time(order.confirmedAt)}
+        </p>
+      )}
+
       <ul className="mt-4 space-y-2.5 border-t border-acai-100 pt-4">
         {order.items.map((item) => (
           <li key={item.id}>
@@ -84,6 +90,11 @@ export function OrderCard({
               {item.product.baseLabel}: {item.base.name}
               {item.toppings.length > 0 && ` · ${item.toppings.map((t) => t.name).join(', ')}`}
             </p>
+            {item.notes && (
+              <p className="mt-1 rounded-lg bg-amber-50 px-2.5 py-1.5 text-sm font-semibold text-amber-800">
+                Obs.: {item.notes}
+              </p>
+            )}
           </li>
         ))}
       </ul>
@@ -105,7 +116,17 @@ export function OrderCard({
 
       <div className="mt-auto border-t border-acai-100 pt-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="text-2xl font-extrabold text-acai-800">{formatPrice(order.total)}</span>
+          <span>
+            <span className="block text-2xl font-extrabold text-acai-800">{formatPrice(order.total)}</span>
+            {order.deliveryFee !== undefined && (
+              <span className="block text-xs text-muted">
+                {formatPrice(order.subtotal ?? order.total - order.deliveryFee)} em itens
+                {order.deliveryFee > 0
+                  ? ` + ${formatPrice(order.deliveryFee)} de entrega`
+                  : ' · entrega grátis'}
+              </span>
+            )}
+          </span>
 
           <div className="flex items-center gap-2">
             {closed ? (

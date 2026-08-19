@@ -1,15 +1,19 @@
 interface FreeToppingsMeterProps {
+  /** Soma das cotas grátis de todas as categorias. */
   readonly limit: number
-  readonly chosen: number
+  /** Quantos da cota já foram usados. */
+  readonly freeUsed: number
+  /** Quantos passaram da cota e entram como adicional. */
+  readonly paid: number
 }
 
 /**
  * Cota de complementos grátis em bolinhas: cheias = usadas, vazias = ainda
  * disponíveis, roxas = passaram do limite e entram como adicional.
  */
-export function FreeToppingsMeter({ limit, chosen }: FreeToppingsMeterProps) {
-  const extra = Math.max(0, chosen - limit)
-  const used = Math.min(chosen, limit)
+export function FreeToppingsMeter({ limit, freeUsed, paid }: FreeToppingsMeterProps) {
+  const extra = paid
+  const used = Math.min(freeUsed, limit)
 
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">

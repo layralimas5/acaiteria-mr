@@ -1,16 +1,15 @@
+import { createEmitter } from '../lib/emitter'
+import { supabase } from '../lib/supabase'
+
 /**
  * Caixa da loja: lançamentos manuais de entrada e saída.
  *
  * As vendas do site já entram sozinhas pelos pedidos. Isto aqui é o resto do
- * caixa — compra de insumo, aluguel, venda no balcão, aporte — que o sistema
- * não tem como saber sozinho.
+ * caixa (compra de insumo, aluguel, venda no balcão, aporte) que o sistema não
+ * tem como saber sozinho.
  *
- * Como os pedidos, hoje mora no navegador. A interface é a mesma que o
- * Supabase vai implementar depois.
+ * Vive no Supabase e só quem entrou no painel enxerga.
  */
-
-const STORAGE_KEY = 'acaiteria-mr:finance'
-const CHANGED_EVENT = 'acaiteria-mr:finance-changed'
 
 export type EntryType = 'entrada' | 'saida'
 
@@ -40,60 +39,66 @@ export const entryCategories: Readonly<Record<EntryType, readonly string[]>> = {
   ],
 }
 
-export const readEntries = (): readonly FinanceEntry[] => {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    const parsed: unknown = JSON.parse(raw)
-    return Array.isArray(parsed) ? (parsed as FinanceEntry[]) : []
-  } catch {
-    return []
-  }
+interface EntryRow {
+  id: string
+  entry_date: string
+  type: EntryType
+  description: string
+  category: string
+  amount: number
+  created_at: string
 }
 
-const write = (entries: readonly FinanceEntry[]): void => {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entries))
-  } catch {
-    // Sem storage disponível: vale só para a sessão atual.
-  }
-  window.dispatchEvent(new CustomEvent(CHANGED_EVENT))
-}
+const changed = createEmitter()
+
+const toEntry = (row: EntryRow): FinanceEntry => ({
+  id: row.id,
+  date: row.entry_date,
+  type: row.type,
+  description: row.description,
+  category: row.category,
+  amount: Number(row.amount),
+  createdAt: row.created_at,
+})
 
 /** Mais recentes primeiro; empate de data resolve pelo horário do cadastro. */
-export const listEntries = (): readonly FinanceEntry[] =>
-  readEntries()
-    .slice()
-    .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt))
+export const listEntries = async (): Promise<readonly FinanceEntry[]> => {
+  const { data, error } = await supabase
+    .from('finance_entries')
+    .select('*')
+    .order('entry_date', { ascending: false })
+    .order('created_at', { ascending: false })
 
-export type NewFinanceEntry = Omit<FinanceEntry, 'id' | 'createdAt'>
-
-export const addEntry = (draft: NewFinanceEntry): FinanceEntry => {
-  const createdAt = new Date().toISOString()
-  const entry: FinanceEntry = {
-    ...draft,
-    id: `${createdAt}-${Math.round(draft.amount * 100)}`,
-    createdAt,
-  }
-  write([entry, ...readEntries()])
-  return entry
+  if (error) throw error
+  return ((data ?? []) as EntryRow[]).map(toEntry)
 }
 
-export const removeEntry = (id: string): void => {
-  write(readEntries().filter((entry) => entry.id !== id))
+export interface NewFinanceEntry {
+  readonly date: string
+  readonly type: EntryType
+  readonly description: string
+  readonly category: string
+  readonly amount: number
 }
 
-/** Avisa quando o caixa mudar, inclusive em outra aba do navegador. */
-export const subscribeToEntries = (listener: () => void): (() => void) => {
-  const onStorage = (event: StorageEvent) => {
-    if (event.key === STORAGE_KEY) listener()
-  }
-
-  window.addEventListener(CHANGED_EVENT, listener)
-  window.addEventListener('storage', onStorage)
-
-  return () => {
-    window.removeEventListener(CHANGED_EVENT, listener)
-    window.removeEventListener('storage', onStorage)
-  }
+export const addEntry = async (draft: NewFinanceEntry): Promise<void> => {
+  const { error } = await supabase.from('finance_entries').insert({
+    entry_date: draft.date,
+    type: draft.type,
+    description: draft.description.trim(),
+    category: draft.category,
+    amount: draft.amount,
+  })
+  if (error) throw error
+  changed.emit()
 }
+
+export const removeEntry = async (id: string): Promise<void> => {
+  const { error } = await supabase.from('finance_entries').delete().eq('id', id)
+  if (error) throw error
+  changed.emit()
+}
+
+/** Avisa as telas abertas quando o caixa mudar. */
+export const subscribeToEntries = (listener: () => void): (() => void) =>
+  changed.subscribe(listener)

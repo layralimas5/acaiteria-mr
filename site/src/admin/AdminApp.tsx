@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { signOut, useSession } from '../auth/useSession'
 import { business } from '../config/business'
+import { errorMessage } from '../lib/supabase'
 import { formatPrice } from '../lib/order'
 import { notifyUrl } from '../orders/messages'
 import { listOrders, removeOrder, subscribeToOrders, updateOrderStatus } from '../orders/store'
@@ -7,22 +9,23 @@ import type { Order, OrderStatus } from '../orders/types'
 import { Logo } from '../components/Logo'
 import type { InventoryItem } from '../inventory/store'
 import { listItems, needsRestock, subscribeToInventory } from '../inventory/store'
-import { useCustomItems, useSoldOut } from '../stock/useCatalog'
 import { AccountView } from './AccountView'
 import { Dashboard } from './Dashboard'
 import { DeliveriesView } from './DeliveriesView'
 import { FinanceView } from './FinanceView'
 import { InventoryView } from './InventoryView'
+import { LoginView } from './LoginView'
+import { MenuView } from './menu/MenuView'
 import { OrdersView } from './OrdersView'
+import { ReviewsView } from './ReviewsView'
 import { SettingsView } from './SettingsView'
-import { SiteView } from './SiteView'
 import { UserMenu } from './UserMenu'
 
 /**
  * Painel da loja: acompanha os pedidos que entram pelo site e dá baixa.
  *
- * O painel está aberto, sem login. A autenticação de verdade entra quando os
- * pedidos passarem para o Supabase (ver docs/sistema.md).
+ * Tudo aqui exige login: pedido, caixa e estoque são dados de gente real, e o
+ * Row Level Security do banco não devolve nenhuma linha para quem não entrou.
  */
 
 const NOTIFY_KEY = 'acaiteria-mr:admin-notify'
@@ -32,30 +35,60 @@ type Section =
   | 'pedidos'
   | 'entregas'
   | 'estoque'
-  | 'site'
+  | 'cardapio'
   | 'financeiro'
+  | 'avaliacoes'
   | 'conta'
   | 'config'
 
 export default function AdminApp() {
+  const { session, loading: checkingSession } = useSession()
+
+  if (checkingSession) {
+    return (
+      <main className="grid min-h-dvh place-items-center bg-acai-50 text-sm text-muted">
+        Carregando...
+      </main>
+    )
+  }
+
+  if (!session) return <LoginView />
+
+  return <Panel email={session.user.email ?? ''} />
+}
+
+function Panel({ email }: { readonly email: string }) {
   const [orders, setOrders] = useState<readonly Order[]>([])
+  const [error, setError] = useState<string | null>(null)
   const [section, setSection] = useState<Section>('dashboard')
   const [autoNotify, setAutoNotify] = useState(
     () => window.localStorage.getItem(NOTIFY_KEY) !== 'off',
   )
 
-  const soldOut = useSoldOut()
-  const customItems = useCustomItems()
   const [supplies, setSupplies] = useState<readonly InventoryItem[]>([])
-  const refresh = useCallback(() => setOrders(listOrders()), [])
 
+  const refresh = useCallback(() => {
+    void listOrders()
+      .then((list) => {
+        setOrders(list)
+        setError(null)
+      })
+      .catch((cause: unknown) => setError(errorMessage(cause)))
+  }, [])
+
+  // O Realtime avisa de qualquer mudança, inclusive de pedido feito no celular
+  // do cliente: o painel atualiza sem ninguém recarregar a página.
   useEffect(() => {
     refresh()
     return subscribeToOrders(refresh)
   }, [refresh])
 
   useEffect(() => {
-    const sync = () => setSupplies(listItems())
+    const sync = () => {
+      void listItems()
+        .then(setSupplies)
+        .catch(() => setSupplies([]))
+    }
     sync()
     return subscribeToInventory(sync)
   }, [])
@@ -67,12 +100,26 @@ export default function AdminApp() {
   /** Muda o status e, se ligado, já abre o WhatsApp do cliente com o aviso. */
   const advance = useCallback(
     (order: Order, status: OrderStatus) => {
-      updateOrderStatus(order.id, status)
+      // A aba abre antes de gravar de propósito: aberta depois da resposta do
+      // banco, o navegador entende como popup e bloqueia.
       if (autoNotify) {
         window.open(notifyUrl(order, status), '_blank', 'noopener,noreferrer')
       }
+
+      void updateOrderStatus(order.id, status)
+        .then(refresh)
+        .catch((cause: unknown) => setError(errorMessage(cause)))
     },
-    [autoNotify],
+    [autoNotify, refresh],
+  )
+
+  const discard = useCallback(
+    (id: string) => {
+      void removeOrder(id)
+        .then(refresh)
+        .catch((cause: unknown) => setError(errorMessage(cause)))
+    },
+    [refresh],
   )
 
   /** Só o que a navegação precisa mostrar como contador. */
@@ -109,23 +156,20 @@ export default function AdminApp() {
         // Insumos no mínimo ou zerados: é o que precisa de compra.
         badge: supplies.filter(needsRestock).length,
       },
-      {
-        id: 'site' as const,
-        label: 'Site',
-        icon: <GlobeIcon />,
-        // Tudo que está fora do ar agora: esgotado ou item criado e escondido.
-        badge: Object.keys(soldOut).length + customItems.filter((item) => !item.visible).length,
-      },
+      { id: 'cardapio' as const, label: 'Cardápio', icon: <GlobeIcon />, badge: 0 },
       { id: 'financeiro' as const, label: 'Financeiro', icon: <MoneyIcon />, badge: 0 },
+      { id: 'avaliacoes' as const, label: 'Avaliações', icon: <StarIcon />, badge: 0 },
     ],
-    [counts, soldOut, customItems, supplies],
+    [counts, supplies],
   )
 
   const userMenu = (
     <UserMenu
       tone="dark"
+      email={email}
       onOpenAccount={() => setSection('conta')}
       onOpenSettings={() => setSection('config')}
+      onSignOut={() => void signOut()}
     />
   )
 
@@ -196,10 +240,10 @@ export default function AdminApp() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Topo do desktop: mesma cor da lateral, com a conta à direita. */}
-        <header className="sticky top-0 z-20 hidden items-center justify-between gap-4 border-b border-white/10 bg-acai-950 px-6 py-2.5 text-white lg:flex">
-          <p className="text-xs text-acai-200">
-            <span className="font-bold text-white">{today.count}</span> pedidos hoje ·{' '}
-            <span className="font-bold text-white">{formatPrice(today.revenue)}</span>
+        <header className="sticky top-0 z-20 hidden items-center justify-between gap-4 border-b border-white/10 bg-acai-950 px-7 py-5 text-white lg:flex">
+          <p className="text-base text-acai-200">
+            <span className="text-lg font-extrabold text-white">{today.count}</span> pedidos hoje ·{' '}
+            <span className="text-lg font-extrabold text-white">{formatPrice(today.revenue)}</span>
           </p>
           {userMenu}
         </header>
@@ -243,6 +287,15 @@ export default function AdminApp() {
         </header>
 
         <main className="min-w-0 flex-1 px-5 py-6 lg:px-6">
+          {error && (
+            <p
+              role="alert"
+              className="mb-4 rounded-2xl bg-red-50 px-4 py-3 text-xs font-semibold text-red-700"
+            >
+              {error}
+            </p>
+          )}
+
           {section === 'dashboard' && (
             <Dashboard
               orders={orders}
@@ -253,13 +306,14 @@ export default function AdminApp() {
           )}
 
           {section === 'pedidos' && (
-            <OrdersView orders={orders} onAdvance={advance} onRemove={removeOrder} />
+            <OrdersView orders={orders} onAdvance={advance} onRemove={discard} />
           )}
 
           {section === 'entregas' && <DeliveriesView orders={orders} onAdvance={advance} />}
           {section === 'estoque' && <InventoryView />}
-          {section === 'site' && <SiteView />}
+          {section === 'cardapio' && <MenuView />}
           {section === 'financeiro' && <FinanceView orders={orders} />}
+          {section === 'avaliacoes' && <ReviewsView />}
           {section === 'conta' && <AccountView />}
           {section === 'config' && (
             <SettingsView autoNotify={autoNotify} onAutoNotifyChange={setAutoNotify} />
@@ -306,6 +360,17 @@ function GlobeIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4 shrink-0 fill-current">
       <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm6.9 9h-3a15.5 15.5 0 0 0-1.3-5.6A8 8 0 0 1 18.9 11ZM12 4.2c.8 1.1 1.7 3.3 1.9 6.8h-3.8c.2-3.5 1.1-5.7 1.9-6.8ZM9.4 5.4A15.5 15.5 0 0 0 8.1 11h-3a8 8 0 0 1 4.3-5.6ZM5.1 13h3a15.5 15.5 0 0 0 1.3 5.6A8 8 0 0 1 5.1 13Zm6.9 6.8c-.8-1.1-1.7-3.3-1.9-6.8h3.8c-.2 3.5-1.1 5.7-1.9 6.8Zm2.6-1.2a15.5 15.5 0 0 0 1.3-5.6h3a8 8 0 0 1-4.3 5.6Z" />
+    </svg>
+  )
+}
+
+function StarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5 fill-none stroke-current stroke-[1.8]">
+      <path
+        d="M12 3.5l2.7 5.5 6 .9-4.35 4.24 1.03 6-5.38-2.83L6.62 20l1.03-6L3.3 9.9l6-.9z"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }

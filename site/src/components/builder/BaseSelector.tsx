@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import type { AcaiBase } from '../../data/builder'
+import type { AcaiBase } from '../../catalog/types'
 import { formatPrice } from '../../lib/order'
 import { SelectedCheck } from './SelectedCheck'
 

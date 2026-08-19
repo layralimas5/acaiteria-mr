@@ -2,7 +2,7 @@ import { business } from '../config/business'
 
 /**
  * Dados da loja que aparecem no site. São lidos de `config/business.ts`, o
- * ponto único de configuração — por isso a tela é de consulta, não de edição.
+ * ponto único de configuração, por isso a tela é de consulta, não de edição.
  */
 
 const formatPhone = (digits: string): string => {
@@ -38,7 +38,7 @@ export function AccountView() {
           <dl className="mt-5 space-y-3 border-t border-acai-100 pt-4 text-sm">
             <Row label="WhatsApp" value={formatPhone(business.whatsappNumber)} />
             <Row label="Instagram" value={`@${business.instagramHandle}`} />
-            <Row label="Cidade" value={city || '—'} />
+            <Row label="Cidade" value={city || 'não informado'} />
             <Row label="Site" value={business.siteUrl} />
             <Row
               label="Atendimento"

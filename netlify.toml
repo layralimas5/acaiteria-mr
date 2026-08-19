@@ -4,7 +4,7 @@
 #
 # ATENÇÃO ao `publish`: com `base` definido, o Netlify entra nessa pasta antes
 # de tudo e resolve o publish a partir dela. Por isso é "dist" e não
-# "site/dist" — este último vira site/site/dist e o deploy falha com
+# "site/dist": este último vira site/site/dist e o deploy falha com
 # "Deploy directory does not exist".
 #
 # O roteamento do SPA (/sistema resolvido no cliente) fica em

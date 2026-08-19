@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import type { ProductKind } from '../../data/builder'
+import type { ProductKind } from '../../catalog/types'
 import { formatPrice } from '../../lib/order'
 import { SelectedCheck } from './SelectedCheck'
 
@@ -29,7 +29,7 @@ export function ProductSelector({ products, selected, onSelect }: ProductSelecto
             disabled={!product.available}
             onClick={() => onSelect(product)}
             whileTap={product.available ? { scale: 0.98 } : undefined}
-            className={`relative flex items-center gap-4 rounded-card border p-4 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-45 ${
+            className={`relative flex items-center gap-3 rounded-card border p-3 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-45 sm:gap-4 sm:p-4 ${
               isSelected
                 ? 'border-acai-800 bg-white shadow-xl shadow-acai-900/10 ring-2 ring-acai-800'
                 : 'border-acai-100 bg-white hover:-translate-y-0.5 hover:border-acai-300 hover:shadow-lg hover:shadow-acai-900/5'
@@ -38,7 +38,7 @@ export function ProductSelector({ products, selected, onSelect }: ProductSelecto
             {isSelected && <SelectedCheck />}
 
             <span
-              className={`grid size-16 shrink-0 place-items-center rounded-2xl text-3xl transition-colors ${
+              className={`grid size-12 shrink-0 place-items-center rounded-2xl text-2xl transition-colors sm:size-16 sm:text-3xl ${
                 isSelected ? 'bg-acai-100' : 'bg-acai-50'
               }`}
             >
@@ -46,8 +46,8 @@ export function ProductSelector({ products, selected, onSelect }: ProductSelecto
             </span>
 
             <span className="min-w-0 pr-6">
-              <span className="block text-lg font-extrabold leading-tight text-ink">{product.name}</span>
-              <span className="mt-1 block text-sm leading-snug text-muted">{product.description}</span>
+              <span className="block text-base font-extrabold leading-tight text-ink sm:text-lg">{product.name}</span>
+              <span className="mt-1 block text-xs leading-snug text-muted sm:text-sm">{product.description}</span>
               <span className="mt-2 block text-xs font-bold text-acai-800">
                 a partir de {formatPrice(cheapest)}
               </span>

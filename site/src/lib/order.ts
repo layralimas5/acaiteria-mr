@@ -1,13 +1,10 @@
 import { business } from '../config/business'
-import type { Product } from '../data/products'
 
 /**
  * Camada de pedido. Hoje o pedido sai por iFood (deep link) ou WhatsApp.
  * Quando a integração oficial do iFood (Portal do Desenvolvedor) estiver
- * homologada, só esta camada muda — os componentes continuam iguais.
+ * homologada, só esta camada muda, os componentes continuam iguais.
  */
-
-export type OrderChannel = 'ifood' | 'whatsapp'
 
 export const hasIfood = (): boolean => business.delivery.ifoodUrl.trim().length > 0
 
@@ -17,24 +14,37 @@ export const formatPrice = (value: number): string =>
 export const whatsappUrl = (message: string = business.whatsappMessage): string =>
   `https://wa.me/${business.whatsappNumber}?text=${encodeURIComponent(message)}`
 
-export const productMessage = (product: Product): string =>
-  `Oi! Quero pedir *${product.name}* (${product.size}) — ${formatPrice(product.price)}.`
-
-/** Texto padrão do CTA de pedido, conforme o canal disponível. */
-export const orderLabel = (): string => (hasIfood() ? 'Peça no iFood' : 'Pedir no WhatsApp')
-
-/** Link de pedido para um produto, no canal disponível. */
-export const orderUrl = (product?: Product): string => {
-  if (hasIfood()) return business.delivery.ifoodUrl
-  return whatsappUrl(product ? productMessage(product) : business.whatsappMessage)
+/** Telefone da loja no formato que o cliente lê: (27) 99285-3101. */
+export const whatsappDisplay = (): string => {
+  const local = business.whatsappNumber.replace(/\D/g, '').replace(/^55/, '')
+  const area = local.slice(0, 2)
+  const number = local.slice(2)
+  if (area.length < 2 || number.length < 8) return business.whatsappNumber
+  const split = number.length > 8 ? 5 : 4
+  return `(${area}) ${number.slice(0, split)}-${number.slice(split)}`
 }
 
-export const orderChannel = (): OrderChannel => (hasIfood() ? 'ifood' : 'whatsapp')
+/**
+ * Taxa de entrega de um pedido. Zera sozinha quando o subtotal alcança
+ * `freeShippingFrom`. A regra vive aqui, nunca dentro de componente.
+ */
+export const deliveryFee = (subtotal: number): number => {
+  const { fee, freeShippingFrom } = business.delivery
+  if (freeShippingFrom !== null && subtotal >= freeShippingFrom) return 0
+  return fee
+}
+
+/** Quanto falta para a entrega sair de graça. 0 quando já está grátis ou a regra não existe. */
+export const missingForFreeShipping = (subtotal: number): number => {
+  const { freeShippingFrom } = business.delivery
+  if (freeShippingFrom === null || subtotal >= freeShippingFrom) return 0
+  return freeShippingFrom - subtotal
+}
 
 /** Localização em texto, omitindo o bairro enquanto ele não estiver definido. */
 export const locationLabel = (): string => {
   const { district, city, state } = business.address
-  return [district, `${city}/${state}`].filter((part) => part.length > 0).join(' — ')
+  return [district, `${city}/${state}`].filter((part) => part.length > 0).join(', ')
 }
 
 export interface OpenStatus {

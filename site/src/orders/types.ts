@@ -22,7 +22,14 @@ export interface Order {
   readonly status: OrderStatus
   readonly customer: Customer
   readonly items: readonly CartItem[]
+  /** Soma dos itens, sem entrega. Ausente em pedidos criados antes da taxa existir. */
+  readonly subtotal?: number
+  /** Taxa cobrada nesse pedido. 0 quando a entrega saiu grátis. */
+  readonly deliveryFee?: number
+  /** O que o cliente paga: subtotal + entrega. */
   readonly total: number
+  /** Quando o cliente confirmou que recebeu. `null` enquanto não confirmar. */
+  readonly confirmedAt?: string | null
   /** Quando saiu do status "novo" pela última vez, para histórico. */
   readonly updatedAt: string
 }
@@ -39,6 +46,13 @@ export const paymentLabels: Readonly<Record<PaymentMethod, string>> = {
   pix: 'Pix',
   dinheiro: 'Dinheiro',
   cartao: 'Cartão na entrega',
+}
+
+/** Linha de apoio de cada forma de pagamento, mostrada no checkout. */
+export const paymentHints: Readonly<Record<PaymentMethod, string>> = {
+  pix: 'A chave chega no WhatsApp junto da confirmação',
+  dinheiro: 'Diga abaixo se precisa de troco',
+  cartao: 'Crédito ou débito na maquininha, na entrega',
 }
 
 /** Ordem em que os status aparecem no painel. */
