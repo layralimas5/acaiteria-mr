@@ -11,7 +11,7 @@ export function Hero() {
   return (
     <section
       id="topo"
-      className="relative isolate flex min-h-[40rem] items-start overflow-hidden bg-acai-900 text-white sm:min-h-[38rem] sm:items-center lg:min-h-[40rem]"
+      className="relative isolate flex min-h-[40rem] items-end overflow-hidden bg-acai-900 text-white sm:min-h-[38rem] sm:items-center lg:min-h-[40rem]"
     >
       {images.length > 0 && (
         <div aria-hidden="true" className="absolute inset-0 -z-10">
@@ -32,18 +32,25 @@ export function Hero() {
                   loading={current === 0 ? 'eager' : 'lazy'}
                   decoding="async"
                   fetchPriority={current === 0 ? 'high' : 'low'}
-                  className="size-full object-cover object-[88%_bottom] sm:object-[92%_center] lg:object-right"
+                  className="size-full object-cover object-[88%_center] sm:object-[92%_center] lg:object-right"
                 />
               </picture>
             </motion.div>
           </AnimatePresence>
 
           {/*
-            No celular o escurecimento termina antes do fim: o texto fica no
-            terço de cima e a arte aparece limpa embaixo. No desktop ele é
-            horizontal, escuro à esquerda e limpo do lado dos copos.
+            No celular o escuro sobe do rodapé: o texto fica embaixo, com leitura
+            garantida, e a arte aparece limpa na parte de cima. Do tablet para
+            cima ele desce do topo, e no desktop vira horizontal, escuro à
+            esquerda e limpo do lado dos copos.
           */}
-          <div className="absolute inset-0 bg-gradient-to-b from-acai-950 from-2% via-acai-950/80 via-34% to-transparent to-70% sm:via-acai-950/82 sm:via-58% sm:to-acai-950/25 sm:to-100% lg:bg-gradient-to-r lg:from-acai-950 lg:from-12% lg:via-acai-950/78 lg:via-42% lg:to-transparent lg:to-68%" />
+          <div className="absolute inset-0 bg-gradient-to-t from-acai-950 from-6% via-acai-950/85 via-44% to-transparent to-80% sm:bg-gradient-to-b sm:from-acai-950 sm:from-2% sm:via-acai-950/82 sm:via-58% sm:to-acai-950/25 sm:to-100% lg:bg-gradient-to-r lg:from-acai-950 lg:from-12% lg:via-acai-950/78 lg:via-42% lg:to-transparent lg:to-68%" />
+
+          {/*
+            Só no celular: uma sombra curta no topo, para o menu branco ler
+            sobre a parte clara da arte.
+          */}
+          <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-acai-950/75 to-transparent sm:hidden" />
         </div>
       )}
 
@@ -52,7 +59,13 @@ export function Hero() {
         className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"
       />
 
-      <div className="relative mx-auto w-full max-w-6xl px-5 pb-56 pt-24 sm:pb-20 sm:pt-36">
+      {/*
+        No celular o bloco encosta no rodapé: sem respiro em cima, ele desce de
+        verdade em vez de ficar no meio. Quem garante a folga do menu fixo é a
+        altura mínima da seção, que sobra bastante. Do tablet para cima o texto
+        volta a ser centralizado e o respiro do topo volta com ele.
+      */}
+      <div className="relative mx-auto w-full max-w-6xl px-5 pb-14 pt-0 sm:pb-20 sm:pt-36">
         <div className="max-w-xl">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-acai-100 ring-1 ring-white/15 backdrop-blur-sm">
