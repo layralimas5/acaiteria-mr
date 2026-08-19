@@ -17,8 +17,10 @@ O plano gratuito atende com folga o volume de uma açaiteria.
 ## 2. Rodar o SQL
 
 1. No projeto, abra **SQL Editor**
-2. Cole o conteúdo de `supabase/migrations/0001_init.sql` inteiro
-3. Clique em **Run**
+2. Rode os arquivos de `supabase/migrations/` **em ordem de número**, um de
+   cada vez: cole o conteúdo inteiro e clique em **Run**
+   - `0001_init.sql`: tabelas, índices, funções e as regras de segurança
+   - `0002_create_order.sql`: a função que cria pedido pelo site
 
 Isso cria as tabelas, os índices, as funções e as regras de segurança (RLS).
 O banco nasce **vazio**: nenhum produto, nenhum preço. Quem cadastra o
@@ -82,9 +84,12 @@ A segurança está no banco, não na tela. Mesmo que alguém descubra a chave
 | Visitante do site | **Não** consegue ler pedido nenhum, nem o próprio, nem ver estoque ou caixa |
 | Loja (logada) | Tudo |
 
-A confirmação de recebimento passa pela função `confirm_order`, que carimba a
-hora e devolve só sim ou não: é a única forma de um visitante tocar na tabela
-de pedidos.
+O visitante nunca escreve direto na tabela de pedidos. Ele tem duas funções, e
+só isso:
+
+- `create_order` grava o pedido e devolve apenas o número dele. O total é
+  calculado no banco, então não dá para forjar preço pelo navegador
+- `confirm_order` carimba a hora do recebimento e devolve só sim ou não
 
 ## Backup
 

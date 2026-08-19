@@ -51,27 +51,51 @@ export const listOrders = async (): Promise<readonly Order[]> => {
   return ((data ?? []) as OrderRow[]).map(toOrder)
 }
 
+interface CreatedRow {
+  id: string
+  code: string
+  created_at: string
+}
+
+/**
+ * Cria o pedido e devolve o número que o cliente vai usar.
+ *
+ * Passa por uma função do banco de propósito: o cliente não pode ler a tabela
+ * de pedidos, que guarda dados de outras pessoas, então um insert que devolve
+ * a linha inteira esbarraria no RLS. A função grava, calcula o total e
+ * devolve só o identificador, o número e a hora deste pedido.
+ */
 export const createOrder = async (
   items: readonly CartItem[],
   subtotal: number,
   deliveryFee: number,
   customer: Customer,
 ): Promise<Order> => {
-  // O número do pedido nasce no banco, numa sequência que não reinicia.
-  const { data, error } = await supabase
-    .from('orders')
-    .insert({
-      customer,
-      items,
-      subtotal,
-      delivery_fee: deliveryFee,
-      total: subtotal + deliveryFee,
-    })
-    .select(SELECT)
-    .single()
+  const { data, error } = await supabase.rpc('create_order', {
+    p_customer: customer,
+    p_items: items,
+    p_subtotal: subtotal,
+    p_delivery_fee: deliveryFee,
+  })
 
   if (error) throw error
-  return toOrder(data as OrderRow)
+
+  const created = (data as CreatedRow[] | null)?.[0]
+  if (!created) throw new Error('O pedido não foi criado. Tente de novo.')
+
+  return {
+    id: created.id,
+    code: created.code,
+    createdAt: created.created_at,
+    updatedAt: created.created_at,
+    status: 'novo',
+    customer,
+    items,
+    subtotal,
+    deliveryFee,
+    total: subtotal + deliveryFee,
+    confirmedAt: null,
+  }
 }
 
 export const updateOrderStatus = async (id: string, status: OrderStatus): Promise<void> => {
