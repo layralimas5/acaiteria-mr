@@ -91,13 +91,13 @@ export function BrandGallery() {
                 </span>
 
                 {artwork?.headline && (
-                  <h2 className="mt-2 text-balance text-[1.75rem] font-extrabold leading-[1.15] tracking-tight sm:text-4xl sm:drop-shadow-lg lg:text-5xl">
+                  <h2 className="mt-2 text-balance text-2xl font-extrabold leading-[1.15] tracking-tight sm:text-4xl sm:drop-shadow-lg lg:text-5xl">
                     {artwork.headline}
                   </h2>
                 )}
 
                 {artwork?.subline && (
-                  <p className="mt-3 max-w-md text-pretty text-sm leading-relaxed text-acai-100/85 sm:max-w-none sm:text-base sm:text-acai-100/90">
+                  <p className="mt-2.5 max-w-md text-pretty text-[13px] leading-relaxed text-acai-100/85 sm:mt-3 sm:max-w-none sm:text-base sm:text-acai-100/90">
                     {artwork.subline}
                   </p>
                 )}

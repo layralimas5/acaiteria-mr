@@ -14,7 +14,7 @@ const items: readonly string[] = [
  */
 export function Marquee() {
   return (
-    <div className="relative isolate overflow-hidden border-y border-white/10 bg-acai-950 py-4">
+    <div className="relative isolate overflow-hidden border-y border-white/10 bg-acai-950 py-3 sm:py-4">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-acai-950 to-transparent sm:w-28"
@@ -30,7 +30,7 @@ export function Marquee() {
             {items.map((item) => (
               <li
                 key={`${copy}-${item}`}
-                className="flex shrink-0 items-center gap-4 whitespace-nowrap px-6 text-sm font-semibold uppercase tracking-[0.14em] text-acai-100 sm:gap-6 sm:px-8 sm:text-base"
+                className="flex shrink-0 items-center gap-3 whitespace-nowrap px-5 text-xs font-semibold uppercase tracking-[0.14em] text-acai-100 sm:gap-6 sm:px-8 sm:text-base"
               >
                 <span
                   aria-hidden="true"

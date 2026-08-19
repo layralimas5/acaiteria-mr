@@ -49,11 +49,11 @@ export function Testimonials() {
   const average = reviews.reduce((sum, item) => sum + item.rating, 0) / reviews.length
 
   return (
-    <section id="depoimentos" className="scroll-mt-24 bg-white py-20 sm:py-24">
+    <section id="depoimentos" className="scroll-mt-24 bg-white py-14 sm:py-24">
       <div className="mx-auto max-w-6xl px-5">
         <div className="max-w-xl">
           <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-700">Depoimentos</span>
-          <h2 className="mt-2 text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
+          <h2 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
             Quem pediu, voltou a pedir
           </h2>
 
@@ -68,7 +68,7 @@ export function Testimonials() {
           </div>
         </div>
 
-        <div className="mt-10 grid gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+        <div className="mt-7 grid gap-3 sm:mt-10 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {reviews.map((review, index) => (
             <TestimonialCard key={review.id} review={review} index={index} />
           ))}

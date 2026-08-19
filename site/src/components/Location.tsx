@@ -6,13 +6,13 @@ export function Location() {
   const status = openStatus(new Date())
 
   return (
-    <section id="onde-estamos" className="scroll-mt-24 bg-acai-50 py-20 sm:py-24">
+    <section id="onde-estamos" className="scroll-mt-24 bg-acai-50 py-14 sm:py-24">
       <div className="mx-auto grid max-w-6xl gap-10 px-5 lg:grid-cols-2 lg:items-center">
         <div>
           <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-700">
             {deliveryOnly ? 'Área de entrega' : 'Onde estamos'}
           </span>
-          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
+          <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-ink sm:text-4xl">
             {deliveryOnly ? 'A gente leva até você' : 'Passa na loja ou chama pelo delivery'}
           </h2>
 

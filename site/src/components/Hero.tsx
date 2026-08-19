@@ -68,28 +68,28 @@ export function Hero() {
       <div className="relative mx-auto w-full max-w-6xl px-5 pb-14 pt-0 sm:pb-20 sm:pt-36">
         <div className="max-w-xl">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-acai-100 ring-1 ring-white/15 backdrop-blur-sm">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold text-acai-100 ring-1 ring-white/15 backdrop-blur-sm sm:gap-2 sm:px-3.5 sm:py-1.5 sm:text-xs">
               <span aria-hidden="true" className="size-1.5 rounded-full bg-green-400" />
               {status.label}
             </span>
             {business.deliveryOnly && (
-              <span className="inline-flex items-center rounded-full bg-white px-3.5 py-1.5 text-xs font-bold text-acai-900 shadow-sm">
+              <span className="inline-flex items-center rounded-full bg-white px-3 py-1 text-[11px] font-bold text-acai-900 shadow-sm sm:px-3.5 sm:py-1.5 sm:text-xs">
                 Só delivery
               </span>
             )}
           </div>
 
-          <h1 className="mt-6 text-balance text-4xl font-extrabold leading-[1.03] tracking-tight drop-shadow-lg sm:text-5xl lg:text-[3.5rem]">
+          <h1 className="mt-4 text-balance text-[1.75rem] font-extrabold leading-[1.1] tracking-tight drop-shadow-lg sm:mt-6 sm:text-5xl sm:leading-[1.03] lg:text-[3.5rem]">
             Açaí de verdade,
             <span className="block text-acai-200">do jeito que você monta</span>
           </h1>
 
-          <p className="mt-5 max-w-md text-pretty text-sm leading-relaxed text-acai-100/85 sm:text-base">
+          <p className="mt-3 max-w-md text-pretty text-[13px] leading-relaxed text-acai-100/85 sm:mt-5 sm:text-base">
             {business.description}
           </p>
 
           {images.length > 1 && (
-            <div className="mt-7 flex items-center gap-2">
+            <div className="mt-5 flex items-center gap-2 sm:mt-7">
               {images.map((image, index) => (
                 <button
                   key={image.src}

@@ -27,20 +27,20 @@ export function CupsShowcase({ onPick }: CupsShowcaseProps) {
   if (sizes.length === 0) return null
 
   return (
-    <section id="nossos-copos" className="scroll-mt-24 bg-white py-20 sm:py-24">
+    <section id="nossos-copos" className="scroll-mt-24 bg-white py-14 sm:py-24">
       <div className="mx-auto max-w-6xl px-5">
         <div className="max-w-xl">
           <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-700">Nossos copos</span>
-          <h2 className="mt-2 text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
+          <h2 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
             Do lanche rápido ao pote de dividir
           </h2>
-          <p className="mt-3 text-base text-muted">
+          <p className="mt-2.5 text-sm text-muted sm:mt-3 sm:text-base">
             Três tamanhos, o mesmo açaí cremoso. Todos vêm com {freeToppings} complementos grátis. Escolha
             um e monte do seu jeito.
           </p>
         </div>
 
-        <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5">
+        <div className="mt-7 grid grid-cols-2 gap-3 sm:mt-10 sm:grid-cols-3 sm:gap-5">
           {sizes.map((size, index) => (
             <CupCard
               key={size.id}
