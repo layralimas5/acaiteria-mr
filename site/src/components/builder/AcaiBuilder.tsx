@@ -209,13 +209,13 @@ export function AcaiBuilder({
       <section
         ref={sectionRef}
         id="monte-seu-acai"
-        className="scroll-mt-24 bg-gradient-to-b from-acai-50 to-white py-20 sm:py-24"
+        className="scroll-mt-24 bg-gradient-to-b from-acai-50 to-white py-14 sm:py-24"
       >
         <div className="mx-auto max-w-xl px-5 text-center">
-          <h2 className="text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
+          <h2 className="text-2xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
             {loadingCatalog ? 'Carregando o cardápio...' : 'Cardápio em montagem'}
           </h2>
-          <p className="mt-3 text-base text-muted">
+          <p className="mt-2.5 text-sm text-muted sm:mt-3 sm:text-base">
             {loadingCatalog
               ? 'Só um instante.'
               : catalogError
@@ -238,10 +238,10 @@ export function AcaiBuilder({
           <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-700">
             {isBuilding ? 'Monte seu pedido' : 'Seu pedido'}
           </span>
-          <h2 className="mt-2 text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
+          <h2 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
             {isBuilding ? 'Açaí ou sorvete, do jeito que você monta' : 'Falta pouco para receber'}
           </h2>
-          <p className="mt-3 text-base text-muted">
+          <p className="mt-2.5 text-sm text-muted sm:mt-3 sm:text-base">
             {isBuilding
               ? 'Uma etapa por vez. Pode pular para qualquer uma tocando no nome aqui em cima.'
               : 'Confira os itens, escolha como pagar e a gente sai para a entrega.'}

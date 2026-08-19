@@ -12,14 +12,14 @@ export function Delivery() {
 
   return (
     <section id="entrega" className="scroll-mt-24 bg-acai-900 text-white">
-      <div className="mx-auto max-w-6xl px-5 py-16 sm:py-20">
+      <div className="mx-auto max-w-6xl px-5 py-12 sm:py-20">
         <div>
           <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
             <div>
               <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-200">
                 {business.deliveryOnly ? 'Só delivery' : 'Entrega'}
               </span>
-              <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
+              <h2 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-4xl">
                 Pediu, chegou em {averageMinutes} minutos
               </h2>
               <p className="mt-4 max-w-md text-base leading-relaxed text-acai-100">
