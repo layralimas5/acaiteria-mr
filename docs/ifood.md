@@ -1,4 +1,4 @@
-# Integração com o iFood — o que dá e o que não dá
+# Integração com o iFood: o que dá e o que não dá
 
 ## O ponto principal
 

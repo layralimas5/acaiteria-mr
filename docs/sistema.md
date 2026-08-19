@@ -6,8 +6,9 @@ Painel onde a Açaiteria MR acompanha os pedidos feitos no site e dá baixa.
 
 - Endereço: **`/sistema`** (ex.: `acaiteriamr.com.br/sistema`)
 - Atalho: ícone de monitor no menu do site
-- Sem senha por enquanto: quem abre o endereço entra direto. A autenticação
-  de verdade entra junto com a migração dos pedidos para o banco
+- **Exige login** (e-mail e senha). O usuário é criado no painel do Supabase,
+  em Authentication. Sem entrar, o banco não devolve nenhum dado da loja
+- Sair fica no menu da conta, no canto superior direito
 
 ## O que o painel mostra
 
@@ -56,16 +57,16 @@ O que está pronto para sair e o que já está na rua, com endereço, referênci
 troco a levar, link para o mapa e para o WhatsApp do cliente. Mostra também
 quanto o entregador tem a receber na mão (tudo que não é Pix).
 
-### Estoque e Site: coisas diferentes
+### Estoque e Cardápio: coisas diferentes
 
 São duas abas, de propósito:
 
 - **Estoque** é a despensa: o que a loja compra para produzir (polpa, granola, copo, colher). Nada disso aparece para o cliente
-- **Site** é a vitrine: o que o cliente vê no montador (produtos, tamanhos, bases, complementos)
+- **Cardápio** é a vitrine: o que o cliente vê no montador (produtos, tamanhos, bases, complementos)
 
-Um item pode existir no cardápio e o insumo dele estar zerado — são controles
-separados, e é assim mesmo. Quando faltar polpa, tira o produto do ar na aba
-Site; o Estoque registra o que faltou.
+Um item pode existir no cardápio e o insumo dele estar zerado: são controles
+separados, e é assim mesmo. Quando faltar polpa, desliga o produto no
+Cardápio; o Estoque registra o que faltou.
 
 ### Estoque
 
@@ -85,25 +86,39 @@ os insumos típicos cadastrados.
 
 O controle fica em `src/inventory/store.ts`.
 
-### Site
+### Cardápio
 
-Lista o cardápio inteiro (produtos, tamanhos, bases e complementos) com uma
-chave em cada item. **O que for desligado sai do site na hora**, sem
-republicar nada, e volta pelo botão **Repor esgotados**.
+É aqui que nasce tudo que o cliente monta no site. **Nada vem de fábrica**: o
+sistema começa vazio e a loja cadastra o que vende.
 
-O botão **Adicionar item** abre a ficha de cadastro e cria complemento,
-tamanho ou base/sabor direto pelo painel. O item nasce publicado, aparece no
-montador na hora e pode ser escondido pela chave ou excluído pela lixeira.
-Itens criados assim levam a etiqueta *criado aqui*.
+A tela tem dois blocos:
 
-Três arquivos sustentam isso:
+**Produtos** (Açaí, Sorvete, o que for). Cada produto tem:
 
-- `src/stock/store.ts` — o que está esgotado
-- `src/stock/custom.ts` — os itens criados no painel
-- `src/stock/useCatalog.ts` — junta cardápio publicado + criados − esgotados, e é o que o montador lê
+- Nome, emoji e descrição
+- Como chamar a escolha: no açaí é "Base", no sorvete costuma ser "Sabor"
+- **Tamanhos**, com nome, medida, preço, etiqueta ("Mais pedido") e foto
+- **Bases ou sabores**, com nome, descrição e acréscimo de preço
 
-O cardápio publicado continua em `src/data/builder.ts`. Item de lá só sai de
-verdade com deploy; item criado no painel vive só no navegador da loja.
+**Complementos**, organizados em categorias (frutas, cremes, crocantes,
+caldas). A categoria é quem carrega a regra:
+
+- **Quantos vêm grátis** já inclusos no preço do copo
+- **Máximo por copo**, opcional (é como se limita caldas a 2, por exemplo)
+
+Cada item tem chave de disponibilidade, setas para reordenar, lápis para
+editar e lixeira para apagar. **O que for salvo vale no site na hora**, sem
+publicar nada.
+
+Regras que valem a pena saber:
+
+- Produto sem nenhum tamanho não aparece no site: sem tamanho não há preço
+- Apagar um produto apaga os tamanhos e as bases dele; apagar uma categoria apaga os complementos dela
+- Desligar é diferente de apagar: desligado some do site e volta com um clique, apagado some do cadastro
+- Pedido antigo nunca muda. A montagem inteira fica congelada no pedido, então mexer no preço hoje não reescreve o que foi vendido ontem
+
+O código fica em `src/catalog/` (`api.ts` fala com o banco, `useCatalog.ts` é
+o cache que site e painel compartilham) e a tela em `src/admin/menu/`.
 
 ### Financeiro
 
@@ -119,7 +134,7 @@ divergirem.
 
 **Por que existe o caixa manual:** o sistema só enxerga o que passou pelo
 site. Compra de insumo, aluguel, venda no balcão e retirada de sócio não têm
-como aparecer sozinhos — por isso a ficha.
+como aparecer sozinhos, por isso a ficha.
 
 ## Fluxo de trabalho
 
@@ -140,12 +155,19 @@ clicar em **Avisar cliente** no cartão do pedido.
 
 Os textos ficam em `src/orders/messages.ts`.
 
-**Por que não é automático:** notificação que chega sozinha (push no celular ou
-mensagem disparada pelo sistema) precisa de servidor — o site é estático e não
-tem de onde disparar. Com o Supabase no lugar, dá para: (a) push web de
-verdade, (b) mensagem automática via API oficial do WhatsApp (Meta Cloud API,
-que cobra por conversa) e (c) uma página de acompanhamento onde o cliente vê o
-status atualizar sozinho, que costuma ser o melhor custo-benefício.
+### Confirmação de recebimento e depoimento
+
+A mensagem de **Concluído** vai com o link `acaiteriamr.com.br/?pedido=1000`.
+O cliente toca, cai no site no card "Chegou tudo certo?" e, ao confirmar, a
+loja recebe a confirmação no WhatsApp e o cliente é levado direto para a seção
+de depoimentos, com o formulário de avaliação aberto.
+
+O passo a passo completo, os custos de automatizar o envio e a recomendação
+estão em `whatsapp-automatico.md`.
+
+**Por que ainda tem um clique:** mensagem disparada sozinha precisa de uma API
+de WhatsApp, que ou custa por mês ou tira o número do celular da loja. O
+`whatsapp-automatico.md` compara os caminhos e explica a recomendação.
 
 ## Como o pedido chega
 
@@ -157,56 +179,18 @@ status atualizar sozinho, que costuma ser o melhor custo-benefício.
 Ou seja, a loja recebe pelos dois caminhos: a mensagem chega no WhatsApp e o
 pedido fica registrado no painel para dar baixa.
 
-## Limitação importante (leia antes de publicar)
+## Onde os dados moram
 
-Os pedidos são gravados **no navegador** (localStorage), não num servidor.
-Na prática isso significa:
+Tudo que é da loja vive no **Supabase**: pedidos, cardápio, avaliações,
+estoque e caixa. Na prática:
 
-- O painel enxerga os pedidos feitos **no mesmo aparelho e navegador**
-- Pedido feito no celular do cliente **não aparece** no computador da loja
-- Hoje o que garante que a loja receba tudo é a **mensagem no WhatsApp**
+- Pedido feito no celular do cliente aparece no computador da loja **na hora**, sem recarregar a página (Realtime)
+- O painel abre igual em qualquer aparelho, bastando entrar com e-mail e senha
+- O cardápio que a loja edita é o mesmo que todo cliente vê
 
-Para o painel funcionar de verdade com pedidos de qualquer cliente, é preciso
-um banco. O código já está preparado: toda a leitura e escrita passa por
-`src/orders/store.ts`, e nenhuma tela conhece o armazenamento.
+O passo a passo de criar o projeto, rodar o SQL e configurar as chaves está em
+`supabase.md`.
 
-## Migrar para o Supabase (quando quiser)
-
-1. Criar projeto no Supabase e a tabela:
-
-```sql
-create table orders (
-  id text primary key,
-  code text not null,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  status text not null default 'novo',
-  customer jsonb not null,
-  items jsonb not null,
-  total numeric(10,2) not null
-);
-
-alter table orders enable row level security;
-
--- Qualquer visitante pode criar o próprio pedido.
-create policy "clientes criam pedidos" on orders for insert with check (true);
-
--- Só a equipe autenticada lê e atualiza.
-create policy "equipe le" on orders for select using (auth.role() = 'authenticated');
-create policy "equipe atualiza" on orders for update using (auth.role() = 'authenticated');
-```
-
-2. `npm i @supabase/supabase-js` e configurar `VITE_SUPABASE_URL` e
-   `VITE_SUPABASE_ANON_KEY`
-3. Reescrever as funções de `src/orders/store.ts` (`listOrders`, `createOrder`,
-   `updateOrderStatus`, `removeOrder`, `subscribeToOrders`) usando o client —
-   `subscribeToOrders` vira Realtime, e o painel passa a atualizar sozinho em
-   qualquer aparelho
-4. Colocar login de verdade com Supabase Auth (e-mail da equipe) e ligar o
-   **Sair** do menu da conta ao encerramento da sessão
-5. Site, caixa e estoque seguem o mesmo caminho: `src/stock/store.ts`,
-   `src/stock/custom.ts`, `src/finance/store.ts` e `src/inventory/store.ts`
-   viram tabelas, e o que a loja marca passa a valer para todos os clientes,
-   não só para o navegador dela
-
-Nenhum componente precisa ser alterado nesse processo.
+Continua no navegador, de propósito, só o que é do próprio visitante: o
+carrinho em montagem, o último pedido feito daquele aparelho (para oferecer
+"pedir de novo") e a preferência de avisar o cliente ao mudar a etapa.
