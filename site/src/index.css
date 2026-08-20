@@ -56,6 +56,39 @@
   }
 }
 
+/*
+ * Dissolve as quatro bordas da arte da marca no roxo da seção. Sem isso, a
+ * ilustração (que tem brilho arroxeado nas beiradas) encosta no fundo quase
+ * preto e desenha um retângulo visível. A máscara é composta por duas faixas,
+ * horizontal e vertical, cruzadas com `intersect` para os cantos sumirem junto.
+ */
+@utility art-fade {
+  --art-fade: 7rem;
+  /* O topo desaparece mais rápido: é onde a logo desenhada mora, e comê-la
+     com um degradê longo tiraria justamente o que a arte tem de melhor. */
+  --art-fade-top: 3.5rem;
+  --art-fade-mask:
+    linear-gradient(
+      to right,
+      transparent 0,
+      black var(--art-fade),
+      black calc(100% - var(--art-fade)),
+      transparent 100%
+    ),
+    linear-gradient(
+      to bottom,
+      transparent 0,
+      black var(--art-fade-top),
+      black calc(100% - var(--art-fade)),
+      transparent 100%
+    );
+
+  -webkit-mask-image: var(--art-fade-mask);
+  mask-image: var(--art-fade-mask);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
