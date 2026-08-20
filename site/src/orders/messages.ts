@@ -50,7 +50,7 @@ export const orderMessage = (order: Order): string => {
     '',
     `Nome: ${customer.name}`,
     `Telefone: ${customer.phone}`,
-    `Endereço: ${customer.address}`,
+    `Endereço: ${[customer.address, customer.district, customer.city].filter(Boolean).join(', ')}`,
     customer.reference ? `Referência: ${customer.reference}` : '',
     customer.notes ? `Observações: ${customer.notes}` : '',
   ]
@@ -68,7 +68,7 @@ export const statusMessage = (order: Order, status: OrderStatus): string => {
     case 'preparando':
       return `Oi ${name}! Seu pedido ${code} já está sendo preparado. Em breve sai para entrega. 💜`
     case 'entrega':
-      return `Oi ${name}! Seu pedido ${code} saiu para entrega e chega em cerca de ${business.delivery.averageMinutes} minutos. Fica de olho! 🛵`
+      return `Oi ${name}! Seu pedido ${code} saiu para entrega e chega a partir de ${business.delivery.minMinutes} minutos. Fica de olho! 🛵`
     case 'concluido':
       return `Pedido ${code} entregue, ${name}! Confirma pra gente que chegou tudo certo? É só tocar aqui: ${confirmUrl(order.code)} 💜`
     case 'cancelado':

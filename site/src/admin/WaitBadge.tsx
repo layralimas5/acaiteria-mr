@@ -13,7 +13,7 @@ interface WaitBadgeProps {
 
 export function WaitBadge({ iso, now }: WaitBadgeProps) {
   const minutes = minutesSince(iso, now)
-  const limit = business.delivery.averageMinutes
+  const limit = business.delivery.minMinutes
 
   const tone =
     minutes >= limit

@@ -101,7 +101,7 @@ export function OrderCard({
 
       <dl className="mt-4 space-y-2 border-t border-acai-100 pt-4 text-sm">
         <Detail label="Endereço">
-          {customer.address}
+          {[customer.address, customer.district, customer.city].filter(Boolean).join(', ')}
           {customer.reference && ` (${customer.reference})`}
         </Detail>
         <Detail label="Telefone">{customer.phone}</Detail>

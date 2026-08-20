@@ -7,7 +7,15 @@ export type PaymentMethod = 'pix' | 'dinheiro' | 'cartao'
 export interface Customer {
   readonly name: string
   readonly phone: string
+  /** Rua e número. O bairro e o município têm campo próprio. */
   readonly address: string
+  /** Bairro da entrega. Ausente nos pedidos anteriores ao campo existir. */
+  readonly district?: string
+  /**
+   * Município da entrega, digitado no checkout. É o que define a taxa.
+   * Ausente nos pedidos feitos antes de a loja atender mais de uma cidade.
+   */
+  readonly city?: string
   readonly reference: string
   readonly payment: PaymentMethod
   readonly changeFor: string
