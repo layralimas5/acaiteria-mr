@@ -7,6 +7,7 @@ import {
   updateCategory,
   updateTopping,
 } from '../../catalog/api'
+import { suggestEmoji } from '../../catalog/emoji'
 import type { Topping, ToppingCategory } from '../../catalog/types'
 import { formatPrice } from '../../lib/order'
 import {
@@ -187,6 +188,7 @@ export function CategoryEditor({
                 {editingId === topping.id && (
                   <ToppingForm
                     topping={topping}
+                    categoryTitle={category.title}
                     onCancel={() => setEditingId(null)}
                     onSave={(values) => {
                       run(() => updateTopping(topping.id, values))
@@ -202,6 +204,7 @@ export function CategoryEditor({
         {adding && (
           <div className="mt-2 rounded-2xl border border-acai-200">
             <ToppingForm
+              categoryTitle={category.title}
               onCancel={() => setAdding(false)}
               onSave={(values) => {
                 run(() => createTopping(category.id, values, toppings))
@@ -334,10 +337,13 @@ const emptyTopping: ToppingValues = { name: '', price: 0, emoji: '', image: '' }
 
 function ToppingForm({
   topping,
+  categoryTitle,
   onSave,
   onCancel,
 }: {
   readonly topping?: Topping
+  /** Segunda pista do ícone automático, quando o nome não diz nada. */
+  readonly categoryTitle: string
   readonly onSave: (values: ToppingValues) => void
   readonly onCancel: () => void
 }) {
@@ -355,8 +361,27 @@ function ToppingForm({
   const set = <K extends keyof ToppingValues>(key: K, value: ToppingValues[K]) =>
     setValues((current) => ({ ...current, [key]: value }))
 
+  // Ícone que o site usaria agora: o digitado, ou o que o nome sugere.
+  const suggestion = suggestEmoji(values.name, categoryTitle)
+  const chosen = values.emoji.trim()
+  const preview = chosen || suggestion
+
   return (
     <div className="border-t border-acai-100 bg-acai-50/50 p-3">
+      <div className="mb-3 flex items-center gap-3 rounded-2xl bg-white px-3 py-2.5">
+        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-acai-50 text-xl">
+          <span aria-hidden="true">{preview}</span>
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-bold text-ink">
+            {values.name.trim() || 'Novo complemento'}
+          </span>
+          <span className="block text-xs text-muted">
+            {chosen ? 'Ícone escolhido por você' : 'Ícone escolhido pelo nome, sem você fazer nada'}
+          </span>
+        </span>
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-2">
         <Field
           label="Nome"
@@ -369,7 +394,8 @@ function ToppingForm({
           label="Emoji"
           value={values.emoji}
           onChange={(value) => set('emoji', value)}
-          placeholder="🍓"
+          placeholder={suggestion}
+          hint={chosen ? undefined : `Vazio, o site usa ${suggestion} por causa do nome`}
           maxLength={4}
         />
         <NumberField
@@ -387,7 +413,10 @@ function ToppingForm({
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <PrimaryButton onClick={() => onSave(values)} disabled={values.name.trim() === ''}>
+        <PrimaryButton
+          onClick={() => onSave({ ...values, emoji: preview })}
+          disabled={values.name.trim() === ''}
+        >
           Salvar
         </PrimaryButton>
         <GhostButton onClick={onCancel}>Cancelar</GhostButton>

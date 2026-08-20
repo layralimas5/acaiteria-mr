@@ -1,4 +1,6 @@
 import { supabase } from '../lib/supabase'
+import { suggestEmoji, toppingEmoji } from './emoji'
+import { sizeImage } from './productImage'
 import type { AcaiBase, Catalog, CupSize, ProductKind, Topping, ToppingCategory } from './types'
 
 /**
@@ -71,17 +73,26 @@ interface ToppingRow {
 // Conversão banco -> tela
 // ---------------------------------------------------------------------------
 
-const toSize = (row: SizeRow): CupSize => ({
-  id: row.id,
-  productId: row.product_id,
-  name: row.name,
-  volume: row.volume,
-  basePrice: Number(row.base_price),
-  ...(row.image ? { image: row.image } : {}),
-  ...(row.highlight ? { highlight: row.highlight } : {}),
-  available: row.available,
-  sortOrder: row.sort_order,
-})
+/**
+ * A foto é do cadastro, mas a loja quase nunca cola o caminho: sem ela, o card
+ * do montador mostrava um quadrado roxo com o volume escrito. Quando o campo
+ * vem vazio, o volume escolhe a foto de estúdio que corresponde à embalagem.
+ */
+const toSize = (row: SizeRow): CupSize => {
+  const image = row.image?.trim() || sizeImage(row.volume, row.name)
+
+  return {
+    id: row.id,
+    productId: row.product_id,
+    name: row.name,
+    volume: row.volume,
+    basePrice: Number(row.base_price),
+    ...(image ? { image } : {}),
+    ...(row.highlight ? { highlight: row.highlight } : {}),
+    available: row.available,
+    sortOrder: row.sort_order,
+  }
+}
 
 const toBase = (row: BaseRow): AcaiBase => ({
   id: row.id,
@@ -101,12 +112,18 @@ const toCategory = (row: CategoryRow): ToppingCategory => ({
   sortOrder: row.sort_order,
 })
 
-const toTopping = (row: ToppingRow): Topping => ({
+/**
+ * O emoji vem do cadastro, mas quase nunca vem: a loja digita o nome do
+ * complemento e passa reto pelo campo do ícone. Quando ele chega vazio (ou com
+ * um ponto, ou com o coringa antigo), o nome decide qual ícone usar, com o
+ * título da categoria como segunda pista.
+ */
+const toTopping = (row: ToppingRow, categoryTitle = ''): Topping => ({
   id: row.id,
   categoryId: row.category_id,
   name: row.name,
   price: Number(row.price),
-  emoji: row.emoji,
+  emoji: toppingEmoji(row.emoji, row.name, categoryTitle),
   ...(row.image ? { image: row.image } : {}),
   available: row.available,
   sortOrder: row.sort_order,
@@ -152,7 +169,13 @@ export const fetchCatalog = async (): Promise<Catalog> => {
   }))
 
   const categoryList = ((categories.data ?? []) as CategoryRow[]).map(toCategory)
-  const toppingList = ((toppings.data ?? []) as ToppingRow[]).map(toTopping)
+
+  const categoryTitle = (id: string): string =>
+    categoryList.find((category) => category.id === id)?.title ?? ''
+
+  const toppingList = ((toppings.data ?? []) as ToppingRow[]).map((row) =>
+    toTopping(row, categoryTitle(row.category_id)),
+  )
 
   return {
     products: productList,
@@ -374,7 +397,7 @@ export const createTopping = async (
     category_id: categoryId,
     name: draft.name.trim(),
     price: draft.price,
-    emoji: draft.emoji.trim() || '✨',
+    emoji: draft.emoji.trim() || suggestEmoji(draft.name),
     image: draft.image.trim() || null,
     sort_order: nextOrder(existing),
   })
@@ -390,7 +413,9 @@ export const updateTopping = async (
     .update({
       ...(patch.name !== undefined && { name: patch.name.trim() }),
       ...(patch.price !== undefined && { price: patch.price }),
-      ...(patch.emoji !== undefined && { emoji: patch.emoji.trim() || '✨' }),
+      ...(patch.emoji !== undefined && {
+        emoji: patch.emoji.trim() || suggestEmoji(patch.name ?? ''),
+      }),
       ...(patch.image !== undefined && { image: patch.image.trim() || null }),
       ...(patch.available !== undefined && { available: patch.available }),
       ...(patch.categoryId !== undefined && { category_id: patch.categoryId }),

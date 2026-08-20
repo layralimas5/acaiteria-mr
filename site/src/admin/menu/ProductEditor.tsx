@@ -10,6 +10,7 @@ import {
   updateProduct,
   updateSize,
 } from '../../catalog/api'
+import { sizeImage } from '../../catalog/productImage'
 import type { AcaiBase, CupSize, ProductKind } from '../../catalog/types'
 import { formatPrice } from '../../lib/order'
 import {
@@ -389,8 +390,37 @@ function SizeForm({
   const set = <K extends keyof SizeValues>(key: K, value: SizeValues[K]) =>
     setValues((current) => ({ ...current, [key]: value }))
 
+  // Foto que o site usaria agora: a digitada, ou a que a medida sugere.
+  const suggestedImage = sizeImage(values.volume, values.name)
+  const chosenImage = values.image.trim()
+  const previewImage = chosenImage || suggestedImage
+
   return (
     <div className="border-t border-acai-100 bg-acai-50/50 p-3">
+      <div className="mb-3 flex items-center gap-3 rounded-2xl bg-white px-3 py-2.5">
+        <span className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-acai-900">
+          {previewImage ? (
+            <img src={previewImage} alt="" className="size-full object-cover" />
+          ) : (
+            <span className="text-[10px] font-extrabold text-white/90">
+              {values.volume.trim() || '?'}
+            </span>
+          )}
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-bold text-ink">
+            {values.name.trim() || 'Novo tamanho'}
+          </span>
+          <span className="block text-xs text-muted">
+            {chosenImage
+              ? 'Foto escolhida por você'
+              : suggestedImage
+                ? 'Foto escolhida pela medida, sem você fazer nada'
+                : 'Sem foto para essa medida: o card mostra a medida escrita'}
+          </span>
+        </span>
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-2">
         <Field
           label="Nome"
@@ -421,8 +451,12 @@ function SizeForm({
           label="Foto"
           value={values.image}
           onChange={(value) => set('image', value)}
-          placeholder="/imagem/pote-500ml.webp"
-          hint="Caminho de um arquivo já publicado na pasta public"
+          placeholder={suggestedImage ?? '/imagem/pote-500ml.webp'}
+          hint={
+            chosenImage || !suggestedImage
+              ? 'Caminho de um arquivo já publicado na pasta public'
+              : `Vazio, o site usa ${suggestedImage} por causa da medida`
+          }
           className="sm:col-span-2"
         />
       </div>

@@ -23,6 +23,7 @@ const targets = [
   { source: 'poto-300ml.png', output: 'poto-300ml.webp', width: 900, format: 'webp', quality: 84, product: true },
   { source: 'pote-500ml.png', output: 'pote-500ml.webp', width: 900, format: 'webp', quality: 84, product: true },
   { source: 'copo-700ml.png', output: 'copo-700ml.webp', width: 900, format: 'webp', quality: 84, product: true },
+  { source: '1-litro.png', output: '1-litro.webp', width: 900, format: 'webp', quality: 84, product: true },
   // Arte de fundo do banner, em duas larguras (celular e desktop).
   { source: 'banner.png', output: 'banner.webp', width: 1830, format: 'webp', quality: 80 },
   { source: 'banner.png', output: 'banner-960.webp', width: 960, format: 'webp', quality: 78 },
