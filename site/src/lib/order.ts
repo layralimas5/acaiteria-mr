@@ -1,4 +1,4 @@
-import { business } from '../config/business'
+import { business, type OpeningHour, type WeekDay } from '../config/business'
 
 /**
  * Camada de pedido. Hoje o pedido sai por iFood (deep link) ou WhatsApp.
@@ -59,20 +59,91 @@ const toMinutes = (time: string): number => {
   return (hours ?? 0) * 60 + (minutes ?? 0)
 }
 
-/** Status de funcionamento com base no horário configurado. */
+/** Semana na ordem em que o cliente lê, começando na segunda. */
+const weekOrder: readonly WeekDay[] = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom']
+
+const dayNames: Readonly<Record<WeekDay, string>> = {
+  seg: 'Segunda-feira',
+  ter: 'Terça-feira',
+  qua: 'Quarta-feira',
+  qui: 'Quinta-feira',
+  sex: 'Sexta-feira',
+  sab: 'Sábado',
+  dom: 'Domingo',
+}
+
+/** Um dia da semana já resolvido: ou tem faixa de atendimento, ou está fechado. */
+export interface DaySchedule {
+  readonly key: WeekDay
+  readonly name: string
+  readonly isToday: boolean
+  /** null nos dias em que a loja não abre. */
+  readonly hour: OpeningHour | null
+}
+
+const hourOf = (day: WeekDay): OpeningHour | null =>
+  business.hours.find((hour) => hour.days.some((key) => key === day)) ?? null
+
+/** Os sete dias da semana, com a faixa de cada um e o dia de hoje marcado. */
+export const weeklySchedule = (now: Date): readonly DaySchedule[] => {
+  const todayKey = dayIndexToKey[now.getDay()]
+
+  return weekOrder.map((key) => ({
+    key,
+    name: dayNames[key],
+    isToday: key === todayKey,
+    hour: hourOf(key),
+  }))
+}
+
+/** Dias em que a loja não abre, escritos por extenso. Vazio quando abre todo dia. */
+export const closedDaysLabel = (): string => {
+  const closed = weekOrder.filter((day) => hourOf(day) === null).map((day) => dayNames[day])
+  if (closed.length === 0) return ''
+  if (closed.length === 1) return closed[0] ?? ''
+  return `${closed.slice(0, -1).join(', ')} e ${closed[closed.length - 1]}`
+}
+
+/** Próximo dia de atendimento a partir de amanhã, para quando hoje já fechou. */
+const nextOpenDay = (now: Date): DaySchedule | null => {
+  const todayIndex = weekOrder.indexOf(dayIndexToKey[now.getDay()])
+  if (todayIndex < 0) return null
+
+  for (let ahead = 1; ahead <= 7; ahead += 1) {
+    const key = weekOrder[(todayIndex + ahead) % weekOrder.length]
+    if (key === undefined) continue
+    const hour = hourOf(key)
+    if (hour) {
+      return { key, name: dayNames[key], isToday: false, hour }
+    }
+  }
+  return null
+}
+
+/**
+ * Status de funcionamento com base no horário configurado. Quando está fechado,
+ * o rótulo diz quando abre de novo, em vez de só avisar que fechou.
+ */
 export const openStatus = (now: Date): OpenStatus => {
   const dayKey = dayIndexToKey[now.getDay()]
   const current = now.getHours() * 60 + now.getMinutes()
+  const today = hourOf(dayKey)
 
-  const today = business.hours.find((hour) => hour.days.some((day) => day === dayKey))
-  if (!today) return { isOpen: false, label: 'Fechado hoje' }
+  if (today) {
+    const opens = toMinutes(today.opensAt)
+    const closes = toMinutes(today.closesAt)
 
-  const opens = toMinutes(today.opensAt)
-  const closes = toMinutes(today.closesAt)
-  const isOpen = current >= opens && current < closes
-
-  return {
-    isOpen,
-    label: isOpen ? `Aberto até ${today.closesAt}` : `Abre às ${today.opensAt}`,
+    if (current >= opens && current < closes) {
+      return { isOpen: true, label: `Aberto até ${today.closesAt}` }
+    }
+    if (current < opens) {
+      return { isOpen: false, label: `Abre hoje às ${today.opensAt}` }
+    }
   }
+
+  const next = nextOpenDay(now)
+  if (!next?.hour) return { isOpen: false, label: 'Fechado' }
+
+  const weekday = next.name.replace('-feira', '')
+  return { isOpen: false, label: `Fechado · abre ${weekday.toLowerCase()} às ${next.hour.opensAt}` }
 }
