@@ -1,9 +1,17 @@
 import { business } from '../config/business'
-import { locationLabel, openStatus, whatsappUrl } from '../lib/order'
+import { closedDaysLabel, locationLabel, openStatus, weeklySchedule, whatsappUrl } from '../lib/order'
 
 export function Location() {
-  const { address, hours, deliveryOnly } = business
-  const status = openStatus(new Date())
+  const { address, deliveryOnly } = business
+  const now = new Date()
+  const status = openStatus(now)
+  const week = weeklySchedule(now)
+  const closedDays = closedDaysLabel()
+  const openDays = week.filter((day) => day.hour !== null)
+  const shift = openDays[0]?.hour ?? null
+  const sameShiftEveryDay =
+    shift !== null &&
+    openDays.every((day) => day.hour?.opensAt === shift.opensAt && day.hour?.closesAt === shift.closesAt)
 
   return (
     <section id="onde-estamos" className="scroll-mt-24 bg-acai-50 py-14 sm:py-24">
@@ -40,9 +48,9 @@ export function Location() {
         </div>
 
         <div className="rounded-card border border-acai-100 bg-white p-6 sm:p-8">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h3 className="text-sm font-bold uppercase tracking-wide text-acai-800">
-              Horário
+              Horário de funcionamento
             </h3>
             <span
               className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold ${
@@ -57,16 +65,65 @@ export function Location() {
             </span>
           </div>
 
+          {sameShiftEveryDay && shift && (
+            <p className="mt-3 text-sm leading-relaxed text-muted">
+              A gente abre só à noite, das{' '}
+              <strong className="font-semibold text-ink">{shift.opensAt}</strong> às{' '}
+              <strong className="font-semibold text-ink">{shift.closesAt}</strong>, em{' '}
+              {openDays.length} dias da semana.
+            </p>
+          )}
+
           <dl className="mt-6 divide-y divide-acai-100">
-            {hours.map((hour) => (
-              <div key={hour.label} className="flex items-center justify-between py-3">
-                <dt className="text-sm text-muted">{hour.label}</dt>
-                <dd className="text-sm font-semibold text-ink">
-                  {hour.opensAt} às {hour.closesAt}
-                </dd>
-              </div>
-            ))}
+            {week.map((day) => {
+              const closed = day.hour === null
+
+              return (
+                <div
+                  key={day.key}
+                  className={`flex items-center justify-between gap-4 rounded-lg py-3 ${
+                    day.isToday ? 'bg-acai-50/80 px-3' : ''
+                  }`}
+                >
+                  <dt className="flex items-center gap-2">
+                    <span
+                      className={`text-sm ${
+                        closed ? 'text-muted/60' : day.isToday ? 'font-semibold text-ink' : 'text-muted'
+                      }`}
+                    >
+                      {day.name}
+                    </span>
+                    {day.isToday && (
+                      <span className="rounded-full bg-acai-800 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                        Hoje
+                      </span>
+                    )}
+                  </dt>
+                  <dd
+                    className={`text-sm tabular-nums ${
+                      closed ? 'text-muted/60' : 'font-semibold text-ink'
+                    }`}
+                  >
+                    {closed ? 'Fechado' : `${day.hour?.opensAt} às ${day.hour?.closesAt}`}
+                  </dd>
+                </div>
+              )
+            })}
           </dl>
+
+          <div className="mt-6 space-y-2 border-t border-acai-100 pt-5 text-sm leading-relaxed text-muted">
+            {closedDays && (
+              <p>
+                <span className="font-semibold text-ink">{closedDays}</span> a gente não abre.
+              </p>
+            )}
+            {shift && (
+              <p>
+                Dá pra pedir até {shift.closesAt}, e a entrega leva em média{' '}
+                {business.delivery.averageMinutes} minutos.
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </section>

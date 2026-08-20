@@ -90,14 +90,18 @@ export const business: BusinessConfig = {
   address: {
     street: '',
     district: '',
-    city: 'Cariacica',
+    city: 'Viana',
     state: 'ES',
     zip: '',
-    mapsUrl: 'https://maps.google.com/?q=Açaiteria+MR+Cariacica+ES',
+    mapsUrl: 'https://maps.google.com/?q=Açaiteria+MR+Viana+ES',
   },
   hours: [
-    { label: 'Segunda a sexta', days: ['seg', 'ter', 'qua', 'qui', 'sex'], opensAt: '13:00', closesAt: '22:00' },
-    { label: 'Sábado e domingo', days: ['sab', 'dom'], opensAt: '14:00', closesAt: '23:00' },
+    {
+      label: 'Seg, ter, qua, sex e sáb',
+      days: ['seg', 'ter', 'qua', 'sex', 'sab'],
+      opensAt: '18:30',
+      closesAt: '23:00',
+    },
   ],
   heroImages: [
     {
@@ -132,7 +136,7 @@ export const business: BusinessConfig = {
   delivery: {
     ifoodUrl: '',
     fee: 5,
-    freeShippingFrom: 40,
+    freeShippingFrom: null,
     averageMinutes: 35,
   },
   payments: {
