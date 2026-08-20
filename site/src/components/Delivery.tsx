@@ -8,7 +8,7 @@ const steps = [
 ] as const
 
 export function Delivery() {
-  const { freeShippingFrom, averageMinutes } = business.delivery
+  const { freeShippingFrom, minMinutes } = business.delivery
 
   return (
     <section id="entrega" className="scroll-mt-24 bg-acai-900 text-white">
@@ -20,7 +20,7 @@ export function Delivery() {
                 {business.deliveryOnly ? 'Só delivery' : 'Entrega'}
               </span>
               <h2 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-4xl">
-                Pediu, chegou em {averageMinutes} minutos
+                Pediu, chega a partir de {minMinutes} minutos
               </h2>
               <p className="mt-4 max-w-md text-base leading-relaxed text-acai-100">
                 {hasIfood()

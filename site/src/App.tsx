@@ -49,7 +49,7 @@ const shouldInviteReview = (order: LastOrder | null): boolean => {
   if (linkedCode('pedido') === order.code && hasConfirmed(order.code)) return true
 
   const minutes = (Date.now() - new Date(order.createdAt).getTime()) / 60_000
-  return minutes >= business.delivery.averageMinutes + 30
+  return minutes >= business.delivery.minMinutes + 30
 }
 
 export default function App() {

@@ -1,4 +1,5 @@
 import { business } from '../config/business'
+import { formatPrice } from '../lib/order'
 
 /**
  * Dados da loja que aparecem no site. São lidos de `config/business.ts`, o
@@ -63,7 +64,14 @@ export function AccountView() {
             Entrega
           </h2>
           <dl className="mt-4 space-y-3 text-sm">
-            <Row label="Tempo médio" value={`${business.delivery.averageMinutes} minutos`} />
+            <Row label="Prazo mínimo" value={`${business.delivery.minMinutes} minutos`} />
+            {business.delivery.areas.map((area) => (
+              <Row
+                key={area.city}
+                label={`Taxa em ${area.city}`}
+                value={formatPrice(area.fee)}
+              />
+            ))}
             <Row
               label="Frete grátis"
               value={

@@ -13,6 +13,13 @@ export interface OpeningHour {
   readonly closesAt: string
 }
 
+/** Município atendido e o que a entrega custa nele. */
+export interface DeliveryArea {
+  readonly city: string
+  readonly state: string
+  readonly fee: number
+}
+
 export interface Artwork {
   readonly src: string
   readonly srcSmall: string
@@ -60,11 +67,15 @@ export interface BusinessConfig {
   readonly delivery: {
     /** URL da loja no iFood. Vazio esconde o botão automaticamente. */
     readonly ifoodUrl: string
-    /** Taxa de entrega cobrada por pedido. 0 significa entrega sempre grátis. */
-    readonly fee: number
+    /**
+     * Municípios atendidos, cada um com a própria taxa. O primeiro é o padrão
+     * do checkout: é onde a loja fica e de onde vem a maioria dos pedidos.
+     */
+    readonly areas: readonly DeliveryArea[]
     /** Acima desse valor a taxa zera. `null` desliga a regra de frete grátis. */
     readonly freeShippingFrom: number | null
-    readonly averageMinutes: number
+    /** Piso do prazo de entrega: o pedido chega a partir daqui, nunca antes. */
+    readonly minMinutes: number
   }
   readonly payments: {
     /** Chave Pix mostrada no checkout. Vazia esconde o aviso. */
@@ -135,9 +146,12 @@ export const business: BusinessConfig = {
   deliveryOnly: true,
   delivery: {
     ifoodUrl: '',
-    fee: 5,
+    areas: [
+      { city: 'Viana', state: 'ES', fee: 3 },
+      { city: 'Cariacica', state: 'ES', fee: 6 },
+    ],
     freeShippingFrom: null,
-    averageMinutes: 35,
+    minMinutes: 40,
   },
   payments: {
     pixKey: '',

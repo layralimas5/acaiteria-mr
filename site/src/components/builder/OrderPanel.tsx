@@ -2,7 +2,15 @@ import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useCart } from '../../cart/CartContext'
 import type { CartItem } from '../../cart/CartContext'
-import { deliveryFee, formatPrice, missingForFreeShipping, whatsappUrl } from '../../lib/order'
+import type { DeliveryArea } from '../../config/business'
+import {
+  cheapestDeliveryArea,
+  deliveryFee,
+  findDeliveryArea,
+  formatPrice,
+  missingForFreeShipping,
+  whatsappUrl,
+} from '../../lib/order'
 import { errorMessage } from '../../lib/supabase'
 import { saveLastOrder } from '../../orders/lastOrder'
 import { orderMessage } from '../../orders/messages'
@@ -32,13 +40,25 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
   const [order, setOrder] = useState<Order | null>(null)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Quem já pediu daqui volta com a cidade da última entrega; o resto só ganha
+  // município no checkout. A taxa mora aqui porque o cabeçalho, o resumo e o
+  // pedido gravado precisam da mesma conta.
+  const [area, setArea] = useState<DeliveryArea | null>(() =>
+    findDeliveryArea(knownCustomer?.city ?? ''),
+  )
 
-  const fee = deliveryFee(total)
+  // Sem cidade, a sacola mostra a menor taxa possível e avisa que é um piso:
+  // é mais honesto do que fechar um valor que ainda pode subir.
+  const feeIsEstimate = area === null
+  const fee = deliveryFee(total, area ?? cheapestDeliveryArea())
   const missingForFree = missingForFreeShipping(total)
   const grandTotal = total + fee
 
   const handleSubmit = (customer: Customer) => {
     if (sending) return
+    // A cidade vem no cliente, então a taxa é recalculada aqui: é ela que vai
+    // para o banco, e não a que estava na tela antes de ele escolher.
+    const chargedFee = deliveryFee(total, findDeliveryArea(customer.city ?? '') ?? area)
 
     setSending(true)
     setError(null)
@@ -48,7 +68,7 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
     // vazia e recebe o endereço quando o pedido tiver número.
     const tab = window.open('', '_blank', 'noopener,noreferrer')
 
-    void createOrder(items, total, fee, customer)
+    void createOrder(items, total, chargedFee, customer)
       .then((created) => {
         saveLastOrder(created)
         setOrder(created)
@@ -100,12 +120,17 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
             Pagamento e entrega
           </h3>
           <p className="mt-1 text-sm text-muted">
-            {count} {count === 1 ? 'item' : 'itens'} · total de {formatPrice(grandTotal)}
+            {count} {count === 1 ? 'item' : 'itens'} ·{' '}
+            {feeIsEstimate
+              ? `a partir de ${formatPrice(grandTotal)}`
+              : `total de ${formatPrice(grandTotal)}`}
           </p>
         </header>
 
         <CheckoutForm
           subtotal={total}
+          area={area}
+          onAreaChange={setArea}
           initialCustomer={knownCustomer}
           onSubmit={handleSubmit}
           onCancel={() => setStage('cart')}
@@ -170,11 +195,17 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
         <div className="flex justify-between gap-4">
           <dt className="text-muted">Entrega</dt>
           <dd className={`font-semibold ${fee === 0 ? 'text-green-700' : 'text-ink'}`}>
-            {fee === 0 ? 'Grátis' : formatPrice(fee)}
+            {fee === 0
+              ? 'Grátis'
+              : feeIsEstimate
+                ? `a partir de ${formatPrice(fee)}`
+                : formatPrice(fee)}
           </dd>
         </div>
         <div className="flex items-baseline justify-between gap-4 border-t border-acai-100 pt-2">
-          <dt className="text-base font-bold text-ink">Total</dt>
+          <dt className="text-base font-bold text-ink">
+            {feeIsEstimate ? 'Total a partir de' : 'Total'}
+          </dt>
           <dd className="text-2xl font-extrabold text-acai-800">{formatPrice(grandTotal)}</dd>
         </div>
       </dl>

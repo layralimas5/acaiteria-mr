@@ -3,7 +3,7 @@ import { business } from '../config/business'
 const items: readonly string[] = [
   'Batido na hora',
   'Complemento à vontade de escolha',
-  `Entrega em ~${business.delivery.averageMinutes} min`,
+  `Entrega a partir de ${business.delivery.minMinutes} min`,
   ...(business.deliveryOnly ? ['Só delivery'] : []),
 ]
 

@@ -1,4 +1,5 @@
-import { business, type OpeningHour, type WeekDay } from '../config/business'
+import { business, type DeliveryArea, type OpeningHour, type WeekDay } from '../config/business'
+import { foldCase } from './text'
 
 /**
  * Camada de pedido. Hoje o pedido sai por iFood (deep link) ou WhatsApp.
@@ -24,14 +25,62 @@ export const whatsappDisplay = (): string => {
   return `(${area}) ${number.slice(0, split)}-${number.slice(split)}`
 }
 
+// ---------------------------------------------------------------------------
+// Área de entrega
+// ---------------------------------------------------------------------------
+
+/** Municípios atendidos, na ordem em que o checkout mostra. */
+export const deliveryAreas = (): readonly DeliveryArea[] => business.delivery.areas
+
+/** Município padrão do checkout: onde a loja fica. */
+export const defaultDeliveryArea = (): DeliveryArea | null =>
+  business.delivery.areas[0] ?? null
+
+const sameCity = (a: string, b: string): boolean => foldCase(a) === foldCase(b)
+
+/** Município atendido pelo nome, venha ele do formulário ou do pedido salvo. */
+export const findDeliveryArea = (city: string): DeliveryArea | null =>
+  deliveryAreas().find((area) => sameCity(area.city, city)) ?? null
+
 /**
- * Taxa de entrega de um pedido. Zera sozinha quando o subtotal alcança
- * `freeShippingFrom`. A regra vive aqui, nunca dentro de componente.
+ * Município reconhecido no endereço que o cliente digitou. É o que faz a taxa
+ * de Cariacica aparecer sozinha quando ele escreve o bairro e a cidade na
+ * mesma linha, sem precisar mexer no seletor.
  */
-export const deliveryFee = (subtotal: number): number => {
-  const { fee, freeShippingFrom } = business.delivery
+export const detectDeliveryArea = (address: string): DeliveryArea | null => {
+  const text = foldCase(address)
+  if (text === '') return null
+
+  // A cidade costuma fechar o endereço ("Rua Viana, 10, Campo Grande,
+  // Cariacica"), então vale a que aparece por último: nome de rua no começo
+  // não rouba a vez do município no fim.
+  const found = deliveryAreas()
+    .map((area) => ({
+      area,
+      at: text.search(new RegExp(`(^|[^a-z])${foldCase(area.city)}([^a-z]|$)`)),
+    }))
+    .filter((match) => match.at >= 0)
+    .sort((a, b) => b.at - a.at)
+
+  return found[0]?.area ?? null
+}
+
+/** Município mais barato, usado como piso antes de o cliente dizer onde mora. */
+export const cheapestDeliveryArea = (): DeliveryArea | null =>
+  deliveryAreas().reduce<DeliveryArea | null>(
+    (lowest, area) => (lowest === null || area.fee < lowest.fee ? area : lowest),
+    null,
+  )
+
+/**
+ * Taxa de entrega de um pedido. Depende do município e zera sozinha quando o
+ * subtotal alcança `freeShippingFrom`. A regra vive aqui, nunca dentro de
+ * componente. Sem município escolhido, vale a taxa do município padrão.
+ */
+export const deliveryFee = (subtotal: number, area: DeliveryArea | null = null): number => {
+  const { freeShippingFrom } = business.delivery
   if (freeShippingFrom !== null && subtotal >= freeShippingFrom) return 0
-  return fee
+  return (area ?? defaultDeliveryArea())?.fee ?? 0
 }
 
 /** Quanto falta para a entrega sair de graça. 0 quando já está grátis ou a regra não existe. */
@@ -39,6 +88,14 @@ export const missingForFreeShipping = (subtotal: number): number => {
   const { freeShippingFrom } = business.delivery
   if (freeShippingFrom === null || subtotal >= freeShippingFrom) return 0
   return freeShippingFrom - subtotal
+}
+
+/** Municípios atendidos escritos por extenso: "Viana e Cariacica". */
+export const deliveryAreasLabel = (): string => {
+  const cities = deliveryAreas().map((area) => area.city)
+  if (cities.length === 0) return ''
+  if (cities.length === 1) return cities[0] ?? ''
+  return `${cities.slice(0, -1).join(', ')} e ${cities[cities.length - 1]}`
 }
 
 /** Localização em texto, omitindo o bairro enquanto ele não estiver definido. */

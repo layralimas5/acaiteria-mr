@@ -1,5 +1,12 @@
 import { business } from '../config/business'
-import { closedDaysLabel, locationLabel, openStatus, weeklySchedule, whatsappUrl } from '../lib/order'
+import {
+  closedDaysLabel,
+  deliveryAreasLabel,
+  locationLabel,
+  openStatus,
+  weeklySchedule,
+  whatsappUrl,
+} from '../lib/order'
 
 export function Location() {
   const { address, deliveryOnly } = business
@@ -26,14 +33,15 @@ export function Location() {
 
           {deliveryOnly && (
             <p className="mt-4 max-w-md text-base leading-relaxed text-muted">
-              Trabalhamos só com entrega, sem atendimento no balcão. Atendemos{' '}
-              {address.city} e região.
+              Trabalhamos só com entrega, sem atendimento no balcão. Entregamos em{' '}
+              {deliveryAreasLabel() || address.city}.
             </p>
           )}
 
           <address className="mt-6 not-italic text-base leading-relaxed text-muted">
             {locationLabel()}
           </address>
+
 
           <a
             href={whatsappUrl(
@@ -119,8 +127,8 @@ export function Location() {
             )}
             {shift && (
               <p>
-                Dá pra pedir até {shift.closesAt}, e a entrega leva em média{' '}
-                {business.delivery.averageMinutes} minutos.
+                Dá pra pedir até {shift.closesAt}, e a entrega chega a partir de{' '}
+                {business.delivery.minMinutes} minutos depois da confirmação.
               </p>
             )}
           </div>

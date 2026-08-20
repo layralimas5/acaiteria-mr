@@ -48,7 +48,7 @@ export function DeliveriesView({ orders, onAdvance }: DeliveriesViewProps) {
     <>
       <h1 className="text-xl font-extrabold text-ink">Entregas</h1>
       <p className="mt-1 text-sm text-muted">
-        Tempo médio combinado com o cliente: {business.delivery.averageMinutes} minutos.
+        Prazo combinado com o cliente: a partir de {business.delivery.minMinutes} minutos.
       </p>
 
       <section aria-label="Resumo" className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
