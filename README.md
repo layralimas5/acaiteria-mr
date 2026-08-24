@@ -27,6 +27,7 @@ npm run preview  # serve o dist/
 | Produtos, preços, categorias, complementos | `site/src/data/products.ts` |
 | Regras de link de pedido (iFood vs WhatsApp) | `site/src/lib/order.ts` |
 | Cores e tipografia | `site/src/index.css` (bloco `@theme`) |
+| Layout do comprovante impresso do pedido | `site/src/orders/receipt.ts` |
 
 Nenhum componente tem telefone, preço ou link hardcoded. Tudo vem desses arquivos.
 

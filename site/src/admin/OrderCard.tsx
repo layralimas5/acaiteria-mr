@@ -1,5 +1,6 @@
 import { formatPrice } from '../lib/order'
 import { notifyUrl } from '../orders/messages'
+import { printReceipt } from '../orders/receipt'
 import type { Order, OrderStatus } from '../orders/types'
 import { nextStatus, paymentLabels, statusFlow, statusLabels } from '../orders/types'
 import { WaitBadge } from './WaitBadge'
@@ -159,15 +160,26 @@ export function OrderCard({
           </div>
         </div>
 
-        <a
-          href={notifyUrl(order, order.status)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-full border border-acai-200 px-4 py-3 text-sm font-bold text-acai-800 transition-colors hover:bg-acai-50"
-        >
-          <WhatsAppIcon />
-          Avisar cliente ({statusLabels[order.status].toLowerCase()})
-        </a>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <a
+            href={notifyUrl(order, order.status)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex min-w-[12rem] flex-1 items-center justify-center gap-2 rounded-full border border-acai-200 px-4 py-3 text-sm font-bold text-acai-800 transition-colors hover:bg-acai-50"
+          >
+            <WhatsAppIcon />
+            Avisar cliente ({statusLabels[order.status].toLowerCase()})
+          </a>
+
+          <button
+            type="button"
+            onClick={() => printReceipt(order)}
+            className="flex items-center justify-center gap-2 rounded-full border border-acai-200 px-4 py-3 text-sm font-bold text-acai-800 transition-colors hover:bg-acai-50"
+          >
+            <PrinterIcon />
+            Imprimir
+          </button>
+        </div>
       </div>
     </article>
   )
@@ -234,6 +246,16 @@ function Detail({ label, children }: { readonly label: string; readonly children
       <dt className="w-24 shrink-0 font-bold text-acai-700">{label}</dt>
       <dd className="min-w-0 text-muted">{children}</dd>
     </div>
+  )
+}
+
+function PrinterIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4 fill-none stroke-current stroke-2">
+      <path d="M7 9V3h10v6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 9h14a2 2 0 0 1 2 2v6h-4v4H7v-4H3v-6a2 2 0 0 1 2-2Z" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7 17h10" strokeLinecap="round" />
+    </svg>
   )
 }
 
