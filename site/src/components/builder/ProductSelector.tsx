@@ -26,10 +26,9 @@ export function ProductSelector({ products, selected, onSelect }: ProductSelecto
             type="button"
             role="radio"
             aria-checked={isSelected}
-            disabled={!product.available}
             onClick={() => onSelect(product)}
-            whileTap={product.available ? { scale: 0.98 } : undefined}
-            className={`relative flex items-center gap-3 rounded-card border p-3 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-45 sm:gap-4 sm:p-4 ${
+            whileTap={{ scale: 0.98 }}
+            className={`relative flex items-center gap-3 rounded-card border p-3 text-left transition-all duration-200 sm:gap-4 sm:p-4 ${
               isSelected
                 ? 'border-acai-800 bg-white shadow-xl shadow-acai-900/10 ring-2 ring-acai-800'
                 : 'border-acai-100 bg-white hover:-translate-y-0.5 hover:border-acai-300 hover:shadow-lg hover:shadow-acai-900/5'
@@ -51,9 +50,6 @@ export function ProductSelector({ products, selected, onSelect }: ProductSelecto
               <span className="mt-2 block text-xs font-bold text-acai-800">
                 a partir de {formatPrice(cheapest)}
               </span>
-              {!product.available && (
-                <span className="mt-1 block text-xs font-semibold text-muted">Indisponível hoje</span>
-              )}
             </span>
           </motion.button>
         )

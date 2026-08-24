@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { useCart } from '../../cart/CartContext'
 import type { AcaiBase, CupSize, ProductKind, Topping } from '../../catalog/types'
-import { useCatalog } from '../../catalog/useCatalog'
+import { useSellableCatalog } from '../../catalog/sellable'
 import type { Customer } from '../../orders/types'
 import type { BuildSelection } from '../../lib/builder'
 import { canAddTopping, emptySelection, priceBuild, toggleTopping } from '../../lib/builder'
@@ -43,8 +43,8 @@ export function AcaiBuilder({
   onPresetApplied,
 }: AcaiBuilderProps) {
   const { addBuild, count } = useCart()
-  /** Cardápio que a loja cadastrou no painel, com o que está no ar hoje. */
-  const { catalog, loading: loadingCatalog, error: catalogError } = useCatalog()
+  /** Só o que a loja deixou no ar: item desmarcado no painel nem chega aqui. */
+  const { catalog, loading: loadingCatalog, error: catalogError } = useSellableCatalog()
   const { products: productKinds, categories, toppingsByCategory, rules } = catalog
   const [selection, setSelection] = useState<BuildSelection>(emptySelection)
   const [notes, setNotes] = useState('')
@@ -200,11 +200,7 @@ export function AcaiBuilder({
     { id: 5, label: 'Finalizar', done: false, hint: formatPrice(pricing.totalPrice) },
   ]
 
-  const sellable = productKinds.filter(
-    (kind) => kind.available && kind.sizes.some((size) => size.available),
-  )
-
-  if (loadingCatalog || sellable.length === 0) {
+  if (loadingCatalog || productKinds.length === 0) {
     return (
       <section
         ref={sectionRef}
@@ -277,7 +273,7 @@ export function AcaiBuilder({
                     }
                   >
                     <ProductSelector
-                      products={sellable}
+                      products={productKinds}
                       selected={selection.product}
                       onSelect={selectProduct}
                     />

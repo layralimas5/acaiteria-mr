@@ -23,10 +23,9 @@ export function SizeSelector({ sizes, freeToppings, selected, onSelect }: SizeSe
             type="button"
             role="radio"
             aria-checked={isSelected}
-            disabled={!size.available}
             onClick={() => onSelect(size)}
-            whileTap={size.available ? { scale: 0.98 } : undefined}
-            className={`group relative flex items-center gap-3 overflow-hidden rounded-card border p-2.5 text-left transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-45 sm:flex-col sm:items-stretch sm:gap-4 sm:p-4 ${
+            whileTap={{ scale: 0.98 }}
+            className={`group relative flex items-center gap-3 overflow-hidden rounded-card border p-2.5 text-left transition-all duration-200 sm:flex-col sm:items-stretch sm:gap-4 sm:p-4 ${
               isSelected
                 ? 'border-acai-800 bg-white shadow-xl shadow-acai-900/10 ring-2 ring-acai-800'
                 : 'border-acai-100 bg-white hover:-translate-y-0.5 hover:border-acai-300 hover:shadow-lg hover:shadow-acai-900/5'
@@ -68,10 +67,6 @@ export function SizeSelector({ sizes, freeToppings, selected, onSelect }: SizeSe
               <span className="mt-1.5 inline-block whitespace-nowrap rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700 sm:mt-2 sm:px-2.5 sm:py-1 sm:text-[11px]">
                 {freeToppings} complementos grátis
               </span>
-
-              {!size.available && (
-                <span className="mt-2 block text-xs font-semibold text-muted">Indisponível hoje</span>
-              )}
             </span>
           </motion.button>
         )

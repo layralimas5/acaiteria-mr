@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import type { CupSize } from '../catalog/types'
 import { totalFreeToppings } from '../catalog/types'
-import { useCatalog } from '../catalog/useCatalog'
+import { useSellableCatalog } from '../catalog/sellable'
 import { formatPrice } from '../lib/order'
 
 interface CupsShowcaseProps {
@@ -16,12 +16,9 @@ interface CupsShowcaseProps {
  * some inteira em vez de mostrar um quadrado vazio.
  */
 export function CupsShowcase({ onPick }: CupsShowcaseProps) {
-  const { catalog } = useCatalog()
+  const { catalog } = useSellableCatalog()
 
-  const sizes = catalog.products
-    .filter((product) => product.available)
-    .flatMap((product) => product.sizes)
-    .filter((size) => size.available && size.image)
+  const sizes = catalog.products.flatMap((product) => product.sizes).filter((size) => size.image)
   const freeToppings = totalFreeToppings(catalog.categories)
 
   if (sizes.length === 0) return null

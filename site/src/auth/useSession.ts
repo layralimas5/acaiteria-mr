@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { devAutoLogin, isDevAutoLoginEnabled } from './devAutoLogin'
 
 /**
  * Sessão da loja no painel.
@@ -23,9 +24,19 @@ export const useSession = (): SessionState => {
   useEffect(() => {
     let active = true
 
-    void supabase.auth.getSession().then(({ data }) => {
-      if (active) setState({ session: data.session, loading: false })
-    })
+    void supabase.auth
+      .getSession()
+      .then(async ({ data }) => {
+        // Em desenvolvimento, quem ainda não entrou entra sozinho: o
+        // `onAuthStateChange` abaixo recebe a sessão criada e o painel abre.
+        if (!data.session && isDevAutoLoginEnabled) await devAutoLogin()
+        return data.session
+      })
+      .then((session) => {
+        // O login automático já publicou a sessão pelo evento; aqui só se
+        // encerra a espera de quem não tem sessão nenhuma.
+        if (active) setState((current) => (current.session ? current : { session, loading: false }))
+      })
 
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       if (active) setState({ session, loading: false })

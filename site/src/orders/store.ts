@@ -55,15 +55,36 @@ interface CreatedRow {
   id: string
   code: string
   created_at: string
+  /** Ausentes enquanto a migration 0003 não tiver rodado no banco. */
+  subtotal?: number
+  delivery_fee?: number
+  total?: number
 }
+
+/**
+ * Valor do banco, com o do navegador como reserva.
+ *
+ * A versão antiga da função não devolve os totais. Enquanto o site novo e o
+ * banco antigo conviverem — entre o deploy e a migration 0003 —, o pedido
+ * continua saindo com a conta local em vez de mostrar NaN na tela.
+ */
+const priced = (fromDatabase: number | undefined, fallback: number): number =>
+  typeof fromDatabase === 'number' && Number.isFinite(Number(fromDatabase))
+    ? Number(fromDatabase)
+    : fallback
 
 /**
  * Cria o pedido e devolve o número que o cliente vai usar.
  *
  * Passa por uma função do banco de propósito: o cliente não pode ler a tabela
  * de pedidos, que guarda dados de outras pessoas, então um insert que devolve
- * a linha inteira esbarraria no RLS. A função grava, calcula o total e
- * devolve só o identificador, o número e a hora deste pedido.
+ * a linha inteira esbarraria no RLS. A função grava e devolve só o que é deste
+ * pedido.
+ *
+ * Os valores que voltam são os que o banco calculou a partir do cardápio, e
+ * são esses que a tela e o WhatsApp usam. O total que o navegador somou serve
+ * para mostrar o preço enquanto o cliente monta; a partir do envio, quem diz
+ * quanto custa é o banco. Se os dois divergirem, o certo é o de lá.
  */
 export const createOrder = async (
   items: readonly CartItem[],
@@ -91,9 +112,9 @@ export const createOrder = async (
     status: 'novo',
     customer,
     items,
-    subtotal,
-    deliveryFee,
-    total: subtotal + deliveryFee,
+    subtotal: priced(created.subtotal, subtotal),
+    deliveryFee: priced(created.delivery_fee, deliveryFee),
+    total: priced(created.total, subtotal + deliveryFee),
     confirmedAt: null,
   }
 }
