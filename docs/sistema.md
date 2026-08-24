@@ -169,6 +169,55 @@ estão em `whatsapp-automatico.md`.
 de WhatsApp, que ou custa por mês ou tira o número do celular da loja. O
 `whatsapp-automatico.md` compara os caminhos e explica a recomendação.
 
+## Apagar um pedido
+
+Todo pedido tem o botão **Apagar** (ícone de lixeira), tanto no cartão quanto
+na lista, em qualquer etapa: novo, preparando, em entrega, concluído ou
+cancelado.
+
+É em **dois cliques**: o primeiro arma o botão (fica vermelho, escrito
+"Confirmar"), o segundo apaga. Se ninguém confirmar em 4 segundos, ele desarma
+sozinho. Isso existe porque o painel roda em balcão, com o dedo perto da tela.
+
+**Apagar é definitivo.** O pedido sai do banco e não volta: some do histórico,
+do caixa e dos números do período. Para tirar um pedido da fila sem perder o
+registro, use **Cancelar** — ele vai para a etapa "Cancelado" e continua
+guardado.
+
+Apagar também não devolve o número: a numeração é sequencial e não reaproveita
+código de pedido apagado.
+
+## Imprimir o comprovante do pedido
+
+Cada card de pedido, em **Pedidos**, tem o botão **Imprimir** ao lado do
+"Avisar cliente". Ele abre a janela de impressão do navegador já com o cupom
+do pedido montado.
+
+O que sai no papel: a logo da marca e o telefone da loja, número do pedido, data e hora,
+os itens com tamanho, base, complementos e observação, subtotal, taxa de
+entrega e total, e os dados do cliente (nome, telefone, endereço com
+referência, forma de pagamento e troco).
+
+**Não é nota fiscal.** É um comprovante interno, para separar o pedido na
+produção e mandar junto com a entrega. O rodapé deixa isso escrito.
+
+**A logo** que sai no cupom é a versão preto e branco (`site/public/imagem/
+logo-print.png`), não a arte oficial: o fundo roxo viraria um bloco preto na
+bobina térmica e gastaria tinta à toa na impressora comum. Se a logo mudar,
+gere a versão de impressão de novo (grayscale + invertido) e substitua esse
+arquivo. Se a imagem falhar em carregar, o cupom cai no nome da loja em texto.
+
+**Papel:** o cupom é desenhado para bobina térmica de **80mm** (as
+impressoras de pedido comuns, tipo Elgin/Epson/Bematech em modo texto ou
+driver Windows). Em impressora comum de folha A4 ele sai centralizado no alto
+da página, sem quebrar. Se a loja usar bobina de 58mm, dá para ajustar em
+`site/src/orders/receipt.ts` (bloco `@page` e a largura do `body`).
+
+**Imprimir sozinho, sem clicar:** o navegador não deixa disparar impressão sem
+uma ação do usuário. Para o cupom sair automático quando o pedido entra,
+precisaria de um programa rodando no computador da loja falando direto com a
+impressora. Fica como evolução, se a operação pedir.
+
 ## Como o pedido chega
 
 1. O cliente monta no site e clica em **Fechar pedido**

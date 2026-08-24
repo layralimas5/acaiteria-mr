@@ -1,6 +1,7 @@
 import { formatPrice } from '../lib/order'
 import type { Order, OrderStatus } from '../orders/types'
 import { nextStatus, paymentLabels, statusLabels } from '../orders/types'
+import { DeleteButton } from './DeleteButton'
 import { WaitBadge } from './WaitBadge'
 import { formatTime } from './metrics'
 
@@ -10,6 +11,7 @@ interface OrderRowProps {
   readonly order: Order
   readonly now: number
   readonly onAdvance: (order: Order, status: OrderStatus) => void
+  readonly onRemove: (id: string) => void
   readonly onOpen: () => void
 }
 
@@ -21,7 +23,7 @@ const advanceLabels: Readonly<Record<OrderStatus, string>> = {
   cancelado: '',
 }
 
-export function OrderRow({ order, now, onAdvance, onOpen }: OrderRowProps) {
+export function OrderRow({ order, now, onAdvance, onRemove, onOpen }: OrderRowProps) {
   const next = nextStatus(order.status)
   const itemCount = order.items.reduce((total, item) => total + item.quantity, 0)
   const open = order.status !== 'concluido' && order.status !== 'cancelado'
@@ -64,6 +66,8 @@ export function OrderRow({ order, now, onAdvance, onOpen }: OrderRowProps) {
           {statusLabels[order.status]}
         </span>
       )}
+
+      <DeleteButton compact onConfirm={() => onRemove(order.id)} />
     </li>
   )
 }
