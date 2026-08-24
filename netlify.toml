@@ -37,6 +37,29 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 
+    # HSTS: uma vez visitado por HTTPS, o navegador se recusa a voltar para
+    # HTTP neste domínio. Sem preload de propósito — entrar na lista dos
+    # navegadores é praticamente irreversível e prende também os subdomínios.
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+
+    # CSP: a rede de proteção para o dia em que algum texto do banco escapar
+    # para a tela. Hoje o React escapa tudo sozinho e não existe innerHTML em
+    # lugar nenhum, mas isso é uma linha de código de distância de mudar.
+    #
+    # O que cada origem faz aqui:
+    #   supabase.co       banco, login e realtime (o wss é o pedido novo
+    #                     chegando no painel sem recarregar)
+    #   fonts.googleapis  folha de estilo da fonte Outfit, carregada no <head>
+    #   fonts.gstatic     os arquivos .woff2 dessa fonte
+    #
+    # 'unsafe-inline' em style-src é exigência do Framer Motion, que anima
+    # escrevendo style inline no elemento. Em script-src não entra: é lá que
+    # 'unsafe-inline' desmontaria a proteção inteira.
+    #
+    # frame-ancestors 'self' é o X-Frame-Options acima escrito na linguagem que
+    # os navegadores atuais realmente leem; os dois ficam, para os antigos.
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://kvmjefhxyvtcaiiqzboh.supabase.co wss://kvmjefhxyvtcaiiqzboh.supabase.co; form-action 'self'; frame-ancestors 'self'; base-uri 'self'; object-src 'none'"
+
 # Os assets levam hash no nome, então podem ser cacheados para sempre.
 [[headers]]
   for = "/assets/*"

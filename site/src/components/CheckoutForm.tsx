@@ -149,6 +149,7 @@ export function CheckoutForm({
           <input
             type="text"
             value={customer.name}
+            maxLength={80}
             onChange={(event) => update('name', event.target.value)}
             autoComplete="name"
             className="w-full rounded-xl border border-acai-200 px-3 py-2.5 text-sm text-ink outline-none focus:border-acai-700"
@@ -160,6 +161,7 @@ export function CheckoutForm({
             type="tel"
             inputMode="tel"
             value={customer.phone}
+            maxLength={20}
             onChange={(event) => update('phone', event.target.value)}
             placeholder="(27) 90000-0000"
             autoComplete="tel"
@@ -173,6 +175,7 @@ export function CheckoutForm({
           <input
             type="text"
             value={customer.address}
+            maxLength={160}
             onChange={(event) => {
               const typed = event.target.value
               update('address', typed)
@@ -195,6 +198,7 @@ export function CheckoutForm({
             <input
               type="text"
               value={customer.district ?? ''}
+              maxLength={80}
               onChange={(event) => update('district', event.target.value)}
               placeholder="Campo Grande"
               autoComplete="address-level3"
@@ -215,6 +219,7 @@ export function CheckoutForm({
             <input
               type="text"
               value={customer.city ?? ''}
+              maxLength={80}
               onChange={(event) => updateCity(event.target.value)}
               placeholder="Viana"
               list="municipios-atendidos"
@@ -265,6 +270,7 @@ export function CheckoutForm({
           <input
             type="text"
             value={customer.reference}
+            maxLength={160}
             onChange={(event) => update('reference', event.target.value)}
             placeholder="Portão azul, ao lado da padaria..."
             className="w-full rounded-xl border border-acai-200 px-3 py-2.5 text-sm text-ink outline-none focus:border-acai-700"
@@ -324,6 +330,7 @@ export function CheckoutForm({
               type="text"
               inputMode="numeric"
               value={customer.changeFor}
+              maxLength={20}
               onChange={(event) => update('changeFor', event.target.value)}
               placeholder="R$ 50,00"
               className="w-full rounded-xl border border-acai-200 px-3 py-2.5 text-sm text-ink outline-none focus:border-acai-700"
@@ -336,6 +343,7 @@ export function CheckoutForm({
         <Field label="Algo pra cozinha? (opcional)" error={null}>
           <textarea
             value={customer.notes}
+            maxLength={500}
             onChange={(event) => update('notes', event.target.value)}
             rows={2}
             placeholder="Sem granola, capricha na calda..."
