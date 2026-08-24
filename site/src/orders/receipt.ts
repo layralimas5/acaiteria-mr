@@ -118,12 +118,7 @@ export const receiptHtml = (order: Order): string => {
 </style>
 </head>
 <body>
-  <img
-    class="logo"
-    src="${logoUrl()}"
-    alt="${escapeHtml(business.name)}"
-    onerror="this.hidden = true; document.getElementById('brand').hidden = false"
-  />
+  <img id="logo" class="logo" src="${logoUrl()}" alt="${escapeHtml(business.name)}" />
   <h1 id="brand" hidden>${escapeHtml(business.name)}</h1>
   <p class="center small">${escapeHtml(whatsappDisplay())}</p>
   <hr />
@@ -231,4 +226,16 @@ export const printReceipt = (order: Order): void => {
   doc.open()
   doc.write(receiptHtml(order))
   doc.close()
+
+  // O fallback é registrado daqui, e não com um `onerror` no HTML: a CSP do
+  // site proíbe script inline, e o iframe herda essa política.
+  const logo = doc.getElementById('logo')
+  logo?.addEventListener(
+    'error',
+    () => {
+      logo.setAttribute('hidden', '')
+      doc.getElementById('brand')?.removeAttribute('hidden')
+    },
+    { once: true },
+  )
 }
