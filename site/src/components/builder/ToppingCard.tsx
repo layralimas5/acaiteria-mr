@@ -23,6 +23,12 @@ export function ToppingCard({
   onToggle,
 }: ToppingCardProps) {
   const blocked = disabled || blockedByLimit
+  /**
+   * Sai de graça por um de dois motivos: cabe na cota da categoria, ou a loja
+   * cadastrou sem preço. O segundo vale mesmo com a cota estourada — item de
+   * preço zero nunca vira adicional.
+   */
+  const costsNothing = free || topping.price === 0
 
   return (
     <motion.button
@@ -55,10 +61,10 @@ export function ToppingCard({
 
       <span
         className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold sm:px-2 sm:text-[11px] ${
-          free ? 'bg-green-50 text-green-700' : 'bg-acai-50 text-acai-800'
+          costsNothing ? 'bg-green-50 text-green-700' : 'bg-acai-50 text-acai-800'
         }`}
       >
-        {blockedByLimit ? 'No limite' : free ? 'Grátis' : `+ ${formatPrice(topping.price)}`}
+        {blockedByLimit ? 'No limite' : costsNothing ? 'Grátis' : `+ ${formatPrice(topping.price)}`}
       </span>
     </motion.button>
   )

@@ -61,6 +61,22 @@ export const emptySelection: BuildSelection = { product: null, size: null, base:
 const inCategory = (toppings: readonly Topping[], categoryId: string): readonly Topping[] =>
   toppings.filter((topping) => topping.categoryId === categoryId)
 
+/**
+ * Complementos de uma categoria que realmente entram na conta.
+ *
+ * Passar da cota grátis não basta: o item precisa custar alguma coisa. Boa
+ * parte do cardápio é cadastrada com preço zero, e sem esse filtro o quarto
+ * morango virava "adicional" com a etiqueta "+ R$ 0,00" — cobrança que não
+ * existe, escrita na tela de quem está montando o copo.
+ */
+const chargedIn = (
+  toppings: readonly Topping[],
+  category: ToppingCategory,
+): readonly Topping[] =>
+  inCategory(toppings, category.id)
+    .slice(category.rule.free)
+    .filter((topping) => topping.price > 0)
+
 /** Cota de uma categoria que o cardápio não conhece mais: nada grátis, sem teto. */
 const noRule: ToppingRule = { free: 0, max: null }
 
@@ -70,25 +86,26 @@ export const priceBuild = (
 ): BuildPricing => {
   const basePrice = (selection.size?.basePrice ?? 0) + (selection.base?.extraPrice ?? 0)
 
+  const paidByCategory = new Map(
+    categories.map((category) => [category.id, chargedIn(selection.toppings, category)]),
+  )
+
   const usages = categories.map((category): CategoryUsage => {
     const rule = category.rule
     const chosen = inCategory(selection.toppings, category.id).length
-    const freeUsed = Math.min(chosen, rule.free)
 
     return {
       categoryId: category.id,
       chosen,
       free: rule.free,
       max: rule.max,
-      freeUsed,
-      paid: Math.max(0, chosen - rule.free),
+      freeUsed: Math.min(chosen, rule.free),
+      paid: paidByCategory.get(category.id)?.length ?? 0,
       full: rule.max !== null && chosen >= rule.max,
     }
   })
 
-  const paidToppings = categories.flatMap((category) =>
-    inCategory(selection.toppings, category.id).slice(category.rule.free),
-  )
+  const paidToppings = categories.flatMap((category) => paidByCategory.get(category.id) ?? [])
   const additionalPrice = paidToppings.reduce((total, topping) => total + topping.price, 0)
 
   return {
@@ -138,9 +155,10 @@ export const categoryQuotaLabel = (usage: CategoryUsage): string => {
 export const toppingsLabel = (selection: BuildSelection, pricing: BuildPricing): string => {
   if (!selection.size) return 'Escolha o tamanho para liberar os complementos'
 
-  const extra = selection.toppings.length - pricing.freeUsed
+  const extra = pricing.paidToppings.length
   if (extra > 0) {
-    return `${pricing.freeUsed} grátis + ${extra} ${extra === 1 ? 'adicional' : 'adicionais'}`
+    const free = selection.toppings.length - extra
+    return `${free} grátis + ${extra} ${extra === 1 ? 'adicional' : 'adicionais'}`
   }
 
   return `Complementos escolhidos: ${selection.toppings.length} de ${pricing.freeLimit} grátis`
