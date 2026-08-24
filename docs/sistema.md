@@ -169,6 +169,24 @@ estão em `whatsapp-automatico.md`.
 de WhatsApp, que ou custa por mês ou tira o número do celular da loja. O
 `whatsapp-automatico.md` compara os caminhos e explica a recomendação.
 
+## Apagar um pedido
+
+Todo pedido tem o botão **Apagar** (ícone de lixeira), tanto no cartão quanto
+na lista, em qualquer etapa: novo, preparando, em entrega, concluído ou
+cancelado.
+
+É em **dois cliques**: o primeiro arma o botão (fica vermelho, escrito
+"Confirmar"), o segundo apaga. Se ninguém confirmar em 4 segundos, ele desarma
+sozinho. Isso existe porque o painel roda em balcão, com o dedo perto da tela.
+
+**Apagar é definitivo.** O pedido sai do banco e não volta: some do histórico,
+do caixa e dos números do período. Para tirar um pedido da fila sem perder o
+registro, use **Cancelar** — ele vai para a etapa "Cancelado" e continua
+guardado.
+
+Apagar também não devolve o número: a numeração é sequencial e não reaproveita
+código de pedido apagado.
+
 ## Imprimir o comprovante do pedido
 
 Cada card de pedido, em **Pedidos**, tem o botão **Imprimir** ao lado do

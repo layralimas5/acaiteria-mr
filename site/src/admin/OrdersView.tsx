@@ -232,6 +232,7 @@ export function OrdersView({ orders, onAdvance, onRemove }: OrdersViewProps) {
                       order={order}
                       now={now}
                       onAdvance={onAdvance}
+                      onRemove={onRemove}
                       onOpen={() => {
                         setOpened(order.id)
                         setLayout('cards')

@@ -3,6 +3,7 @@ import { notifyUrl } from '../orders/messages'
 import { printReceipt } from '../orders/receipt'
 import type { Order, OrderStatus } from '../orders/types'
 import { nextStatus, paymentLabels, statusFlow, statusLabels } from '../orders/types'
+import { DeleteButton } from './DeleteButton'
 import { WaitBadge } from './WaitBadge'
 
 interface OrderCardProps {
@@ -130,15 +131,7 @@ export function OrderCard({
           </span>
 
           <div className="flex items-center gap-2">
-            {closed ? (
-              <button
-                type="button"
-                onClick={() => onRemove(order.id)}
-                className="rounded-full px-4 py-2.5 text-sm font-semibold text-muted transition-colors hover:text-acai-800"
-              >
-                Arquivar
-              </button>
-            ) : (
+            {!closed && (
               <button
                 type="button"
                 onClick={() => onCancel(order)}
@@ -147,6 +140,8 @@ export function OrderCard({
                 Cancelar
               </button>
             )}
+
+            <DeleteButton onConfirm={() => onRemove(order.id)} />
 
             {next && (
               <button
