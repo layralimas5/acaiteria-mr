@@ -3,7 +3,7 @@ import { useCart } from '../cart/CartContext'
 import { formatPrice } from '../lib/order'
 import { rebuildOrder } from '../lib/repeatOrder'
 import type { LastOrder } from '../orders/lastOrder'
-import { useCatalog } from '../catalog/useCatalog'
+import { useSellableCatalog } from '../catalog/sellable'
 
 interface RepeatOrderProps {
   readonly lastOrder: LastOrder
@@ -28,7 +28,7 @@ const relativeDay = (iso: string): string => {
  * novo e item esgotado aparecem antes de ir para o carrinho.
  */
 export function RepeatOrder({ lastOrder, onDismiss, onRepeated }: RepeatOrderProps) {
-  const { catalog } = useCatalog()
+  const { catalog } = useSellableCatalog()
   const { addItems } = useCart()
   const [warning, setWarning] = useState<string | null>(null)
 
