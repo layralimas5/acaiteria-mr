@@ -175,13 +175,19 @@ Cada card de pedido, em **Pedidos**, tem o botão **Imprimir** ao lado do
 "Avisar cliente". Ele abre a janela de impressão do navegador já com o cupom
 do pedido montado.
 
-O que sai no papel: nome da loja e telefone, número do pedido, data e hora,
+O que sai no papel: a logo da marca e o telefone da loja, número do pedido, data e hora,
 os itens com tamanho, base, complementos e observação, subtotal, taxa de
 entrega e total, e os dados do cliente (nome, telefone, endereço com
 referência, forma de pagamento e troco).
 
 **Não é nota fiscal.** É um comprovante interno, para separar o pedido na
 produção e mandar junto com a entrega. O rodapé deixa isso escrito.
+
+**A logo** que sai no cupom é a versão preto e branco (`site/public/imagem/
+logo-print.png`), não a arte oficial: o fundo roxo viraria um bloco preto na
+bobina térmica e gastaria tinta à toa na impressora comum. Se a logo mudar,
+gere a versão de impressão de novo (grayscale + invertido) e substitua esse
+arquivo. Se a imagem falhar em carregar, o cupom cai no nome da loja em texto.
 
 **Papel:** o cupom é desenhado para bobina térmica de **80mm** (as
 impressoras de pedido comuns, tipo Elgin/Epson/Bematech em modo texto ou

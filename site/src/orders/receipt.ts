@@ -11,6 +11,17 @@ import { paymentLabels } from './types'
  * cupom sai centralizado no alto da folha, sem quebrar.
  */
 
+/**
+ * Logo impressa no topo do cupom. É uma versão preto e branco da marca
+ * (`logo-print.png`), não a oficial: o fundo roxo da arte original viraria um
+ * bloco preto na bobina térmica e comeria tinta na impressora comum.
+ */
+const logoPath = '/imagem/logo-print.png'
+
+/** A impressão roda num iframe `about:blank`, então o caminho precisa ser absoluto. */
+const logoUrl = (): string =>
+  typeof window === 'undefined' ? logoPath : `${window.location.origin}${logoPath}`
+
 const escapeHtml = (value: string): string =>
   value
     .replace(/&/g, '&amp;')
@@ -90,6 +101,8 @@ export const receiptHtml = (order: Order): string => {
     color: #000;
   }
   h1 { margin: 0; font-size: 15px; text-align: center; text-transform: uppercase; }
+  .logo { display: block; width: 26mm; height: auto; margin: 0 auto 4px; }
+  [hidden] { display: none; }
   .center { text-align: center; }
   .small { font-size: 11px; }
   .strong { font-weight: 700; }
@@ -105,7 +118,13 @@ export const receiptHtml = (order: Order): string => {
 </style>
 </head>
 <body>
-  <h1>${escapeHtml(business.name)}</h1>
+  <img
+    class="logo"
+    src="${logoUrl()}"
+    alt="${escapeHtml(business.name)}"
+    onerror="this.hidden = true; document.getElementById('brand').hidden = false"
+  />
+  <h1 id="brand" hidden>${escapeHtml(business.name)}</h1>
   <p class="center small">${escapeHtml(whatsappDisplay())}</p>
   <hr />
 
@@ -141,6 +160,29 @@ export const receiptHtml = (order: Order): string => {
 }
 
 /**
+ * Resolve quando toda imagem do cupom terminou de carregar (ou falhou). O
+ * teto de 3s evita que uma imagem travada segure a impressão para sempre.
+ */
+const imagesReady = (doc: Document): Promise<void> => {
+  const pending = Array.from(doc.images)
+    .filter((image) => !image.complete)
+    .map(
+      (image) =>
+        new Promise<void>((resolve) => {
+          image.addEventListener('load', () => resolve(), { once: true })
+          image.addEventListener('error', () => resolve(), { once: true })
+        }),
+    )
+
+  if (pending.length === 0) return Promise.resolve()
+
+  const timeout = new Promise<void>((resolve) => {
+    window.setTimeout(resolve, 3000)
+  })
+  return Promise.race([Promise.all(pending).then(() => undefined), timeout])
+}
+
+/**
  * Manda o cupom para a impressora usando um iframe escondido: o painel não
  * sai da tela e o navegador não bloqueia como bloquearia um popup.
  */
@@ -167,12 +209,16 @@ export const printReceipt = (order: Order): void => {
       return
     }
     view.onafterprint = cleanup
-    try {
-      view.focus()
-      view.print()
-    } catch {
-      cleanup()
-    }
+
+    // Sem esperar a logo, a janela de impressão abre com um buraco no topo.
+    void imagesReady(view.document).then(() => {
+      try {
+        view.focus()
+        view.print()
+      } catch {
+        cleanup()
+      }
+    })
   }
 
   document.body.append(frame)
