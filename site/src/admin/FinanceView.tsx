@@ -17,6 +17,7 @@ interface FinanceViewProps {
 }
 
 const paymentBars: Readonly<Record<PaymentMethod, string>> = {
+  online: 'bg-acai-600',
   pix: 'bg-emerald-500',
   dinheiro: 'bg-amber-500',
   cartao: 'bg-sky-500',

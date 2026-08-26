@@ -4,6 +4,7 @@ import { printReceipt } from '../orders/receipt'
 import type { Order, OrderStatus } from '../orders/types'
 import { nextStatus, paymentLabels, statusFlow, statusLabels } from '../orders/types'
 import { DeleteButton } from './DeleteButton'
+import { PaymentBadge } from './PaymentBadge'
 import { WaitBadge } from './WaitBadge'
 
 interface OrderCardProps {
@@ -61,6 +62,7 @@ export function OrderCard({
           <p className="flex flex-wrap items-center gap-2">
             <span className="text-xl font-extrabold text-ink">#{order.code}</span>
             {!closed && <WaitBadge iso={order.createdAt} now={now} />}
+            <PaymentBadge status={order.paymentStatus} compact />
           </p>
           <p className="mt-0.5 text-sm text-muted">
             {time(order.createdAt)} · {customer.name} · {itemCount}{' '}
@@ -111,6 +113,25 @@ export function OrderCard({
           {paymentLabels[customer.payment]}
           {customer.changeFor && (
             <span className="font-bold text-amber-700"> · troco para {customer.changeFor}</span>
+          )}
+          {order.paidAt && (
+            <span className="font-bold text-green-700"> · pago às {time(order.paidAt)}</span>
+          )}
+          {order.paymentStatus === 'aguardando' && (
+            <span className="font-bold text-amber-700"> · ainda não caiu</span>
+          )}
+          {order.paymentReceiptUrl && (
+            <>
+              {' · '}
+              <a
+                href={order.paymentReceiptUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-acai-800 underline"
+              >
+                comprovante
+              </a>
+            </>
           )}
         </Detail>
         {customer.notes && <Detail label="Obs.">{customer.notes}</Detail>}

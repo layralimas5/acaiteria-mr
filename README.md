@@ -23,6 +23,7 @@ npm run preview  # serve o dist/
 | Telefone, endereço, horário, link do iFood | `site/src/config/business.ts` |
 | Taxa de entrega e valor do frete grátis | `site/src/config/business.ts` (`delivery.fee`, `delivery.freeShippingFrom`) |
 | Formas de pagamento aceitas e chave Pix | `site/src/config/business.ts` (`payments`) |
+| Ligar/desligar o pagamento online (InfinitePay) | `site/src/config/business.ts` (`payments.onlineCheckout`) — ver `docs/infinitepay.md` |
 | Modo só delivery | `site/src/config/business.ts` (`deliveryOnly`) |
 | Produtos, preços, categorias, complementos | `site/src/data/products.ts` |
 | Regras de link de pedido (iFood vs WhatsApp) | `site/src/lib/order.ts` |
@@ -38,6 +39,19 @@ por diante. Quem numera é o banco, pela sequência `order_code_seq`, não a
 quantidade de pedidos guardados: apagar um pedido antigo no painel não faz dois
 nascerem com o mesmo número. Todo pedido enviado pelo site entra no painel, em
 Pedidos, na hora, em qualquer aparelho.
+
+## Pagamento
+
+O cliente pode pagar **na entrega** (Pix, cartão na maquininha ou dinheiro) ou
+**na hora, pelo site**, no checkout da InfinitePay: Pix ou cartão em até 12x,
+com o dinheiro caindo direto na conta da loja e o pedido nascendo marcado como
+pago no painel.
+
+O checkout online vem desligado. Para ligar: `docs/infinitepay.md`.
+
+O link de cobrança nunca é gerado no navegador. Quem gera é uma função servidor
+(`site/netlify/functions/`), a partir do total que está no banco: assim o
+cliente não escolhe quanto vai pagar.
 
 ## Sistema da loja
 
@@ -60,6 +74,7 @@ e o botão de WhatsApp continua disponível na seção de entrega.
 - [x] Telefone real: (27) 99285-3101
 - [ ] Resto dos dados em `business.ts` (endereço, horário, Instagram)
 - [ ] Confirmar taxa de entrega com o cliente (hoje `delivery.fee: 5`) e a chave Pix (`payments.pixKey`)
+- [ ] Ligar o pagamento online: InfiniteTag da cliente, migration `0004`, variáveis no Netlify e `payments.onlineCheckout: true` (`docs/infinitepay.md`)
 - [ ] Criar o projeto no Supabase e rodar `supabase/migrations/0001_init.sql` (`docs/supabase.md`)
 - [ ] Cadastrar o cardápio no painel: o sistema começa vazio, sem nenhum produto
 - [ ] Publicar os primeiros depoimentos reais (painel → Avaliações → Publicar no site; a seção fica escondida até lá)

@@ -11,6 +11,7 @@ import { Hero } from './components/Hero'
 import { Location } from './components/Location'
 import { Marquee } from './components/Marquee'
 import { OrderConfirm } from './components/OrderConfirm'
+import { PaymentReturn } from './components/PaymentReturn'
 import { RepeatOrder } from './components/RepeatOrder'
 import { ReviewInvite } from './components/ReviewInvite'
 import { Testimonials } from './components/Testimonials'
@@ -27,12 +28,26 @@ const scrollTo = (id: string) => {
 const linkedCode = (param: 'pedido' | 'avaliar'): string | null =>
   new URLSearchParams(window.location.search).get(param)
 
+/** true quando o cliente acabou de voltar do checkout da InfinitePay. */
+const backFromCheckout = (): boolean =>
+  new URLSearchParams(window.location.search).get('pago') === '1'
+
+/**
+ * O retorno do pagamento aparece quando o checkout devolve o cliente para o
+ * site (`?pedido=1000&pago=1`), e só para o pedido que é dele.
+ */
+const shouldShowPaymentResult = (order: LastOrder | null): boolean =>
+  order !== null && backFromCheckout() && linkedCode('pedido') === order.code
+
 /**
  * A confirmação de recebimento aparece pelo link que a loja manda ao dar baixa
  * (`?pedido=1000`). Quem já confirmou, ou já avaliou, não vê o card de novo.
  */
 const shouldConfirmOrder = (order: LastOrder | null): boolean => {
   if (!order || hasConfirmed(order.code) || hasReviewed(order.code)) return false
+  // Voltar do pagamento usa o mesmo `?pedido=`, e ali o açaí nem saiu para
+  // entrega: perguntar se chegou, nessa hora, não faz sentido nenhum.
+  if (backFromCheckout()) return false
   return linkedCode('pedido') === order.code
 }
 
@@ -46,6 +61,7 @@ const shouldInviteReview = (order: LastOrder | null): boolean => {
   if (!order || hasReviewed(order.code)) return false
 
   if (linkedCode('avaliar') === order.code) return true
+  if (backFromCheckout()) return false
   if (linkedCode('pedido') === order.code && hasConfirmed(order.code)) return true
 
   const minutes = (Date.now() - new Date(order.createdAt).getTime()) / 60_000
@@ -61,6 +77,7 @@ export default function App() {
   const [lastOrder, setLastOrder] = useState<LastOrder | null>(null)
   const [confirming, setConfirming] = useState(false)
   const [reviewing, setReviewing] = useState(false)
+  const [showingPayment, setShowingPayment] = useState(false)
 
   // O pedido anterior só existe no navegador, então é lido depois da montagem.
   useEffect(() => {
@@ -68,6 +85,7 @@ export default function App() {
     setLastOrder(stored)
     setConfirming(shouldConfirmOrder(stored))
     setReviewing(shouldInviteReview(stored))
+    setShowingPayment(shouldShowPaymentResult(stored))
   }, [])
 
   /** Confirmou o recebimento: leva direto aos depoimentos, com a nota aberta. */
@@ -102,6 +120,10 @@ export default function App() {
       <main className="pb-20 sm:pb-0">
         <Hero />
         <Marquee />
+
+        {showingPayment && lastOrder && (
+          <PaymentReturn order={lastOrder} onDismiss={() => setShowingPayment(false)} />
+        )}
 
         {confirming && lastOrder && (
           <OrderConfirm

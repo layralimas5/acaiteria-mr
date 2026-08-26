@@ -31,26 +31,34 @@ interface CheckoutFormProps {
   readonly onCancel: () => void
 }
 
-/** Formas aceitas hoje, conforme a configuração da loja. */
+/**
+ * Formas aceitas hoje, conforme a configuração da loja. A ordem é a da tela:
+ * pagar na hora vem primeiro porque é o que fecha o pedido sem depender de
+ * ninguém digitar chave nem separar troco.
+ */
 const availablePayments = (): readonly PaymentMethod[] =>
-  (['pix', 'cartao', 'dinheiro'] as const).filter(
+  (['online', 'pix', 'cartao', 'dinheiro'] as const).filter(
     (method) =>
       method === 'pix' ||
+      (method === 'online' && business.payments.onlineCheckout) ||
       (method === 'cartao' && business.payments.cardOnDelivery) ||
       (method === 'dinheiro' && business.payments.cash),
   )
 
-const emptyCustomer: Customer = {
+/** Primeira forma da lista: é a que já vem marcada. */
+const defaultPayment = (): PaymentMethod => availablePayments()[0] ?? 'pix'
+
+const emptyCustomer = (): Customer => ({
   name: '',
   phone: '',
   address: '',
   district: '',
   city: '',
   reference: '',
-  payment: 'pix',
+  payment: defaultPayment(),
   changeFor: '',
   notes: '',
-}
+})
 
 function PixIcon() {
   return (
@@ -78,7 +86,18 @@ function CashIcon() {
   )
 }
 
+function OnlineIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5 fill-none stroke-current stroke-[1.8]">
+      <rect x="5" y="2.5" width="14" height="19" rx="3" />
+      <path d="M10 18.5h4" strokeLinecap="round" />
+      <path d="M9.5 9.5l1.8 1.8L15 7.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 const paymentIcons: Readonly<Record<PaymentMethod, () => ReactNode>> = {
+  online: OnlineIcon,
   pix: PixIcon,
   cartao: CardIcon,
   dinheiro: CashIcon,
@@ -96,9 +115,18 @@ export function CheckoutForm({
   error = null,
 }: CheckoutFormProps) {
   // A observação é do pedido de hoje: entrega e pagamento voltam, o recado não.
-  const [customer, setCustomer] = useState<Customer>(
-    initialCustomer ? { ...initialCustomer, notes: '' } : emptyCustomer,
-  )
+  const [customer, setCustomer] = useState<Customer>(() => {
+    if (!initialCustomer) return emptyCustomer()
+    // A forma de pagamento do pedido passado pode ter saído do ar desde então
+    // (a loja desligou o checkout online, por exemplo). Nesse caso ela volta
+    // para o padrão em vez de ficar marcada uma opção que não existe mais.
+    const known = availablePayments().includes(initialCustomer.payment)
+    return {
+      ...initialCustomer,
+      payment: known ? initialCustomer.payment : defaultPayment(),
+      notes: '',
+    }
+  })
   const [touched, setTouched] = useState(false)
 
   const areas = deliveryAreas()
@@ -317,6 +345,14 @@ export function CheckoutForm({
           </div>
         </fieldset>
 
+        {customer.payment === 'online' && (
+          <p className="rounded-2xl border border-acai-100 bg-acai-50/70 px-4 py-3 text-xs leading-relaxed text-muted">
+            Ao enviar o pedido você vai para a tela segura de pagamento da InfinitePay. Assim que o
+            pagamento cair, a loja já começa a preparar. Se preferir pagar na entrega, é só escolher
+            outra forma aqui em cima.
+          </p>
+        )}
+
         {customer.payment === 'pix' && business.payments.pixKey && (
           <p className="rounded-2xl border border-acai-100 bg-acai-50/70 px-4 py-3 text-xs text-muted">
             Chave Pix: <strong className="font-bold text-ink">{business.payments.pixKey}</strong> (
@@ -386,7 +422,15 @@ export function CheckoutForm({
           disabled={sending}
           className="flex-1 rounded-full bg-acai-800 px-6 py-3.5 text-sm font-bold text-white transition-colors hover:animate-pulse-soft hover:bg-acai-900 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {sending ? 'Enviando...' : area ? `Enviar pedido · ${formatPrice(total)}` : 'Enviar pedido'}
+          {sending
+            ? 'Enviando...'
+            : customer.payment === 'online'
+              ? area
+                ? `Ir para o pagamento · ${formatPrice(total)}`
+                : 'Ir para o pagamento'
+              : area
+                ? `Enviar pedido · ${formatPrice(total)}`
+                : 'Enviar pedido'}
         </button>
         <button
           type="button"

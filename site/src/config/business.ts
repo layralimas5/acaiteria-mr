@@ -85,6 +85,14 @@ export interface BusinessConfig {
     readonly cardOnDelivery: boolean
     /** true quando a loja aceita dinheiro (e precisa levar troco). */
     readonly cash: boolean
+    /**
+     * Pagamento na hora, pelo site, no checkout da InfinitePay (Pix ou cartão
+     * em até 12x). Ligar aqui só mostra a opção na tela: quem cobra de verdade
+     * é a função servidor, e ela exige a variável INFINITEPAY_HANDLE
+     * configurada no Netlify. Ligar sem a variável faz o cliente ver a opção e
+     * receber erro na hora de pagar. Ver `docs/infinitepay.md`.
+     */
+    readonly onlineCheckout: boolean
   }
 }
 
@@ -158,5 +166,6 @@ export const business: BusinessConfig = {
     pixHolder: 'Açaiteria MR',
     cardOnDelivery: true,
     cash: true,
+    onlineCheckout: false,
   },
 }

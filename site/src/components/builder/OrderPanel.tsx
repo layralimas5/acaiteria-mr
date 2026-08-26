@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useCart } from '../../cart/CartContext'
 import type { CartItem } from '../../cart/CartContext'
@@ -14,6 +14,7 @@ import {
 import { errorMessage } from '../../lib/supabase'
 import { saveLastOrder } from '../../orders/lastOrder'
 import { orderMessage } from '../../orders/messages'
+import { paymentLink } from '../../orders/payment'
 import { createOrder } from '../../orders/store'
 import type { Customer, Order } from '../../orders/types'
 import { CheckoutForm } from '../CheckoutForm'
@@ -63,10 +64,15 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
     setSending(true)
     setError(null)
 
+    // Pagando pelo site, o cliente sai desta aba para o checkout da
+    // InfinitePay: abrir o WhatsApp junto só atrapalharia. A conversa vem
+    // depois, na volta do pagamento.
+    const payingOnline = customer.payment === 'online'
+
     // A aba do WhatsApp precisa abrir agora, no clique: aberta depois da
     // resposta do banco, o navegador entende como popup e bloqueia. Ela abre
     // vazia e recebe o endereço quando o pedido tiver número.
-    const tab = window.open('', '_blank', 'noopener,noreferrer')
+    const tab = payingOnline ? null : window.open('', '_blank', 'noopener,noreferrer')
 
     void createOrder(items, total, chargedFee, customer)
       .then((created) => {
@@ -74,6 +80,11 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
         setOrder(created)
         setStage('done')
         clear()
+
+        // O pedido já está gravado. Quem paga pelo site é levado para o
+        // checkout pela própria tela de conclusão, que sabe tentar de novo se
+        // o link não vier.
+        if (payingOnline) return
 
         const url = whatsappUrl(orderMessage(created))
         if (tab) {
@@ -303,6 +314,86 @@ function CartLine({ item, onIncrement, onDecrement, onRemove }: CartLineProps) {
 }
 
 function OrderDone({ order, onBuildMore }: { readonly order: Order; readonly onBuildMore: () => void }) {
+  const awaitingPayment = order.paymentStatus === 'aguardando'
+  const [opening, setOpening] = useState(awaitingPayment)
+  const [linkError, setLinkError] = useState<string | null>(null)
+
+  /**
+   * Leva o cliente ao checkout da InfinitePay. Quem monta a cobrança é o
+   * servidor, a partir do total gravado no banco: daqui só vai o número do
+   * pedido.
+   */
+  const openPayment = useCallback(() => {
+    setOpening(true)
+    setLinkError(null)
+
+    paymentLink(order.code)
+      .then((url) => {
+        window.location.href = url
+      })
+      .catch((cause: unknown) => {
+        setLinkError(errorMessage(cause))
+        setOpening(false)
+      })
+  }, [order.code])
+
+  // Pedido pago pelo site vai direto para a cobrança, sem passo extra: o
+  // cliente já apertou o botão de pagar na tela anterior.
+  useEffect(() => {
+    if (awaitingPayment) openPayment()
+  }, [awaitingPayment, openPayment])
+
+  if (awaitingPayment) {
+    return (
+      <div className="flex flex-col items-center py-4 text-center">
+        <span className="grid size-14 place-items-center rounded-full bg-acai-100 text-acai-800">
+          <svg viewBox="0 0 24 24" aria-hidden="true" className="size-7 fill-none stroke-current stroke-[2]">
+            <rect x="5" y="2.5" width="14" height="19" rx="3" />
+            <path d="M9.5 12l1.8 1.8L15 10.1" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+
+        <p className="mt-4 text-lg font-extrabold text-ink">Pedido #{order.code} criado</p>
+        <p className="mt-2 max-w-sm text-sm text-muted">
+          {opening
+            ? 'Abrindo a tela de pagamento segura da InfinitePay...'
+            : 'Falta só o pagamento. A loja começa a preparar assim que ele cair.'}
+        </p>
+
+        {linkError && (
+          <p
+            role="alert"
+            className="mt-4 w-full rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
+          >
+            {linkError}
+          </p>
+        )}
+
+        <button
+          type="button"
+          onClick={openPayment}
+          disabled={opening}
+          className="mt-5 rounded-full bg-acai-800 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-acai-900 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {opening ? 'Abrindo...' : linkError ? 'Tentar de novo' : 'Pagar agora'}
+        </button>
+
+        {/*
+          Saída para o caso de o pagamento não abrir de jeito nenhum: o pedido
+          existe, então o cliente não fica sem caminho — combina pelo WhatsApp.
+        */}
+        <a
+          href={whatsappUrl(orderMessage(order))}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 rounded-full px-6 py-2 text-xs font-semibold text-muted transition-colors hover:text-acai-800"
+        >
+          Prefiro combinar pelo WhatsApp
+        </a>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col items-center py-4 text-center">
       <span className="grid size-14 place-items-center rounded-full bg-green-100 text-green-700">
