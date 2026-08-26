@@ -78,9 +78,24 @@ export interface BusinessConfig {
     readonly minMinutes: number
   }
   readonly payments: {
-    /** Chave Pix mostrada no checkout. Vazia esconde o aviso. */
+    /**
+     * Chave Pix da loja, no formato exato em que o banco a reconhece. O código
+     * copia e cola é montado com ela, então errar o formato faz o app do
+     * cliente recusar o pagamento:
+     *
+     * - Telefone: com DDI e sinal, `+5527992853101`
+     * - CPF ou CNPJ: só dígitos, `12345678000199`
+     * - E-mail: em minúsculas
+     * - Aleatória: a chave inteira, com os hifens
+     *
+     * Vazia esconde o Pix copia e cola: o cliente ainda escolhe Pix, mas
+     * combina o pagamento pelo WhatsApp.
+     */
     readonly pixKey: string
+    /** Nome do recebedor que o app do banco mostra ao cliente. */
     readonly pixHolder: string
+    /** Município do recebedor, exigido pelo padrão do Banco Central. */
+    readonly pixCity: string
     /** true quando a loja leva maquininha na entrega. */
     readonly cardOnDelivery: boolean
     /** true quando a loja aceita dinheiro (e precisa levar troco). */
@@ -164,6 +179,7 @@ export const business: BusinessConfig = {
   payments: {
     pixKey: '',
     pixHolder: 'Açaiteria MR',
+    pixCity: 'Viana',
     cardOnDelivery: true,
     cash: true,
     onlineCheckout: false,

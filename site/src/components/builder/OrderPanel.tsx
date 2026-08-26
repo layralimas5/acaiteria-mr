@@ -18,6 +18,7 @@ import { paymentLink } from '../../orders/payment'
 import { createOrder } from '../../orders/store'
 import type { Customer, Order } from '../../orders/types'
 import { CheckoutForm } from '../CheckoutForm'
+import { PixCode } from '../PixCode'
 
 type Stage = 'cart' | 'checkout' | 'done'
 
@@ -315,6 +316,7 @@ function CartLine({ item, onIncrement, onDecrement, onRemove }: CartLineProps) {
 
 function OrderDone({ order, onBuildMore }: { readonly order: Order; readonly onBuildMore: () => void }) {
   const awaitingPayment = order.paymentStatus === 'aguardando'
+  const payingWithPix = order.customer.payment === 'pix'
   const [opening, setOpening] = useState(awaitingPayment)
   const [linkError, setLinkError] = useState<string | null>(null)
 
@@ -406,6 +408,17 @@ function OrderDone({ order, onBuildMore }: { readonly order: Order; readonly onB
       <p className="mt-2 max-w-sm text-sm text-muted">
         Ele já entrou no sistema da loja. A confirmação e o tempo de entrega chegam pelo WhatsApp.
       </p>
+
+      {/*
+        Escolheu Pix: o código já sai daqui com o valor fechado e o número do
+        pedido, então o cliente não digita chave nem erra centavo, e a loja
+        reconhece o pagamento pelo extrato.
+      */}
+      {payingWithPix && (
+        <div className="mt-5 w-full">
+          <PixCode amount={order.total} reference={`MR${order.code}`} />
+        </div>
+      )}
 
       <a
         href={whatsappUrl(orderMessage(order))}

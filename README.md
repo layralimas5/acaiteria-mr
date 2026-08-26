@@ -22,7 +22,7 @@ npm run preview  # serve o dist/
 | --- | --- |
 | Telefone, endereço, horário, link do iFood | `site/src/config/business.ts` |
 | Taxa de entrega e valor do frete grátis | `site/src/config/business.ts` (`delivery.fee`, `delivery.freeShippingFrom`) |
-| Formas de pagamento aceitas e chave Pix | `site/src/config/business.ts` (`payments`) |
+| Formas de pagamento aceitas e chave Pix | `site/src/config/business.ts` (`payments`) — ver `docs/pix.md` |
 | Ligar/desligar o pagamento online (InfinitePay) | `site/src/config/business.ts` (`payments.onlineCheckout`) — ver `docs/infinitepay.md` |
 | Modo só delivery | `site/src/config/business.ts` (`deliveryOnly`) |
 | Produtos, preços, categorias, complementos | `site/src/data/products.ts` |
@@ -46,6 +46,12 @@ O cliente pode pagar **na entrega** (Pix, cartão na maquininha ou dinheiro) ou
 **na hora, pelo site**, no checkout da InfinitePay: Pix ou cartão em até 12x,
 com o dinheiro caindo direto na conta da loja e o pedido nascendo marcado como
 pago no painel.
+
+Escolhendo **Pix**, a tela de pedido enviado mostra o **copia e cola já com o
+valor fechado** e o número do pedido na referência, mais o QR Code no
+computador. O cliente não digita chave nem valor, e o pagamento chega
+identificado no extrato da loja. Basta preencher `payments.pixKey`: detalhes e
+o formato certo da chave em `docs/pix.md`.
 
 O checkout online vem desligado. Para ligar: `docs/infinitepay.md`.
 
@@ -73,7 +79,8 @@ e o botão de WhatsApp continua disponível na seção de entrega.
 
 - [x] Telefone real: (27) 99285-3101
 - [ ] Resto dos dados em `business.ts` (endereço, horário, Instagram)
-- [ ] Confirmar taxa de entrega com o cliente (hoje `delivery.fee: 5`) e a chave Pix (`payments.pixKey`)
+- [ ] Confirmar taxa de entrega com o cliente (hoje Viana R$ 3 e Cariacica R$ 6)
+- [ ] Preencher a chave Pix em `payments.pixKey` e pagar um pedido de teste (`docs/pix.md`)
 - [ ] Ligar o pagamento online: InfiniteTag da cliente, migration `0004`, variáveis no Netlify e `payments.onlineCheckout: true` (`docs/infinitepay.md`)
 - [ ] Criar o projeto no Supabase e rodar `supabase/migrations/0001_init.sql` (`docs/supabase.md`)
 - [ ] Cadastrar o cardápio no painel: o sistema começa vazio, sem nenhum produto

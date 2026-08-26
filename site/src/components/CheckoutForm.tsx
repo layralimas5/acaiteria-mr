@@ -353,10 +353,16 @@ export function CheckoutForm({
           </p>
         )}
 
+        {/*
+          A chave aparece aqui só como confirmação de para quem vai o dinheiro.
+          O copia e cola com o valor exato vem na tela seguinte, quando o
+          pedido já tem número e total fechado: assim ninguém paga a mais nem
+          a menos por causa da taxa de entrega.
+        */}
         {customer.payment === 'pix' && business.payments.pixKey && (
-          <p className="rounded-2xl border border-acai-100 bg-acai-50/70 px-4 py-3 text-xs text-muted">
-            Chave Pix: <strong className="font-bold text-ink">{business.payments.pixKey}</strong> (
-            {business.payments.pixHolder})
+          <p className="rounded-2xl border border-acai-100 bg-acai-50/70 px-4 py-3 text-xs leading-relaxed text-muted">
+            O código Pix com o valor certo aparece assim que você enviar o pedido. Recebedor:{' '}
+            <strong className="font-bold text-ink">{business.payments.pixHolder}</strong>.
           </p>
         )}
 
