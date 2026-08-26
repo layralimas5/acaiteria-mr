@@ -80,7 +80,8 @@ e o botão de WhatsApp continua disponível na seção de entrega.
 - [x] Telefone real: (27) 99285-3101
 - [ ] Resto dos dados em `business.ts` (endereço, horário, Instagram)
 - [ ] Confirmar taxa de entrega com o cliente (hoje Viana R$ 3 e Cariacica R$ 6)
-- [ ] Preencher a chave Pix em `payments.pixKey` e pagar um pedido de teste (`docs/pix.md`)
+- [x] Chave Pix preenchida (e-mail da conta InfinitePay)
+- [ ] Pagar um pedido de teste no Pix e conferir nome, valor e referência (`docs/pix.md`)
 - [ ] Ligar o pagamento online: InfiniteTag da cliente, migration `0004`, variáveis no Netlify e `payments.onlineCheckout: true` (`docs/infinitepay.md`)
 - [ ] Criar o projeto no Supabase e rodar `supabase/migrations/0001_init.sql` (`docs/supabase.md`)
 - [ ] Cadastrar o cardápio no painel: o sistema começa vazio, sem nenhum produto

@@ -177,7 +177,7 @@ export const business: BusinessConfig = {
     minMinutes: 40,
   },
   payments: {
-    pixKey: '',
+    pixKey: 'reginasoares0187@gmail.com',
     pixHolder: 'Açaiteria MR',
     pixCity: 'Viana',
     cardOnDelivery: true,

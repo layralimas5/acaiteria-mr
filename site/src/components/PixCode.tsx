@@ -129,12 +129,17 @@ export function PixCode({ amount, reference }: PixCodeProps) {
       </div>
 
       <p className="mt-3 text-xs text-muted">
-        Recebedor: <strong className="font-semibold text-ink">{business.payments.pixHolder}</strong>
-        {' · '}
         Chave: <strong className="font-semibold text-ink">{business.payments.pixKey}</strong>
       </p>
-      <p className="mt-1 text-xs text-muted">
-        Depois de pagar, mande o comprovante na conversa do WhatsApp.
+      {/*
+        O banco mostra o nome que está no cadastro da conta, que é o da dona da
+        loja e não o nome fantasia. Sem esse aviso o cliente vê um nome que não
+        conhece na hora de confirmar e desiste achando que errou o código.
+      */}
+      <p className="mt-1 text-xs leading-relaxed text-muted">
+        No seu banco o pagamento aparece no nome da titular da conta da{' '}
+        {business.payments.pixHolder}. Depois de pagar, mande o comprovante na conversa do
+        WhatsApp.
       </p>
     </div>
   )
