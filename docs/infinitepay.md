@@ -32,8 +32,13 @@ No app da InfinitePay: **Vendas → Checkout → Configurações**. Ou pela web,
 <https://app.infinitepay.io/external-checkout>.
 
 A InfiniteTag é aquele identificador que aparece no canto superior esquerdo do
-app, começando com `$`. **Anote sem o `$`.** Se lá está `$acaiteriamr`, o valor
-que interessa é `acaiteriamr`.
+app, começando com `$`. **Anote sem o `$`.**
+
+Nesta loja ela já é conhecida, confirmada no gerador de payload do app:
+
+```
+maria_regina_soares
+```
 
 É a conta bancária da cliente que recebe. Você não precisa de senha, chave de
 API nem acesso ao app dela: a InfiniteTag basta, e ela só serve para *receber*
@@ -55,7 +60,7 @@ Add a variable**. São três:
 
 | Variável | Valor | Onde achar |
 | --- | --- | --- |
-| `INFINITEPAY_HANDLE` | a InfiniteTag sem o `$` | passo 1 |
+| `INFINITEPAY_HANDLE` | `maria_regina_soares` | passo 1 |
 | `SUPABASE_URL` | o endereço do projeto, terminando em `.supabase.co` | Supabase → Project Settings → API |
 | `SUPABASE_SERVICE_ROLE_KEY` | a chave `service_role` (ou `secret`) | Supabase → Project Settings → API |
 
@@ -123,6 +128,11 @@ O caminho tem uma regra que não se negocia: **o preço nunca vem do navegador.*
    carimba "pago" se a resposta for sim e o valor cobrir o pedido.
 6. A tela de retorno pergunta o estado ao banco de dois em dois segundos,
    porque o cliente pode voltar antes de o webhook chegar.
+
+O link vem na resposta como `checkout_url` (o "Teste da API" do app mostra
+assim), e aponta para `https://checkout.infinitepay.io/maria_regina_soares?lenc=...`.
+Parte da documentação escrita chama esse mesmo campo de `url`, então a função
+aceita os dois nomes: se eles padronizarem para um lado, o pagamento não para.
 
 O que o cliente vê na tela de conclusão, e o que a loja vê no painel, saem
 sempre do banco. Nenhuma das duas telas acredita na URL de retorno.

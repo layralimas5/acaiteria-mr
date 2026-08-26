@@ -115,9 +115,17 @@ export default async (request: Request): Promise<Response> => {
       }),
     })
 
-    const payload = (await response.json().catch(() => null)) as { url?: string } | null
+    // A InfinitePay devolve o link em `checkout_url` (é o que o gerador de
+    // payload do app deles mostra no "Teste da API"). Parte da documentação
+    // escrita chama o mesmo campo de `url`, então os dois são aceitos: assim o
+    // pagamento não para se eles padronizarem para um lado ou para o outro.
+    const payload = (await response.json().catch(() => null)) as
+      | { checkout_url?: string; url?: string }
+      | null
 
-    if (!response.ok || !payload?.url) {
+    const checkoutUrl = payload?.checkout_url ?? payload?.url
+
+    if (!response.ok || !checkoutUrl) {
       console.error('InfinitePay recusou o link', response.status, payload)
       return json({ error: 'Não foi possível abrir o pagamento agora.' }, 502)
     }
@@ -127,7 +135,7 @@ export default async (request: Request): Promise<Response> => {
     const { error: markError } = await db.rpc('start_online_payment', { p_order_id: order.id })
     if (markError) console.error('Falha ao marcar pagamento iniciado', markError)
 
-    return json({ url: payload.url })
+    return json({ url: checkoutUrl })
   } catch (cause) {
     console.error('Erro ao gerar link de pagamento', cause)
     return json({ error: 'Não foi possível abrir o pagamento agora.' }, 500)
