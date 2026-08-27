@@ -183,8 +183,14 @@ export const business: BusinessConfig = {
     pixKey: 'reginasoares0187@gmail.com',
     pixHolder: 'Açaiteria MR',
     pixCity: 'Viana',
-    cardOnDelivery: false,
+    // Cartão de crédito pago na hora já está pronto no código, mas depende das
+    // variáveis INFINITEPAY_HANDLE, SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no
+    // Netlify. Enquanto elas não existirem, ligar aqui faria o cliente escolher
+    // cartão e receber erro na hora de pagar, então a maquininha na entrega
+    // segue no ar. Criadas as variáveis: cardOnDelivery false, onlineCheckout
+    // true, e o cartão passa a ser cobrado no pedido.
+    cardOnDelivery: true,
     cash: true,
-    onlineCheckout: true,
+    onlineCheckout: false,
   },
 }
