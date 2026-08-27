@@ -1,6 +1,6 @@
 import type { CartItem } from '../cart/CartContext'
 import { supabase } from '../lib/supabase'
-import type { Customer, Order, OrderStatus } from './types'
+import type { Customer, Order, OrderStatus, PaymentStatus } from './types'
 
 /**
  * Pedidos, no Supabase.
@@ -22,10 +22,14 @@ interface OrderRow {
   confirmed_at: string | null
   created_at: string
   updated_at: string
+  /** Ausentes enquanto a migration 0004 não tiver rodado no banco. */
+  payment_status?: PaymentStatus
+  payment_receipt_url?: string | null
+  paid_at?: string | null
 }
 
 const SELECT =
-  'id, code, status, customer, items, subtotal, delivery_fee, total, confirmed_at, created_at, updated_at'
+  'id, code, status, customer, items, subtotal, delivery_fee, total, confirmed_at, created_at, updated_at, payment_status, payment_receipt_url, paid_at'
 
 const toOrder = (row: OrderRow): Order => ({
   id: row.id,
@@ -39,6 +43,9 @@ const toOrder = (row: OrderRow): Order => ({
   deliveryFee: Number(row.delivery_fee),
   total: Number(row.total),
   confirmedAt: row.confirmed_at,
+  paymentStatus: row.payment_status ?? 'na_entrega',
+  paymentReceiptUrl: row.payment_receipt_url ?? null,
+  paidAt: row.paid_at ?? null,
 })
 
 export const listOrders = async (): Promise<readonly Order[]> => {
@@ -116,6 +123,9 @@ export const createOrder = async (
     deliveryFee: priced(created.delivery_fee, deliveryFee),
     total: priced(created.total, subtotal + deliveryFee),
     confirmedAt: null,
+    paymentStatus: customer.payment === 'online' ? 'aguardando' : 'na_entrega',
+    paymentReceiptUrl: null,
+    paidAt: null,
   }
 }
 

@@ -15,6 +15,13 @@
   command = "npm run build"
   publish = "dist"
 
+# As funções servidor do pagamento. O caminho é relativo ao `base`, então
+# aponta para site/netlify/functions. Elas existem porque o link de cobrança
+# precisa nascer do total que está no banco, e não do que o navegador diz.
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
 [build.environment]
   # Vite 7 exige Node 20.19+ ou 22.12+. Fixado para o deploy não mudar sozinho.
   NODE_VERSION = "22"

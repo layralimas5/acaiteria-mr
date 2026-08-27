@@ -219,7 +219,15 @@ revoke all on function public.price_order_items(jsonb) from public;
 --
 -- p_subtotal continua na assinatura, e ignorado, só para o site publicado hoje
 -- não quebrar entre rodar esta migration e sair o próximo deploy.
-create or replace function public.create_order(
+--
+-- O drop antes do create não é enfeite: `create or replace` não muda o tipo de
+-- retorno de uma função que já existe. A 0002 devolvia três colunas e aqui
+-- passam a ser seis, então sem o drop o Postgres recusa a migration inteira
+-- com "cannot change return type of existing function". A assinatura de
+-- entrada é a mesma, por isso o drop precisa listá-la.
+drop function if exists public.create_order(jsonb, jsonb, numeric, numeric);
+
+create function public.create_order(
   p_customer jsonb,
   p_items jsonb,
   p_subtotal numeric,

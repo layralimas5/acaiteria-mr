@@ -1,2 +1,6 @@
-# SPA: /sistema é resolvido no cliente, então tudo cai no index.html.
+# As funções servidor primeiro: sem esta linha o /* abaixo engoliria /api/* e
+# o pagamento cairia no index.html em vez de na função.
+/api/*    /.netlify/functions/:splat   200
+
+# SPA: /sistema é resolvido no cliente, então o resto cai no index.html.
 /*    /index.html   200

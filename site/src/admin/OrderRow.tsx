@@ -2,6 +2,7 @@ import { formatPrice } from '../lib/order'
 import type { Order, OrderStatus } from '../orders/types'
 import { nextStatus, paymentLabels, statusLabels } from '../orders/types'
 import { DeleteButton } from './DeleteButton'
+import { PaymentBadge } from './PaymentBadge'
 import { WaitBadge } from './WaitBadge'
 import { formatTime } from './metrics'
 
@@ -40,6 +41,7 @@ export function OrderRow({ order, now, onAdvance, onRemove, onOpen }: OrderRowPr
           <span className="text-sm font-extrabold text-ink">#{order.code}</span>
           <span className="text-sm font-bold text-ink">{order.customer.name}</span>
           {open && <WaitBadge iso={order.createdAt} now={now} />}
+          <PaymentBadge status={order.paymentStatus} compact />
         </span>
         <span className="mt-0.5 block truncate text-xs text-muted">
           {formatTime(order.createdAt)} · {itemCount} {itemCount === 1 ? 'item' : 'itens'} ·{' '}

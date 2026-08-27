@@ -94,17 +94,6 @@ export function AcaiBuilder({
 
   const pricing = useMemo(() => priceBuild(selection, categories), [selection, categories])
 
-  // A cota é por categoria: dentro de cada uma, os primeiros escolhidos entram.
-  const freeIds = useMemo(
-    () =>
-      categories.flatMap((category) =>
-        selection.toppings
-          .filter((topping) => topping.categoryId === category.id)
-          .slice(0, category.rule.free)
-          .map((topping) => topping.id),
-      ),
-    [selection.toppings, categories],
-  )
   const selectedIds = useMemo(() => selection.toppings.map((topping) => topping.id), [selection.toppings])
 
   const goToStep = useCallback((next: number) => {
@@ -392,7 +381,6 @@ export function AcaiBuilder({
                             category={category}
                             toppings={toppingsByCategory(category.id)}
                             selectedIds={selectedIds}
-                            freeIds={freeIds}
                             usage={usage}
                             disabled={!sizeDone}
                             onToggle={handleToggleTopping}

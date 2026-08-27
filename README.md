@@ -22,7 +22,8 @@ npm run preview  # serve o dist/
 | --- | --- |
 | Telefone, endereço, horário, link do iFood | `site/src/config/business.ts` |
 | Taxa de entrega e valor do frete grátis | `site/src/config/business.ts` (`delivery.fee`, `delivery.freeShippingFrom`) |
-| Formas de pagamento aceitas e chave Pix | `site/src/config/business.ts` (`payments`) |
+| Formas de pagamento aceitas e chave Pix | `site/src/config/business.ts` (`payments`) — ver `docs/pix.md` |
+| Ligar/desligar o pagamento online (InfinitePay) | `site/src/config/business.ts` (`payments.onlineCheckout`) — ver `docs/infinitepay.md` |
 | Modo só delivery | `site/src/config/business.ts` (`deliveryOnly`) |
 | Produtos, preços, categorias, complementos | `site/src/data/products.ts` |
 | Regras de link de pedido (iFood vs WhatsApp) | `site/src/lib/order.ts` |
@@ -38,6 +39,25 @@ por diante. Quem numera é o banco, pela sequência `order_code_seq`, não a
 quantidade de pedidos guardados: apagar um pedido antigo no painel não faz dois
 nascerem com o mesmo número. Todo pedido enviado pelo site entra no painel, em
 Pedidos, na hora, em qualquer aparelho.
+
+## Pagamento
+
+O cliente pode pagar **na entrega** (Pix, cartão na maquininha ou dinheiro) ou
+**na hora, pelo site**, no checkout da InfinitePay: Pix ou cartão em até 12x,
+com o dinheiro caindo direto na conta da loja e o pedido nascendo marcado como
+pago no painel.
+
+Escolhendo **Pix**, a tela de pedido enviado mostra o **copia e cola já com o
+valor fechado** e o número do pedido na referência, mais o QR Code no
+computador. O cliente não digita chave nem valor, e o pagamento chega
+identificado no extrato da loja. Basta preencher `payments.pixKey`: detalhes e
+o formato certo da chave em `docs/pix.md`.
+
+O checkout online vem desligado. Para ligar: `docs/infinitepay.md`.
+
+O link de cobrança nunca é gerado no navegador. Quem gera é uma função servidor
+(`site/netlify/functions/`), a partir do total que está no banco: assim o
+cliente não escolhe quanto vai pagar.
 
 ## Sistema da loja
 
@@ -59,7 +79,10 @@ e o botão de WhatsApp continua disponível na seção de entrega.
 
 - [x] Telefone real: (27) 99285-3101
 - [ ] Resto dos dados em `business.ts` (endereço, horário, Instagram)
-- [ ] Confirmar taxa de entrega com o cliente (hoje `delivery.fee: 5`) e a chave Pix (`payments.pixKey`)
+- [ ] Confirmar taxa de entrega com o cliente (hoje Viana R$ 3 e Cariacica R$ 6)
+- [x] Chave Pix preenchida (e-mail da conta InfinitePay)
+- [ ] Pagar um pedido de teste no Pix e conferir nome, valor e referência (`docs/pix.md`)
+- [ ] Ligar o pagamento online: InfiniteTag da cliente, migration `0004`, variáveis no Netlify e `payments.onlineCheckout: true` (`docs/infinitepay.md`)
 - [ ] Criar o projeto no Supabase e rodar `supabase/migrations/0001_init.sql` (`docs/supabase.md`)
 - [ ] Cadastrar o cardápio no painel: o sistema começa vazio, sem nenhum produto
 - [ ] Publicar os primeiros depoimentos reais (painel → Avaliações → Publicar no site; a seção fica escondida até lá)
@@ -228,12 +251,19 @@ produto, preço ou complemento vive no código.
 Para marcar algo como esgotado, é a chave de disponibilidade no painel: o card
 aparece desabilitado no site, com o aviso, e volta com outro clique.
 
-**Regra dos gratuitos:** a cota é **por categoria**, não por copo. Cada
-categoria tem `free` (quantos já vêm inclusos) e `max` (teto de escolha; `null`
-quando não há limite). Dentro de uma categoria vale a ordem de escolha: os
-primeiros entram na cota, os seguintes somam o próprio preço. Ao bater o teto,
-os cards restantes daquela categoria ficam desabilitados com o aviso "no
-limite".
+**Regra dos gratuitos:** quem decide se um complemento custa alguma coisa é o
+**preço dele no cardápio**, não a ordem em que o cliente clicou. Preço zero é
+cortesia e nunca cobra; preço é adicional e sempre cobra. Para dar um item de
+graça, é preço zero no painel.
+
+A cota (`free`) e o teto (`max`) continuam **por categoria**, não por copo:
+`free` é o número de cortesias que a loja anuncia e `max` limita a escolha. Ao
+bater o teto, os cards restantes daquela categoria ficam desabilitados com o
+aviso "no limite".
+
+Foi assim que "Cremes" passou a cobrar Nutella e Bueno: a categoria tem cota 1 e
+mistura cortesia (Avelã, Leitinho) com item de R$ 3,00. Pela ordem de escolha,
+quem clicava na Nutella primeiro levava os R$ 3,00 de graça.
 
 Esses números são da categoria e a loja define ao criar cada uma, no painel,
 em Cardápio. Mudar vale na hora, sem publicar o site de novo.

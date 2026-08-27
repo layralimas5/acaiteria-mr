@@ -1,13 +1,12 @@
 import { motion } from 'framer-motion'
 import type { Topping } from '../../catalog/types'
+import { isFreeTopping } from '../../lib/builder'
 import { formatPrice } from '../../lib/order'
 import { SelectedCheck } from './SelectedCheck'
 
 interface ToppingCardProps {
   readonly topping: Topping
   readonly selected: boolean
-  /** true quando esse complemento ainda cabe na cota grátis do tamanho. */
-  readonly free: boolean
   readonly disabled: boolean
   /** true quando a categoria bateu o teto e este item ficou de fora. */
   readonly blockedByLimit?: boolean
@@ -17,18 +16,17 @@ interface ToppingCardProps {
 export function ToppingCard({
   topping,
   selected,
-  free,
   disabled,
   blockedByLimit = false,
   onToggle,
 }: ToppingCardProps) {
   const blocked = disabled || blockedByLimit
   /**
-   * Sai de graça por um de dois motivos: cabe na cota da categoria, ou a loja
-   * cadastrou sem preço. O segundo vale mesmo com a cota estourada — item de
-   * preço zero nunca vira adicional.
+   * Só o preço do cardápio decide. A etiqueta é a mesma antes e depois de
+   * escolher, então o cliente vê "+ R$ 3,00" na Nutella desde o primeiro
+   * clique e não descobre a cobrança no fim.
    */
-  const costsNothing = free || topping.price === 0
+  const costsNothing = isFreeTopping(topping)
 
   return (
     <motion.button

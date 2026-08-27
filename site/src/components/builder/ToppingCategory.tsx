@@ -7,8 +7,6 @@ interface ToppingCategoryProps {
   readonly category: Category
   readonly toppings: readonly Topping[]
   readonly selectedIds: readonly string[]
-  /** Complementos já escolhidos que ocupam a cota grátis, na ordem de escolha. */
-  readonly freeIds: readonly string[]
   /** Cota e teto desta categoria, já com o que o cliente escolheu. */
   readonly usage: CategoryUsage
   readonly disabled: boolean
@@ -19,7 +17,6 @@ export function ToppingCategory({
   category,
   toppings,
   selectedIds,
-  freeIds,
   usage,
   disabled,
   onToggle,
@@ -31,8 +28,6 @@ export function ToppingCategory({
       </p>
     )
   }
-
-  const freeRemaining = Math.max(0, usage.free - usage.chosen)
 
   return (
     <div>
@@ -60,14 +55,12 @@ export function ToppingCategory({
       <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3">
         {toppings.map((topping) => {
           const selected = selectedIds.includes(topping.id)
-          const free = selected ? freeIds.includes(topping.id) : freeRemaining > 0
 
           return (
             <ToppingCard
               key={topping.id}
               topping={topping}
               selected={selected}
-              free={free}
               disabled={disabled}
               blockedByLimit={!selected && usage.full}
               onToggle={onToggle}

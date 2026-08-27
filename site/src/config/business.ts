@@ -78,13 +78,39 @@ export interface BusinessConfig {
     readonly minMinutes: number
   }
   readonly payments: {
-    /** Chave Pix mostrada no checkout. Vazia esconde o aviso. */
+    /**
+     * Chave Pix da loja, no formato exato em que o banco a reconhece. O código
+     * copia e cola é montado com ela, então errar o formato faz o app do
+     * cliente recusar o pagamento:
+     *
+     * - Telefone: com DDI e sinal, `+5527992853101`
+     * - CPF ou CNPJ: só dígitos, `12345678000199`
+     * - E-mail: em minúsculas
+     * - Aleatória: a chave inteira, com os hifens
+     *
+     * Vazia esconde o Pix copia e cola: o cliente ainda escolhe Pix, mas
+     * combina o pagamento pelo WhatsApp.
+     */
     readonly pixKey: string
+    /** Nome do recebedor que o app do banco mostra ao cliente. */
     readonly pixHolder: string
-    /** true quando a loja leva maquininha na entrega. */
+    /** Município do recebedor, exigido pelo padrão do Banco Central. */
+    readonly pixCity: string
+    /**
+     * true quando a loja leva maquininha na entrega. Hoje false: cartão é pago
+     * na hora do pedido, pelo site, e não quando o motoboy chega.
+     */
     readonly cardOnDelivery: boolean
     /** true quando a loja aceita dinheiro (e precisa levar troco). */
     readonly cash: boolean
+    /**
+     * Pagamento na hora, pelo site, no checkout da InfinitePay (Pix ou cartão
+     * em até 12x). Ligar aqui só mostra a opção na tela: quem cobra de verdade
+     * é a função servidor, e ela exige a variável INFINITEPAY_HANDLE
+     * configurada no Netlify. Ligar sem a variável faz o cliente ver a opção e
+     * receber erro na hora de pagar. Ver `docs/infinitepay.md`.
+     */
+    readonly onlineCheckout: boolean
   }
 }
 
@@ -154,9 +180,17 @@ export const business: BusinessConfig = {
     minMinutes: 40,
   },
   payments: {
-    pixKey: '',
+    pixKey: 'reginasoares0187@gmail.com',
     pixHolder: 'Açaiteria MR',
+    pixCity: 'Viana',
+    // Cartão de crédito pago na hora já está pronto no código, mas depende das
+    // variáveis INFINITEPAY_HANDLE, SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no
+    // Netlify. Enquanto elas não existirem, ligar aqui faria o cliente escolher
+    // cartão e receber erro na hora de pagar, então a maquininha na entrega
+    // segue no ar. Criadas as variáveis: cardOnDelivery false, onlineCheckout
+    // true, e o cartão passa a ser cobrado no pedido.
     cardOnDelivery: true,
     cash: true,
+    onlineCheckout: false,
   },
 }

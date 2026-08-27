@@ -9,3 +9,6 @@ dist-ssr
 
 # Cache de build do TypeScript
 *.tsbuildinfo
+
+# Cache local do Netlify CLI (netlify dev)
+.netlify
