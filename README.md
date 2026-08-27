@@ -251,12 +251,19 @@ produto, preço ou complemento vive no código.
 Para marcar algo como esgotado, é a chave de disponibilidade no painel: o card
 aparece desabilitado no site, com o aviso, e volta com outro clique.
 
-**Regra dos gratuitos:** a cota é **por categoria**, não por copo. Cada
-categoria tem `free` (quantos já vêm inclusos) e `max` (teto de escolha; `null`
-quando não há limite). Dentro de uma categoria vale a ordem de escolha: os
-primeiros entram na cota, os seguintes somam o próprio preço. Ao bater o teto,
-os cards restantes daquela categoria ficam desabilitados com o aviso "no
-limite".
+**Regra dos gratuitos:** quem decide se um complemento custa alguma coisa é o
+**preço dele no cardápio**, não a ordem em que o cliente clicou. Preço zero é
+cortesia e nunca cobra; preço é adicional e sempre cobra. Para dar um item de
+graça, é preço zero no painel.
+
+A cota (`free`) e o teto (`max`) continuam **por categoria**, não por copo:
+`free` é o número de cortesias que a loja anuncia e `max` limita a escolha. Ao
+bater o teto, os cards restantes daquela categoria ficam desabilitados com o
+aviso "no limite".
+
+Foi assim que "Cremes" passou a cobrar Nutella e Bueno: a categoria tem cota 1 e
+mistura cortesia (Avelã, Leitinho) com item de R$ 3,00. Pela ordem de escolha,
+quem clicava na Nutella primeiro levava os R$ 3,00 de graça.
 
 Esses números são da categoria e a loja define ao criar cada uma, no painel,
 em Cardápio. Mudar vale na hora, sem publicar o site de novo.

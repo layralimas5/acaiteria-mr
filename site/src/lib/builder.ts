@@ -11,11 +11,13 @@ import type {
 /**
  * Regras de preço da montagem.
  *
- * A cota gratuita é por categoria: cada uma tem quantos itens já vêm inclusos
- * (`free`) e, quando faz sentido, um teto de escolha (`max`). Dentro de uma
- * categoria vale a ordem de escolha: os primeiros entram na cota, os
- * seguintes são cobrados. É a regra que a loja explica no balcão e a que o
- * painel controla no cardápio.
+ * Quem decide se um complemento custa alguma coisa é o preço dele no cardápio,
+ * não a ordem em que o cliente clicou. Item cadastrado com preço zero é
+ * cortesia; item com preço sempre entra como adicional.
+ *
+ * A cota gratuita (`free`) e o teto (`max`) continuam por categoria: a cota
+ * anuncia quantos itens de cortesia acompanham o copo e o teto limita a
+ * escolha. É a regra que a loja explica no balcão e a que o painel controla.
  *
  * As categorias não são fixas: vêm do cardápio que a loja cadastrou, então
  * toda função aqui recebe a lista em vez de importar uma constante.
@@ -57,25 +59,34 @@ export interface BuildPricing {
 
 export const emptySelection: BuildSelection = { product: null, size: null, base: null, toppings: [] }
 
+/** Cortesia é o que a loja cadastrou sem preço. Vale para qualquer categoria. */
+export const isFreeTopping = (topping: Topping): boolean => topping.price === 0
+
 /** Complementos escolhidos de uma categoria, preservando a ordem de escolha. */
 const inCategory = (toppings: readonly Topping[], categoryId: string): readonly Topping[] =>
   toppings.filter((topping) => topping.categoryId === categoryId)
 
 /**
- * Complementos de uma categoria que realmente entram na conta.
+ * Complementos de uma categoria que realmente entram na conta: os que a loja
+ * cadastrou com preço.
  *
- * Passar da cota grátis não basta: o item precisa custar alguma coisa. Boa
- * parte do cardápio é cadastrada com preço zero, e sem esse filtro o quarto
- * morango virava "adicional" com a etiqueta "+ R$ 0,00" — cobrança que não
- * existe, escrita na tela de quem está montando o copo.
+ * Item com preço nunca ocupa vaga na cota grátis. Antes a cota valia por ordem
+ * de escolha, então clicar na Nutella antes da Avelã fazia um creme de R$ 3,00
+ * sair de graça e dois clientes pagavam valores diferentes pelo mesmo copo.
+ * Para dar um item de cortesia, é preço zero no painel.
  */
 const chargedIn = (
   toppings: readonly Topping[],
   category: ToppingCategory,
 ): readonly Topping[] =>
-  inCategory(toppings, category.id)
-    .slice(category.rule.free)
-    .filter((topping) => topping.price > 0)
+  inCategory(toppings, category.id).filter((topping) => topping.price > 0)
+
+/** Complementos de cortesia escolhidos: os de preço zero. */
+const freeIn = (
+  toppings: readonly Topping[],
+  category: ToppingCategory,
+): readonly Topping[] =>
+  inCategory(toppings, category.id).filter((topping) => topping.price === 0)
 
 /** Cota de uma categoria que o cardápio não conhece mais: nada grátis, sem teto. */
 const noRule: ToppingRule = { free: 0, max: null }
@@ -99,7 +110,7 @@ export const priceBuild = (
       chosen,
       free: rule.free,
       max: rule.max,
-      freeUsed: Math.min(chosen, rule.free),
+      freeUsed: Math.min(freeIn(selection.toppings, category).length, rule.free),
       paid: paidByCategory.get(category.id)?.length ?? 0,
       full: rule.max !== null && chosen >= rule.max,
     }
