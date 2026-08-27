@@ -96,7 +96,10 @@ export interface BusinessConfig {
     readonly pixHolder: string
     /** Município do recebedor, exigido pelo padrão do Banco Central. */
     readonly pixCity: string
-    /** true quando a loja leva maquininha na entrega. */
+    /**
+     * true quando a loja leva maquininha na entrega. Hoje false: cartão é pago
+     * na hora do pedido, pelo site, e não quando o motoboy chega.
+     */
     readonly cardOnDelivery: boolean
     /** true quando a loja aceita dinheiro (e precisa levar troco). */
     readonly cash: boolean
@@ -180,8 +183,8 @@ export const business: BusinessConfig = {
     pixKey: 'reginasoares0187@gmail.com',
     pixHolder: 'Açaiteria MR',
     pixCity: 'Viana',
-    cardOnDelivery: true,
+    cardOnDelivery: false,
     cash: true,
-    onlineCheckout: false,
+    onlineCheckout: true,
   },
 }

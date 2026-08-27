@@ -23,7 +23,12 @@ export const periods: readonly { readonly id: PeriodId; readonly label: string }
   { id: 'tudo', label: 'Tudo' },
 ]
 
-export const paymentOrder: readonly PaymentMethod[] = ['pix', 'dinheiro', 'cartao']
+/**
+ * Ordem das formas de pagamento no faturamento do painel. Precisa listar
+ * todas: o que fica de fora some do gráfico, e some sem avisar, como aconteceu
+ * com o cartão pelo site enquanto ele não estava aqui.
+ */
+export const paymentOrder: readonly PaymentMethod[] = ['online', 'pix', 'dinheiro', 'cartao']
 
 /** Começo do dia, N dias atrás. `startOfDay(0)` é a meia-noite de hoje. */
 export const startOfDay = (daysAgo: number): Date => {

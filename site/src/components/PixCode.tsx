@@ -7,8 +7,17 @@ import { storePixCode } from '../lib/pix'
 interface PixCodeProps {
   /** Valor a cobrar, em reais. Já entra fechado no código. */
   readonly amount: number
-  /** Referência no extrato da loja, normalmente o número do pedido. */
-  readonly reference: string
+  /**
+   * Referência no extrato da loja, normalmente o número do pedido. Vazia no
+   * checkout, onde o pedido ainda não nasceu e não existe número para citar.
+   */
+  readonly reference?: string
+  /**
+   * true no checkout, antes de o pedido ser enviado. Troca o texto de fecho:
+   * ali o cliente ainda precisa confirmar o pedido, senão paga e a loja não
+   * recebe nada para preparar.
+   */
+  readonly beforeOrder?: boolean
 }
 
 /** Os quadradinhos escuros do QR, como um caminho SVG só. */
@@ -37,7 +46,7 @@ const qrPath = (payload: string): { readonly d: string; readonly size: number } 
  * O QR serve para quem está no computador e paga pelo celular. No celular o
  * que resolve é o botão de copiar, por isso ele vem primeiro na leitura.
  */
-export function PixCode({ amount, reference }: PixCodeProps) {
+export function PixCode({ amount, reference = '', beforeOrder = false }: PixCodeProps) {
   const payload = useMemo(() => storePixCode(amount, reference), [amount, reference])
   const qr = useMemo(() => (payload ? qrPath(payload) : null), [payload])
   const [copied, setCopied] = useState(false)
@@ -138,9 +147,22 @@ export function PixCode({ amount, reference }: PixCodeProps) {
       */}
       <p className="mt-1 text-xs leading-relaxed text-muted">
         No seu banco o pagamento aparece no nome da titular da conta da{' '}
-        {business.payments.pixHolder}. Depois de pagar, mande o comprovante na conversa do
-        WhatsApp.
+        {business.payments.pixHolder}.
+        {beforeOrder
+          ? ' Você pode pagar agora ou depois de confirmar.'
+          : ' Depois de pagar, mande o comprovante na conversa do WhatsApp.'}
       </p>
+
+      {/*
+        No checkout o pedido ainda não existe. Sem esse aviso o cliente paga,
+        fecha a aba achando que terminou, e a loja fica com o dinheiro na conta
+        sem nenhum pedido para preparar.
+      */}
+      {beforeOrder && (
+        <p className="mt-3 rounded-xl bg-white px-3 py-2 text-xs font-semibold leading-relaxed text-acai-900">
+          Só confirmando o pedido aqui embaixo ele chega na loja. Pagar sozinho não envia nada.
+        </p>
+      )}
     </div>
   )
 }

@@ -11,6 +11,8 @@ import {
 } from '../lib/order'
 import type { Customer, PaymentMethod } from '../orders/types'
 import { paymentHints, paymentLabels } from '../orders/types'
+import { CreditCardInfo } from './CreditCardInfo'
+import { PixCode } from './PixCode'
 
 interface CheckoutFormProps {
   /** Soma dos itens, sem entrega. A taxa é calculada a partir dela. */
@@ -345,26 +347,15 @@ export function CheckoutForm({
           </div>
         </fieldset>
 
-        {customer.payment === 'online' && (
-          <p className="rounded-2xl border border-acai-100 bg-acai-50/70 px-4 py-3 text-xs leading-relaxed text-muted">
-            Ao enviar o pedido você vai para a tela segura de pagamento da InfinitePay. Assim que o
-            pagamento cair, a loja já começa a preparar. Se preferir pagar na entrega, é só escolher
-            outra forma aqui em cima.
-          </p>
-        )}
+        {customer.payment === 'online' && <CreditCardInfo total={total} />}
 
         {/*
-          A chave aparece aqui só como confirmação de para quem vai o dinheiro.
-          O copia e cola com o valor exato vem na tela seguinte, quando o
-          pedido já tem número e total fechado: assim ninguém paga a mais nem
-          a menos por causa da taxa de entrega.
+          O código sai aqui, no clique, e não só depois de enviar: quem escolhe
+          Pix quer pagar naquele instante, com o celular na mão. O valor é o
+          desta tela, taxa de entrega incluída, e o card avisa que pagar sozinho
+          não envia o pedido.
         */}
-        {customer.payment === 'pix' && business.payments.pixKey && (
-          <p className="rounded-2xl border border-acai-100 bg-acai-50/70 px-4 py-3 text-xs leading-relaxed text-muted">
-            O código Pix com o valor certo aparece assim que você enviar o pedido. Recebedor:{' '}
-            <strong className="font-bold text-ink">{business.payments.pixHolder}</strong>.
-          </p>
-        )}
+        {customer.payment === 'pix' && <PixCode amount={total} beforeOrder />}
 
         {customer.payment === 'dinheiro' && (
           <Field label="Troco para quanto? (opcional)" error={null}>
