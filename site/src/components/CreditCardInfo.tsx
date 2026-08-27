@@ -38,7 +38,7 @@ export function CreditCardInfo({ total }: CreditCardInfoProps) {
           <Step n={3} />
           <span>
             Assim que o pagamento é aprovado, o pedido aparece pago na loja e entra na fila de
-            preparo. Nada para acertar na entrega.
+            preparo. Chega em casa sem nada para acertar.
           </span>
         </li>
       </ol>

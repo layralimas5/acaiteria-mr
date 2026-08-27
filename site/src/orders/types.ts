@@ -74,7 +74,7 @@ export const paymentLabels: Readonly<Record<PaymentMethod, string>> = {
 
 /** Linha de apoio de cada forma de pagamento, mostrada no checkout. */
 export const paymentHints: Readonly<Record<PaymentMethod, string>> = {
-  online: 'Paga agora, em até 12x, sem esperar a entrega',
+  online: 'Paga agora, em até 12x, direto no sistema',
   pix: 'O QR Code e o copia e cola aparecem aqui na hora',
   dinheiro: 'Diga abaixo se precisa de troco',
   cartao: 'Crédito ou débito na maquininha, na entrega',
