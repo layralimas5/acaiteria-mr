@@ -42,18 +42,23 @@ Pedidos, na hora, em qualquer aparelho.
 
 ## Pagamento
 
-O cliente pode pagar **na entrega** (Pix, cartão na maquininha ou dinheiro) ou
-**na hora, pelo site**, no checkout da InfinitePay: Pix ou cartão em até 12x,
-com o dinheiro caindo direto na conta da loja e o pedido nascendo marcado como
-pago no painel.
+A loja **recebe tudo na hora do pedido**. Não há maquininha na entrega nem
+dinheiro para o motoboy separar troco: o entregador sai só com o açaí.
 
-Escolhendo **Pix**, a tela de pedido enviado mostra o **copia e cola já com o
-valor fechado** e o número do pedido na referência, mais o QR Code no
-computador. O cliente não digita chave nem valor, e o pagamento chega
-identificado no extrato da loja. Basta preencher `payments.pixKey`: detalhes e
-o formato certo da chave em `docs/pix.md`.
+São duas formas, as duas pagas antes de o pedido sair:
 
-O checkout online vem desligado. Para ligar: `docs/infinitepay.md`.
+- **Pix**, com QR Code e copia e cola no próprio checkout, no clique da opção,
+  já com o valor fechado e a taxa de entrega inclusa. A tela de pedido enviado
+  repete o código, agora com o número do pedido na referência, e é esse que a
+  loja reconhece no extrato. O cliente nunca digita chave nem valor. Formato
+  certo da chave em `docs/pix.md`
+- **Cartão de crédito**, em até 12x, no checkout da InfinitePay, com o dinheiro
+  caindo direto na conta da loja e o pedido nascendo marcado como pago. Os
+  dados do cartão são digitados na tela da InfinitePay, nunca neste site
+
+Quem liga cada uma é `payments`, em `business.ts`. O cartão exige as três
+variáveis do Netlify antes de ser ligado, senão o cliente escolhe e leva erro
+na hora de pagar: `docs/infinitepay.md`.
 
 O link de cobrança nunca é gerado no navegador. Quem gera é uma função servidor
 (`site/netlify/functions/`), a partir do total que está no banco: assim o
