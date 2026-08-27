@@ -99,7 +99,7 @@ export function PaymentReturn({ order, onDismiss }: PaymentReturnProps) {
             {paid
               ? `Recebemos ${formatPrice(order.total)}. A loja já foi avisada e começa a preparar seu pedido. Ele chega a partir de ${business.delivery.minMinutes} minutos.`
               : failed
-                ? 'Nada foi cobrado. Você pode tentar de novo agora ou combinar o pagamento na entrega pelo WhatsApp.'
+                ? 'Nada foi cobrado. Você pode tentar de novo agora ou combinar o pagamento pelo WhatsApp.'
                 : 'Isso costuma levar poucos segundos. Pode deixar esta tela aberta.'}
           </p>
 

@@ -97,8 +97,8 @@ export interface BusinessConfig {
     /** Município do recebedor, exigido pelo padrão do Banco Central. */
     readonly pixCity: string
     /**
-     * true quando a loja leva maquininha na entrega. Hoje false: cartão é pago
-     * na hora do pedido, pelo site, e não quando o motoboy chega.
+     * true quando a loja leva maquininha na entrega. A loja não tem maquininha:
+     * cartão é passado no sistema, na hora do pedido.
      */
     readonly cardOnDelivery: boolean
     /** true quando a loja aceita dinheiro (e precisa levar troco). */
@@ -183,14 +183,15 @@ export const business: BusinessConfig = {
     pixKey: 'reginasoares0187@gmail.com',
     pixHolder: 'Açaiteria MR',
     pixCity: 'Viana',
-    // Cartão de crédito pago na hora já está pronto no código, mas depende das
-    // variáveis INFINITEPAY_HANDLE, SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no
-    // Netlify. Enquanto elas não existirem, ligar aqui faria o cliente escolher
-    // cartão e receber erro na hora de pagar, então a maquininha na entrega
-    // segue no ar. Criadas as variáveis: cardOnDelivery false, onlineCheckout
-    // true, e o cartão passa a ser cobrado no pedido.
-    cardOnDelivery: true,
-    cash: true,
-    onlineCheckout: false,
+    // A loja recebe tudo na hora do pedido: não há maquininha na entrega nem
+    // dinheiro para o motoboy separar troco. Sobram Pix, com o código já na
+    // tela, e cartão passado no sistema.
+    //
+    // O cartão depende de INFINITEPAY_HANDLE, SUPABASE_URL e
+    // SUPABASE_SERVICE_ROLE_KEY no Netlify: sem elas o cliente escolhe cartão e
+    // leva erro na hora de pagar.
+    cardOnDelivery: false,
+    cash: false,
+    onlineCheckout: true,
   },
 }
