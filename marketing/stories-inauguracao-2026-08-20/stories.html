@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Açaiteria MR — stories de inauguração</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  /* =====================================================================
+     Açaiteria MR — 4 stories 1080x1920 (9:16)
+     Tudo que muda de campanha pra campanha está no bloco DADOS, no final
+     do arquivo. Trocou lá, roda `node render.js`, sai PNG novo.
+     ===================================================================== */
+
+  :root {
+    --roxo-950: #100518;
+    --roxo-900: #1a0b29;
+    --roxo-800: #2c1642;
+    --roxo-700: #422260;
+    --roxo-500: #6d4296;
+    --cream: #faf6f0;
+    --gold: #ffc94a;
+    --ink: #150c1c;
+
+    /* Faixas que a interface do Instagram cobre. Nada de texto aqui dentro. */
+    --safe-top: 220px;
+    --safe-bottom: 250px;
+    --pad: 96px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', system-ui, sans-serif;
+    background: #14161a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+    padding: 48px;
+  }
+
+  .story {
+    position: relative;
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+    background: var(--roxo-900);
+    color: var(--cream);
+    display: flex;
+    flex-direction: column;
+    isolation: isolate;
+  }
+
+  /* Brilho roxo que a marca usa no fundo das artes. */
+  .story::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(120% 70% at 50% 20%, #6d4296 0%, #2c1642 46%, #150720 100%);
+    z-index: -2;
+  }
+
+  .safe {
+    position: relative;
+    z-index: 3;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: var(--safe-top) var(--pad) var(--safe-bottom);
+  }
+
+  /* ---------- tipos ---------- */
+  .kicker {
+    font-size: 26px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+  }
+
+  .rule {
+    width: 84px;
+    height: 5px;
+    background: var(--gold);
+    border-radius: 4px;
+    margin: 28px 0 34px;
+  }
+
+  h1 {
+    font-size: 106px;
+    font-weight: 900;
+    line-height: 0.96;
+    letter-spacing: -0.045em;
+  }
+
+  h2 {
+    font-size: 78px;
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+  }
+
+  .lead {
+    font-size: 34px;
+    font-weight: 500;
+    line-height: 1.42;
+    color: rgba(250, 246, 240, 0.82);
+    max-width: 800px;
+  }
+
+  .handle { font-size: 30px; font-weight: 700; }
+
+  /* ---------- marca no topo ---------- */
+  /* Logo centralizada em todos os stories: é a primeira coisa que a
+     pessoa vê, antes de ler qualquer palavra. */
+  .topbar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 56px;
+  }
+  /* A logo é um quadrado com fundo roxo, então vira medalhão redondo:
+     assim ela pousa em qualquer fundo sem desenhar caixa. */
+  .badge {
+    width: 290px;
+    height: 290px;
+    border-radius: 50%;
+    background-image: url('../../site/public/imagem/logo-oficial.webp');
+    background-size: 126%;
+    background-position: center;
+    flex: none;
+    box-shadow: 0 0 0 3px rgba(250, 246, 240, 0.22);
+  }
+  .topbar .meta {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    opacity: 0.78;
+  }
+
+  /* ---------- arte ---------- */
+  /* Faixa com a arte inteira no rodapé: nada de personagem cortado. */
+  .band {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: auto;
+    z-index: 0;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 210px, #000 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 210px, #000 100%);
+  }
+  .veil {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(to bottom, rgba(21, 7, 32, 0.86) 0%, rgba(21, 7, 32, 0.5) 40%, rgba(21, 7, 32, 0) 62%);
+  }
+
+  .sizes {
+    display: flex;
+    gap: 18px;
+    margin-top: 46px;
+  }
+  .sizes span {
+    border: 2px solid rgba(250, 246, 240, 0.34);
+    border-radius: 999px;
+    padding: 16px 34px;
+    font-size: 32px;
+    font-weight: 700;
+  }
+
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 46px;
+    margin-top: 66px;
+  }
+  .step { display: flex; gap: 30px; align-items: flex-start; }
+  .step b {
+    font-size: 64px;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--gold);
+    letter-spacing: -0.04em;
+    width: 76px;
+    flex: none;
+  }
+  .step p { font-size: 38px; font-weight: 600; line-height: 1.28; }
+  .step p small {
+    display: block;
+    margin-top: 10px;
+    font-size: 28px;
+    font-weight: 500;
+    color: rgba(250, 246, 240, 0.62);
+  }
+
+  .footline {
+    margin-top: auto;
+    padding-top: 44px;
+    border-top: 1px solid rgba(250, 246, 240, 0.16);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footline small { font-size: 26px; font-weight: 500; opacity: 0.7; }
+
+  /* ---------- story do "segue a gente" ---------- */
+  .arrow-wrap {
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: -26px 0 34px;
+  }
+  .arrow-head {
+    width: 100px;
+    height: 100px;
+    border-left: 20px solid var(--gold);
+    border-top: 20px solid var(--gold);
+    border-radius: 8px;
+    transform: rotate(45deg);
+  }
+  .arrow-tail {
+    width: 20px;
+    height: 120px;
+    background: var(--gold);
+    border-radius: 12px;
+    margin-top: -44px;
+  }
+  .pill {
+    align-self: center;
+    margin-top: 44px;
+    background: var(--gold);
+    color: var(--roxo-900);
+    border-radius: 999px;
+    padding: 24px 58px;
+    font-size: 60px;
+    font-weight: 900;
+    letter-spacing: -0.035em;
+  }
+  .center { text-align: center; align-items: center; }
+</style>
+</head>
+<body>
+
+<!-- ===================== 1 · ANÚNCIO ===================== -->
+<section class="story" id="s1">
+  <img class="band" style="bottom: 0; width: 122%; left: -11%" src="../../site/public/imagem/banner-2.webp" alt="" />
+  <div class="veil"></div>
+  <div class="safe">
+    <div class="topbar">
+      <div class="badge"></div>
+      <span class="meta" data-var="handle">@mracai9</span>
+    </div>
+    <div class="kicker" data-var="kicker1">Inauguração</div>
+    <div class="rule"></div>
+    <h1 data-var="titulo1">O açaí que Viana<br />tava esperando</h1>
+    <p class="lead" style="margin-top: 38px" data-var="lead1">
+      Cremoso, batido na hora e montado do seu jeito. A gente leva até a sua porta.
+    </p>
+    <p class="lead" style="margin-top: 30px; font-weight: 700; color: #ffc94a" data-var="abertura1">
+      Abre dia 5 de setembro
+    </p>
+  </div>
+</section>
+
+<!-- ===================== 2 · TAMANHOS ===================== -->
+<section class="story" id="s2">
+  <img class="band" style="bottom: 0; width: 165%; left: -58%" src="../../site/public/imagem/banner.webp" alt="" />
+  <div class="veil"></div>
+  <div class="safe">
+    <div class="topbar">
+      <div class="badge"></div>
+      <span class="meta" data-var="handle">@mracai9</span>
+    </div>
+    <div class="kicker" data-var="kicker2">Você monta</div>
+    <div class="rule"></div>
+    <h2 data-var="titulo2">Três complementos<br />grátis em qualquer<br />tamanho</h2>
+    <div class="sizes">
+      <span data-var="tam1">500ml</span><span data-var="tam2">700ml</span><span data-var="tam3">1 litro</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 3 · COMO PEDIR ===================== -->
+<section class="story" id="s3">
+  <div class="safe">
+    <div class="topbar">
+      <div class="badge"></div>
+    </div>
+    <div class="kicker" data-var="kicker3">Como pedir</div>
+    <div class="rule"></div>
+    <h2 data-var="titulo3">Do sofá até<br />a sua porta</h2>
+    <div class="steps">
+      <div class="step">
+        <b>1</b>
+        <p data-var="passo1">Abre o site e monta o seu copo<small>acaiteria-mr.netlify.app</small></p>
+      </div>
+      <div class="step">
+        <b>2</b>
+        <p data-var="passo2">Escolhe base, sabor e complementos<small>três entram de graça</small></p>
+      </div>
+      <div class="step">
+        <b>3</b>
+        <p data-var="passo3">Confirma e recebe em casa<small>taxa de entrega: R$ 3 em Viana, R$ 6 em Cariacica</small></p>
+      </div>
+    </div>
+    <div class="footline">
+      <span class="handle" data-var="handle">@mracai9</span>
+      <small data-var="rodape3">(27) 99285-3101</small>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 4 · SEGUE A GENTE ===================== -->
+<section class="story" id="s4">
+  <img class="band" style="bottom: -130px; width: 152%; left: -26%" src="../../site/public/imagem/banner-2.webp" alt="" />
+  <div class="veil"></div>
+  <div class="safe center">
+    <div class="topbar">
+      <div class="badge"></div>
+    </div>
+    <div class="arrow-wrap">
+      <div class="arrow-head"></div>
+      <div class="arrow-tail"></div>
+    </div>
+    <h2 class="center" data-var="titulo4">Segue a gente<br />aqui em cima</h2>
+    <p class="lead center" style="margin-top: 28px" data-var="lead4">
+      Promoção, sabor novo e o combinado do fim de semana saem primeiro por aqui.
+    </p>
+    <div class="pill" data-var="handle">@mracai9</div>
+  </div>
+</section>
+
+<script>
+  /* =====================================================================
+     DADOS — mexe só aqui.
+     A chave bate com o data-var do HTML. Aceita <br> e <small>.
+     Tirar uma chave daqui mantém o texto que já está escrito no HTML.
+     ===================================================================== */
+  const DADOS = {
+    handle: '@mracai9',
+
+    // Story 1 — anúncio
+    kicker1: 'Inauguração',
+    titulo1: 'O açaí que Viana<br />tava esperando',
+    lead1: 'Cremoso, batido na hora e montado do seu jeito. A gente leva até a sua porta.',
+    abertura1: 'Abre dia 5 de setembro',
+
+    // Story 2 — tamanhos
+    kicker2: 'Você monta',
+    titulo2: 'Três complementos<br />grátis em qualquer<br />tamanho',
+    tam1: '500ml',
+    tam2: '700ml',
+    tam3: '1 litro',
+
+    // Story 3 — como pedir
+    kicker3: 'Como pedir',
+    titulo3: 'Do sofá até<br />a sua porta',
+    passo1: 'Abre o site e monta o seu copo<small>acaiteria-mr.netlify.app</small>',
+    passo2: 'Escolhe base, sabor e complementos<small>três entram de graça</small>',
+    passo3: 'Confirma e recebe em casa<small>taxa de entrega: R$ 3 em Viana, R$ 6 em Cariacica</small>',
+    rodape3: '(27) 99285-3101',
+
+    // Story 4 — seguir
+    titulo4: 'Segue a gente<br />aqui em cima',
+    lead4: 'Promoção, sabor novo e o combinado do fim de semana saem primeiro por aqui.',
+  }
+
+  for (const [chave, valor] of Object.entries(DADOS)) {
+    document.querySelectorAll('[data-var="' + chave + '"]').forEach(function (el) {
+      el.innerHTML = valor
+    })
+  }
+</script>
+</body>
+</html>
