@@ -14,6 +14,11 @@ interface CreditCardInfoProps {
  *
  * Por isso o bloco explica o pulo para a outra tela antes de o cliente clicar:
  * ninguém gosta de ser jogado num domínio estranho sem aviso na hora de pagar.
+ *
+ * Os passos descrevem o que acontece sozinho depois de confirmar, e não uma
+ * lista de coisas a fazer: o redirecionamento é automático. Também não citam
+ * débito, porque prometer na tela uma opção que pode não aparecer no checkout
+ * faz o cliente desistir no meio do pagamento.
  */
 export function CreditCardInfo({ total }: CreditCardInfoProps) {
   return (
@@ -30,8 +35,9 @@ export function CreditCardInfo({ total }: CreditCardInfoProps) {
         <li className="flex gap-2.5">
           <Step n={2} />
           <span>
-            Abre a tela de pagamento da <strong className="font-semibold text-ink">InfinitePay</strong>,
-            onde você digita os dados do cartão. Crédito em até 12x ou débito.
+            Você vai direto para a tela de pagamento da{' '}
+            <strong className="font-semibold text-ink">InfinitePay</strong>, onde digita os dados do
+            cartão. Crédito em até 12x.
           </span>
         </li>
         <li className="flex gap-2.5">
