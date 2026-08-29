@@ -8,10 +8,18 @@ export function Hero() {
   const images = business.heroImages
   const { index: current, goTo, paused } = useRotation(images.length, business.heroRotationMs)
 
+  /*
+    A altura do desktop acompanha a proporção da arte (1830x859, ou seja
+    2.13:1, logo 100vw / 2.13 = 47vw) em vez de ser fixa. Com altura fixa,
+    quanto mais largo o monitor mais a caixa vira uma tarja e o `object-cover`
+    come o topo e a base da arte: num 1920 os copos saíam cortados pela metade.
+    O piso de 40rem segura a leitura em janela estreita e o teto de 90vh impede
+    que a seção passe da tela em monitor ultrawide.
+  */
   return (
     <section
       id="topo"
-      className="relative isolate flex min-h-[40rem] items-end overflow-hidden bg-acai-900 text-white sm:min-h-[38rem] sm:items-center lg:min-h-[40rem]"
+      className="relative isolate flex min-h-[40rem] items-end overflow-hidden bg-acai-900 text-white sm:min-h-[38rem] sm:items-center lg:min-h-[max(40rem,min(47vw,90vh))]"
     >
       {images.length > 0 && (
         <div aria-hidden="true" className="absolute inset-0 -z-10">
