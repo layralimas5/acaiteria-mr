@@ -207,11 +207,21 @@ bobina térmica e gastaria tinta à toa na impressora comum. Se a logo mudar,
 gere a versão de impressão de novo (grayscale + invertido) e substitua esse
 arquivo. Se a imagem falhar em carregar, o cupom cai no nome da loja em texto.
 
-**Papel:** o cupom é desenhado para bobina térmica de **80mm** (as
-impressoras de pedido comuns, tipo Elgin/Epson/Bematech em modo texto ou
-driver Windows). Em impressora comum de folha A4 ele sai centralizado no alto
-da página, sem quebrar. Se a loja usar bobina de 58mm, dá para ajustar em
-`site/src/orders/receipt.ts` (bloco `@page` e a largura do `body`).
+**Papel:** o cupom é desenhado para a térmica portátil Bluetooth da loja, a
+**Altomex/LTOMEX AL-3179**: bobina de **58mm**, com área útil de impressão de
+**48mm**. O que passar dessa faixa é cortado no papel, não reduzido, por isso o
+layout inteiro é medido pelas constantes `paperWidthMm`, `printWidthMm` e
+`feedMm` no topo de `site/src/orders/receipt.ts`. Trocar de impressora é trocar
+esses números (bobina de 80mm, por exemplo, é `80` e `72`).
+
+O `feedMm` existe porque na portátil a serrilha fica alguns milímetros acima da
+cabeça de impressão: sem essa sobra no fim, o rodapé fica preso dentro do
+mecanismo e só sai no começo do cupom seguinte.
+
+Na hora de imprimir, no diálogo do navegador: escolher a AL-3179, margem
+**Nenhuma** e desmarcar "cabeçalhos e rodapés" (senão o Chrome escreve a URL do
+painel na bobina). Em impressora comum de folha A4 o cupom continua saindo
+centralizado no alto da página, sem quebrar.
 
 **Imprimir sozinho, sem clicar:** o navegador não deixa disparar impressão sem
 uma ação do usuário. Para o cupom sair automático quando o pedido entra,
