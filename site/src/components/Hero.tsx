@@ -113,7 +113,7 @@ export function Hero() {
           </a>
 
           {images.length > 1 && (
-            <div className="mt-6 flex items-center gap-3 sm:mt-8">
+            <div className="mt-6 flex items-center gap-3 sm:mt-7 sm:gap-2">
               {images.map((image, index) => (
                 <button
                   key={image.src}
@@ -121,7 +121,7 @@ export function Hero() {
                   onClick={() => goTo(index)}
                   aria-label={`Ver arte ${index + 1} de ${images.length}`}
                   aria-current={index === current}
-                  className="group/dot -my-3 flex h-11 items-center py-3"
+                  className="group/dot flex items-center max-sm:-my-3 max-sm:h-11 max-sm:py-3"
                 >
                   {/* A barra é fina de propósito; quem cresce é a área de
                       toque em volta dela, senão vira alvo de 6px no dedo. */}

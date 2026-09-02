@@ -61,7 +61,7 @@ export function BrandGallery() {
           />
 
           {artworks.length > 1 && (
-            <div className="absolute right-5 top-5 flex gap-2 sm:right-8 sm:top-8">
+            <div className="absolute right-5 top-4 flex gap-2.5 sm:right-8 sm:top-8 sm:gap-2">
               {artworks.map((item, index) => (
                 <button
                   key={item.src}
@@ -69,10 +69,19 @@ export function BrandGallery() {
                   onClick={() => goTo(index)}
                   aria-label={`Ver arte ${index + 1} de ${artworks.length}`}
                   aria-current={index === current}
-                  className={`h-1.5 rounded-full shadow-sm transition-all duration-300 ${
-                    index === current ? 'w-8 bg-white' : 'w-3 bg-white/50 hover:bg-white/80'
-                  }`}
-                />
+                  className="group/dot flex items-center max-sm:-my-3 max-sm:h-11 max-sm:py-3"
+                >
+                  {/* Igual ao hero: a barra continua fina, quem cresce no
+                      celular é a área de toque em volta dela. */}
+                  <span
+                    aria-hidden="true"
+                    className={`block h-1.5 rounded-full shadow-sm transition-all duration-300 ${
+                      index === current
+                        ? 'w-8 bg-white'
+                        : 'w-3 bg-white/50 group-hover/dot:bg-white/80'
+                    }`}
+                  />
+                </button>
               ))}
             </div>
           )}
@@ -97,7 +106,7 @@ export function BrandGallery() {
                   </span>
 
                   {artwork?.headline && (
-                    <h2 className="mt-1.5 text-balance text-[clamp(1.5rem,6vw,2.25rem)] font-extrabold leading-[1.12] tracking-tight sm:mt-2 sm:text-4xl sm:drop-shadow-lg lg:text-5xl">
+                    <h2 className="mt-1.5 text-balance text-[clamp(1.5rem,6vw,2.25rem)] font-extrabold leading-[1.15] tracking-tight sm:mt-2 sm:text-4xl sm:drop-shadow-lg lg:text-5xl">
                       {artwork.headline}
                     </h2>
                   )}

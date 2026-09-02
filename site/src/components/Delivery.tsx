@@ -30,7 +30,7 @@ export function Delivery() {
               <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-200">
                 {business.deliveryOnly ? 'Só delivery' : 'Entrega'}
               </span>
-              <h2 className="mt-1.5 text-[clamp(1.5rem,6vw,2.25rem)] font-extrabold leading-[1.12] tracking-tight sm:mt-2 sm:text-4xl">
+              <h2 className="mt-1.5 text-[clamp(1.5rem,6vw,2.25rem)] font-extrabold tracking-tight max-sm:leading-[1.12] sm:mt-2 sm:text-4xl">
                 Pediu, chega a partir de {minMinutes} minutos
               </h2>
               <p className="mt-2.5 max-w-md text-[clamp(0.9375rem,3.7vw,1rem)] leading-[1.5] text-acai-100 sm:mt-4 sm:leading-relaxed">
@@ -52,7 +52,7 @@ export function Delivery() {
                   href={business.delivery.ifoodUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3.5 text-sm font-bold text-acai-900 transition-colors hover:animate-pulse-soft hover:bg-acai-50"
+                  className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3.5 text-sm font-bold text-acai-900 sm:py-3 transition-colors hover:animate-pulse-soft hover:bg-acai-50"
                 >
                   Pedir no iFood
                 </a>
@@ -61,7 +61,7 @@ export function Delivery() {
                 href={whatsappUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-full border border-white/30 px-6 py-3.5 text-sm font-bold text-white transition-colors hover:animate-pulse-soft hover:bg-white/10"
+                className="inline-flex items-center justify-center rounded-full border border-white/30 px-6 py-3.5 text-sm font-bold text-white sm:py-3 transition-colors hover:animate-pulse-soft hover:bg-white/10"
               >
                 Falar no WhatsApp
               </a>

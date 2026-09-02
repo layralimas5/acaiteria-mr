@@ -223,7 +223,7 @@ export function AcaiBuilder({
           <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-700">
             {isBuilding ? 'Monte seu pedido' : 'Seu pedido'}
           </span>
-          <h2 className="mt-1.5 text-[clamp(1.5rem,6vw,2.25rem)] font-extrabold leading-[1.12] tracking-tight text-ink sm:mt-2 sm:text-4xl">
+          <h2 className="mt-1.5 text-[clamp(1.5rem,6vw,2.25rem)] font-extrabold tracking-tight text-ink max-sm:leading-[1.12] sm:mt-2 sm:text-4xl sm:leading-tight">
             {isBuilding ? 'Açaí ou sorvete, do jeito que você monta' : 'Falta pouco para receber'}
           </h2>
           <p className="mt-2 text-[clamp(0.875rem,3.6vw,1rem)] leading-[1.5] text-muted sm:mt-3 sm:leading-normal">

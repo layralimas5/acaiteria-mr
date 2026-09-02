@@ -20,7 +20,7 @@ export function StepPanel({ title, subtitle, done, children, footer }: StepPanel
     >
       <header className="flex items-start gap-3">
         <div className="min-w-0">
-          <h3 className="text-[clamp(1.125rem,4.8vw,1.5rem)] font-extrabold leading-[1.15] tracking-tight text-ink">
+          <h3 className="text-[clamp(1.125rem,4.8vw,1.5rem)] font-extrabold tracking-tight text-ink max-sm:leading-[1.15] sm:leading-tight">
             {title}
           </h3>
           <p className={`mt-1 text-sm ${done ? 'font-semibold text-green-700' : 'text-muted'}`}>{subtitle}</p>

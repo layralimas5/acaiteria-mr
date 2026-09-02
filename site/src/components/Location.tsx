@@ -36,7 +36,7 @@ export function Location() {
           <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-700">
             {deliveryOnly ? 'Área de entrega' : 'Onde estamos'}
           </span>
-          <h2 className="mt-1.5 text-[clamp(1.5rem,6vw,2.25rem)] font-extrabold leading-[1.12] tracking-tight text-ink sm:mt-2 sm:text-4xl">
+          <h2 className="mt-1.5 text-[clamp(1.5rem,6vw,2.25rem)] font-extrabold tracking-tight text-ink max-sm:leading-[1.12] sm:mt-2 sm:text-4xl">
             {deliveryOnly ? 'A gente leva até você' : 'Passa na loja ou chama pelo delivery'}
           </h2>
 

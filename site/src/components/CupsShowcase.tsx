@@ -47,7 +47,7 @@ export function CupsShowcase({ onPick }: CupsShowcaseProps) {
       <div className="mx-auto max-w-6xl px-5">
         <div className="max-w-xl">
           <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-700">Nossos copos</span>
-          <h2 className="mt-1.5 text-[clamp(1.5rem,6vw,2.25rem)] font-extrabold leading-[1.12] tracking-tight text-ink sm:mt-2 sm:text-4xl">
+          <h2 className="mt-1.5 text-[clamp(1.5rem,6vw,2.25rem)] font-extrabold tracking-tight text-ink max-sm:leading-[1.12] sm:mt-2 sm:text-4xl sm:leading-tight">
             Do lanche rápido ao pote de dividir
           </h2>
           <p className="mt-2 text-[clamp(0.875rem,3.6vw,1rem)] leading-[1.5] text-muted sm:mt-3 sm:leading-normal">
@@ -135,7 +135,7 @@ function CupCard({ size, index, wide, freeToppings, onPick }: CupCardProps) {
           </p>
         </div>
 
-        <p className="mt-1.5 inline-block rounded-full bg-green-50 px-2 py-0.5 text-xs font-bold text-green-700 sm:mt-2 sm:px-2.5 sm:py-1">
+        <p className="mt-1.5 inline-block rounded-full bg-green-50 px-2 py-0.5 text-[12px] font-bold text-green-700 sm:mt-2 sm:px-2.5 sm:py-1 sm:text-[11px]">
           {freeToppings} complementos grátis
         </p>
 
