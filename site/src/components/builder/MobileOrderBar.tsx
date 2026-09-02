@@ -58,7 +58,7 @@ export function MobileOrderBar({
               transition={{ duration: 0.22, ease: 'easeOut' }}
               className="overflow-hidden"
             >
-              <div className="max-h-[52vh] overflow-y-auto px-5 pt-5">
+              <div className="max-h-[50svh] overflow-y-auto px-4 pt-4 sm:px-5 sm:pt-5">
                 <dl className="space-y-2.5 text-sm">
                   <div className="flex justify-between gap-4">
                     <dt className="text-muted">Produto</dt>
@@ -129,7 +129,7 @@ export function MobileOrderBar({
           )}
         </AnimatePresence>
 
-        <div className="flex items-center gap-3 px-4 py-3">
+        <div className="flex items-center gap-3 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3">
           <button
             type="button"
             onClick={() => setExpanded((value) => !value)}

@@ -200,7 +200,7 @@ export function AcaiBuilder({
           <h2 className="text-2xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
             {loadingCatalog ? 'Carregando o cardápio...' : 'Cardápio em montagem'}
           </h2>
-          <p className="mt-2.5 text-sm text-muted sm:mt-3 sm:text-base">
+          <p className="mt-2 text-[clamp(0.875rem,3.6vw,1rem)] leading-[1.5] text-muted sm:mt-3 sm:leading-normal">
             {loadingCatalog
               ? 'Só um instante.'
               : catalogError
@@ -216,30 +216,30 @@ export function AcaiBuilder({
     <section
       ref={sectionRef}
       id="monte-seu-acai"
-      className="scroll-mt-24 bg-gradient-to-b from-acai-50 to-white py-20 sm:py-24"
+      className="scroll-mt-20 bg-gradient-to-b from-acai-50 to-white py-11 sm:py-24"
     >
       <div className="mx-auto max-w-6xl px-5">
         <div className={isBuilding ? 'max-w-xl' : 'mx-auto max-w-xl text-center'}>
           <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-700">
             {isBuilding ? 'Monte seu pedido' : 'Seu pedido'}
           </span>
-          <h2 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
+          <h2 className="mt-1.5 text-[clamp(1.5rem,6vw,2.25rem)] font-extrabold leading-[1.12] tracking-tight text-ink sm:mt-2 sm:text-4xl">
             {isBuilding ? 'Açaí ou sorvete, do jeito que você monta' : 'Falta pouco para receber'}
           </h2>
-          <p className="mt-2.5 text-sm text-muted sm:mt-3 sm:text-base">
+          <p className="mt-2 text-[clamp(0.875rem,3.6vw,1rem)] leading-[1.5] text-muted sm:mt-3 sm:leading-normal">
             {isBuilding
               ? 'Uma etapa por vez. Pode pular para qualquer uma tocando no nome aqui em cima.'
               : 'Confira os itens, escolha como pagar e a gente sai para a entrega.'}
           </p>
         </div>
 
-        <div className={`mt-8 ${isBuilding ? 'grid gap-8 lg:grid-cols-[1.6fr_1fr] lg:items-start' : ''}`}>
+        <div className={`mt-5 sm:mt-8 ${isBuilding ? 'grid gap-8 lg:grid-cols-[1.6fr_1fr] lg:items-start' : ''}`}>
           <div className={isBuilding ? 'min-w-0' : 'mx-auto w-full max-w-2xl'}>
             {isBuilding && <StepTabs steps={steps} active={step} onSelect={goToStep} />}
 
             <div
               ref={panelRef}
-              className="mt-4 rounded-card border border-acai-100 bg-white p-5 shadow-sm sm:p-8"
+              className="mt-3 rounded-card border border-acai-100 bg-white p-4 shadow-sm sm:mt-4 sm:p-8"
             >
               {!isBuilding && (
                 <OrderPanel onBuildMore={buildMore} knownCustomer={knownCustomer} justAdded={added} />
@@ -345,7 +345,7 @@ export function AcaiBuilder({
                     }
                   >
                     {sizeDone ? (
-                      <div className="mb-6 rounded-2xl border border-acai-100 bg-acai-50/60 px-4 py-3">
+                      <div className="mb-4 rounded-2xl border border-acai-100 bg-acai-50/60 px-3.5 py-2.5 sm:mb-6 sm:px-4 sm:py-3">
                         <p className="text-sm font-semibold text-muted">
                           <span className="text-ink">{pricing.freeUsed}</span> de {pricing.freeLimit}{' '}
                           grátis usados
@@ -370,7 +370,7 @@ export function AcaiBuilder({
                       />
                     )}
 
-                    <div className="space-y-8">
+                    <div className="space-y-6 sm:space-y-8">
                       {categories.map((category) => {
                         const usage = pricing.byCategory[category.id]
                         if (!usage) return null
@@ -439,11 +439,11 @@ export function AcaiBuilder({
                         rows={2}
                         maxLength={200}
                         placeholder="Ex.: capricha na granola e manda o leite condensado à parte"
-                        className="mt-2 w-full resize-none rounded-xl border border-acai-200 px-3 py-2.5 text-sm text-ink outline-none focus:border-acai-700"
+                        className="mt-2 w-full resize-none rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
                       />
                     </label>
 
-                    <div className="mt-6 rounded-card bg-acai-900 p-5 text-white">
+                    <div className="mt-5 rounded-card bg-acai-900 p-4 text-white sm:mt-6 sm:p-5">
                       <div className="flex items-end justify-between gap-4">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-acai-200">
@@ -514,7 +514,10 @@ export function AcaiBuilder({
       </div>
 
       {/* Respiro só enquanto a barra fixa do celular está no ar. */}
-      {isBuilding && inView && <div aria-hidden="true" className="h-20 lg:hidden" />}
+      {isBuilding && inView && <div
+          aria-hidden="true"
+          className="h-[calc(5rem+env(safe-area-inset-bottom))] lg:hidden"
+        />}
 
       {isBuilding && inView && (
         <MobileOrderBar

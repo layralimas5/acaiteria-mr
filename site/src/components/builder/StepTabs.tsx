@@ -34,7 +34,7 @@ export function StepTabs({ steps, active, onSelect }: StepTabsProps) {
                   onClick={() => onSelect(step.id)}
                   aria-current={isActive ? 'step' : undefined}
                   aria-label={`Etapa ${step.id}: ${step.label}`}
-                  className={`grid size-9 shrink-0 place-items-center rounded-full text-sm font-extrabold transition-all duration-200 ${
+                  className={`grid size-10 shrink-0 place-items-center rounded-full text-sm font-extrabold transition-all duration-200 ${
                     isActive
                       ? 'bg-acai-800 text-white shadow-lg shadow-acai-900/25 ring-4 ring-acai-100'
                       : step.done
@@ -62,7 +62,7 @@ export function StepTabs({ steps, active, onSelect }: StepTabsProps) {
           })}
         </ol>
 
-        <p className="mt-3 flex items-baseline gap-2">
+        <p className="mt-2.5 flex items-baseline gap-2">
           <span className="text-sm font-extrabold text-ink">{current?.label}</span>
           <span className="truncate text-xs text-muted">
             etapa {active} de {steps.length} · {current?.hint}

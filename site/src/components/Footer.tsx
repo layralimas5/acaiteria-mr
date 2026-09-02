@@ -28,19 +28,19 @@ export function Footer() {
     <footer className="relative isolate overflow-hidden bg-acai-950 text-white">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -left-24 -top-32 size-[420px] rounded-full bg-acai-600/25 blur-3xl"
+        className="pointer-events-none absolute -left-24 -top-32 hidden size-[420px] rounded-full bg-acai-600/25 blur-3xl sm:block"
       />
 
-      <div className="relative mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="sm:col-span-2 lg:col-span-2">
-          <Logo className="size-16" />
-          <p className="mt-4 max-w-xs text-sm text-acai-100/70">{business.tagline}</p>
+      <div className="relative mx-auto grid max-w-6xl grid-cols-2 gap-x-4 gap-y-7 px-5 py-10 sm:gap-10 sm:py-14 lg:grid-cols-4">
+        <div className="col-span-2 lg:col-span-2">
+          <Logo className="size-14 sm:size-16" />
+          <p className="mt-3 max-w-xs text-sm leading-[1.5] text-acai-100/70 sm:mt-4">{business.tagline}</p>
 
           <a
             href={instagramUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-5 inline-flex items-center gap-3 rounded-full bg-white/10 px-5 py-3 text-sm font-semibold text-white ring-1 ring-white/15 transition-colors hover:animate-pulse-soft hover:bg-white/20"
+            className="mt-4 inline-flex items-center gap-3 rounded-full bg-white/10 px-5 py-3 text-sm font-semibold text-white ring-1 ring-white/15 transition-colors hover:animate-pulse-soft hover:bg-white/20 sm:mt-5"
           >
             <InstagramIcon />
             Segue a gente no Instagram
@@ -52,7 +52,7 @@ export function Footer() {
 
         <nav aria-label="Links do rodapé">
           <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-acai-300">Navegue</h2>
-          <ul className="mt-4 flex flex-col gap-3 text-sm">
+          <ul className="mt-3 flex flex-col gap-0.5 text-sm sm:mt-4">
             {[
               { href: '#monte-seu-acai', label: 'Monte seu pedido' },
               { href: '#entrega', label: 'Entrega' },
@@ -61,7 +61,7 @@ export function Footer() {
               { href: '#onde-estamos', label: 'Área de entrega' },
             ].map((link) => (
               <li key={link.href}>
-                <a href={link.href} className="text-acai-100/70 transition-colors hover:text-white">
+                <a href={link.href} className="block py-2 text-acai-100/70 transition-colors hover:text-white">
                   {link.label}
                 </a>
               </li>
@@ -71,20 +71,20 @@ export function Footer() {
 
         <div>
           <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-acai-300">Fale com a gente</h2>
-          <ul className="mt-4 flex flex-col gap-3 text-sm">
+          <ul className="mt-3 flex flex-col gap-0.5 text-sm sm:mt-4">
             <li>
               <a
                 href={whatsappUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-acai-100/70 transition-colors hover:text-white"
+                className="inline-flex items-center gap-2 py-2 text-acai-100/70 transition-colors hover:text-white"
               >
                 <WhatsAppIcon />
                 {whatsappDisplay()}
               </a>
             </li>
           </ul>
-          <address className="mt-4 not-italic text-sm leading-relaxed text-acai-100/70">
+          <address className="mt-3 not-italic text-sm leading-[1.5] text-acai-100/70 sm:mt-4">
             {business.deliveryOnly && (
               <>
                 Só delivery
@@ -97,7 +97,7 @@ export function Footer() {
       </div>
 
       <div className="relative border-t border-white/10">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-5 py-6 text-xs text-acai-100/60 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto flex max-w-6xl flex-col gap-1.5 px-5 py-5 text-xs leading-[1.5] text-acai-100/60 sm:flex-row sm:items-center sm:justify-between sm:py-6">
           <p>
             © {year} {business.name}. Todos os direitos reservados.
           </p>

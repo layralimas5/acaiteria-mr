@@ -22,7 +22,7 @@ export function FloatingOrder({ onGoToCart }: FloatingOrderProps) {
 
   return (
     <div
-      className={`fixed inset-x-0 bottom-0 z-40 border-t border-acai-100 bg-white/95 p-4 backdrop-blur-md transition-transform duration-300 sm:hidden ${
+      className={`fixed inset-x-0 bottom-0 z-40 border-t border-acai-100 bg-white/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-md transition-transform duration-300 sm:hidden ${
         visible ? 'translate-y-0' : 'translate-y-full'
       }`}
     >
