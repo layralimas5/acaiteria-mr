@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
+import { sizeLabel } from '../../catalog/types'
 import type { BuildPricing, BuildSelection } from '../../lib/builder'
 import { missingSteps } from '../../lib/builder'
 import { formatPrice } from '../../lib/order'
@@ -31,7 +32,7 @@ export function OrderSummary({ selection, pricing, onAdd, onReset }: OrderSummar
       <div className="px-6 py-5">
         <ul className="space-y-3 text-sm">
           <SummaryRow label="Produto" value={selection.product?.name ?? null} />
-          <SummaryRow label="Tamanho" value={selection.size?.volume ?? null} />
+          <SummaryRow label="Tamanho" value={selection.size ? sizeLabel(selection.size) : null} />
           <SummaryRow label={selection.product?.baseLabel ?? 'Base'} value={selection.base?.name ?? null} />
         </ul>
 

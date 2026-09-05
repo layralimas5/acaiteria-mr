@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { useCart } from '../../cart/CartContext'
 import type { AcaiBase, CupSize, ProductKind, Topping } from '../../catalog/types'
+import { sizeLabel } from '../../catalog/types'
 import { useSellableCatalog } from '../../catalog/sellable'
 import type { Customer } from '../../orders/types'
 import type { BuildSelection } from '../../lib/builder'
@@ -178,7 +179,12 @@ export function AcaiBuilder({
 
   const steps: readonly StepInfo[] = [
     { id: 1, label: 'Produto', done: productDone, hint: product?.name ?? 'açaí ou sorvete' },
-    { id: 2, label: 'Tamanho', done: sizeDone, hint: selection.size?.volume ?? 'obrigatório' },
+    {
+      id: 2,
+      label: 'Tamanho',
+      done: sizeDone,
+      hint: selection.size ? sizeLabel(selection.size) : 'obrigatório',
+    },
     { id: 3, label: baseLabel, done: baseDone, hint: selection.base?.name ?? 'obrigatório' },
     {
       id: 4,
@@ -275,7 +281,7 @@ export function AcaiBuilder({
                     title="Escolha seu tamanho"
                     subtitle={
                       sizeDone
-                        ? `${selection.size?.volume} · ${pricing.freeLimit} complementos grátis`
+                        ? `${selection.size ? sizeLabel(selection.size) : ''} · ${pricing.freeLimit} complementos grátis`
                         : `Todo tamanho vem com ${pricing.freeLimit} complementos grátis inclusos.`
                     }
                     done={sizeDone}
@@ -406,7 +412,7 @@ export function AcaiBuilder({
                       <ReviewRow label="Produto" value={product?.name ?? null} onEdit={() => goToStep(1)} />
                       <ReviewRow
                         label="Tamanho"
-                        value={selection.size?.volume ?? null}
+                        value={selection.size ? sizeLabel(selection.size) : null}
                         onEdit={() => goToStep(2)}
                       />
                       <ReviewRow

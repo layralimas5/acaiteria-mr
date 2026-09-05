@@ -18,6 +18,7 @@ interface ImageRule {
 
 /** Fotos que existem em `public/imagem`, geradas por `npm run images`. */
 const rules: readonly ImageRule[] = [
+  { image: '/imagem/sundae.webp', terms: ['sundae'] },
   { image: '/imagem/poto-300ml.webp', terms: ['300', '300ml', '300 ml'] },
   { image: '/imagem/pote-500ml.webp', terms: ['500', '500ml', '500 ml'] },
   { image: '/imagem/copo-700ml.webp', terms: ['700', '700ml', '700 ml'] },
@@ -38,6 +39,9 @@ const hasTerm = (text: string, term: string): boolean =>
 /**
  * Caminho da foto que combina com o tamanho, ou null quando a loja cadastrou
  * uma embalagem que ainda não tem foto no site.
+ *
+ * Nem todo produto se mede em mililitros: o sundae é servido numa taça só, e
+ * quem entrega a foto ali é o nome.
  */
 export const sizeImage = (volume: string, name = ''): string | null => {
   const text = foldWords(`${volume} ${name}`)

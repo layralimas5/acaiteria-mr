@@ -96,6 +96,16 @@ export const emptyCatalog: Catalog = {
   rules: {},
 }
 
+/**
+ * Como o tamanho se apresenta nas telas do cliente.
+ *
+ * O açaí se identifica pela medida ("500ml") e é ela que o cliente procura.
+ * Mas nem todo produto se mede assim: o sundae vem em taça única, sem
+ * mililitro nenhum, e aí quem identifica é o nome. Sem isso, o resumo do
+ * pedido mostrava "Tamanho: a escolher" com o tamanho já escolhido.
+ */
+export const sizeLabel = (size: CupSize): string => size.volume.trim() || size.name
+
 /** Soma das cotas grátis de todas as categorias. É o que o site anuncia. */
 export const totalFreeToppings = (categories: readonly ToppingCategory[]): number =>
   categories.reduce((total, category) => total + category.rule.free, 0)

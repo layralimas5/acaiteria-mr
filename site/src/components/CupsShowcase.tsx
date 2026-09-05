@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import type { CupSize } from '../catalog/types'
-import { totalFreeToppings } from '../catalog/types'
+import { sizeLabel, totalFreeToppings } from '../catalog/types'
 import { useSellableCatalog } from '../catalog/sellable'
 import { formatPrice } from '../lib/order'
 
@@ -51,8 +52,8 @@ export function CupsShowcase({ onPick }: CupsShowcaseProps) {
             Do lanche rápido ao pote de dividir
           </h2>
           <p className="mt-2 text-[clamp(0.875rem,3.6vw,1rem)] leading-[1.5] text-muted sm:mt-3 sm:leading-normal">
-            Três tamanhos, o mesmo açaí cremoso. Todos vêm com {freeToppings} complementos grátis. Escolha
-            um e monte do seu jeito.
+            Do copo de levar ao pote de dividir, todos vêm com {freeToppings} complementos grátis.
+            Escolha um e monte do seu jeito.
           </p>
         </div>
 
@@ -83,6 +84,16 @@ interface CupCardProps {
 }
 
 function CupCard({ size, index, wide, freeToppings, onPick }: CupCardProps) {
+  const label = sizeLabel(size)
+  /**
+   * A foto é cadastro: a loja pode apontar para um arquivo que ainda não foi
+   * publicado, e a vitrine é o lugar mais visível do site para um quadrado
+   * quebrado. Sem foto no ar, o card inteiro sai — o tamanho segue à venda no
+   * montador logo abaixo.
+   */
+  const [broken, setBroken] = useState(false)
+  if (broken) return null
+
   return (
     <motion.article
       initial={{ opacity: 0, y: 16 }}
@@ -107,6 +118,7 @@ function CupCard({ size, index, wide, freeToppings, onPick }: CupCardProps) {
           alt={`${size.name} da Açaiteria MR`}
           loading="lazy"
           decoding="async"
+          onError={() => setBroken(true)}
           className={`size-full object-cover transition-transform duration-500 group-hover:scale-105 ${
             wide ? 'object-[center_30%] sm:object-center' : 'object-center'
           }`}
@@ -121,14 +133,14 @@ function CupCard({ size, index, wide, freeToppings, onPick }: CupCardProps) {
         {/* O volume aparece logo abaixo, no título do card. No celular a
             etiqueta sobre a foto só repetiria a mesma palavra. */}
         <span className="absolute bottom-4 left-4 hidden rounded-full bg-acai-950/70 px-3 py-1.5 text-sm font-extrabold text-white backdrop-blur-sm sm:block">
-          {size.volume}
+          {label}
         </span>
       </div>
 
       <div className="p-2.5 sm:p-5">
         <div className="flex items-baseline justify-between gap-2">
           <h3 className="text-[0.9375rem] font-extrabold tracking-tight text-ink sm:text-lg">
-            {size.volume}
+            {label}
           </h3>
           <p className="text-[0.9375rem] font-extrabold text-acai-800 sm:text-lg">
             {formatPrice(size.basePrice)}

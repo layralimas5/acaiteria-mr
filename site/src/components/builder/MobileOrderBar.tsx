@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { sizeLabel } from '../../catalog/types'
 import type { BuildPricing, BuildSelection } from '../../lib/builder'
 import { missingSteps } from '../../lib/builder'
 import { formatPrice } from '../../lib/order'
@@ -66,7 +67,9 @@ export function MobileOrderBar({
                   </div>
                   <div className="flex justify-between gap-4">
                     <dt className="text-muted">Tamanho</dt>
-                    <dd className="font-bold text-ink">{selection.size?.volume ?? 'a escolher'}</dd>
+                    <dd className="font-bold text-ink">
+                      {selection.size ? sizeLabel(selection.size) : 'a escolher'}
+                    </dd>
                   </div>
                   <div className="flex justify-between gap-4">
                     <dt className="text-muted">{selection.product?.baseLabel ?? 'Base'}</dt>
@@ -138,7 +141,9 @@ export function MobileOrderBar({
           >
             <span className="min-w-0">
               <span className="flex items-center gap-1 truncate text-xs text-muted">
-                {blocked ? `Falta ${missing[0]}` : `${selection.size?.volume} · ${selection.base?.name}`}
+                {blocked
+                  ? `Falta ${missing[0]}`
+                  : `${selection.size ? sizeLabel(selection.size) : ''} · ${selection.base?.name}`}
                 <svg
                   viewBox="0 0 24 24"
                   aria-hidden="true"

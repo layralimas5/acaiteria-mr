@@ -28,6 +28,12 @@ Isso cria as tabelas, os índices, as funções e as regras de segurança (RLS).
 O banco nasce **vazio**: nenhum produto, nenhum preço. Quem cadastra o
 cardápio é a loja, pelo painel.
 
+Em `supabase/seeds/` ficam cadastros prontos, que fazem pelo SQL o mesmo que a
+loja faria no painel. São opcionais, rodam na mesma tela e podem rodar de novo
+sem duplicar nada:
+
+- `sundae.sql`: cria o Sundae (R$ 6,50) com os sabores Açaí com Ninho e Morango
+
 ## 3. Criar o usuário da loja
 
 1. **Authentication > Users > Add user**
