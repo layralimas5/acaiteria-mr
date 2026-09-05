@@ -24,6 +24,7 @@ interface ProductRow {
   base_step_title: string
   base_step_subtitle: string
   base_label: string
+  accepts_toppings: boolean
   available: boolean
   sort_order: number
 }
@@ -164,6 +165,7 @@ export const fetchCatalog = async (): Promise<Catalog> => {
     baseStepTitle: row.base_step_title,
     baseStepSubtitle: row.base_step_subtitle,
     baseLabel: row.base_label,
+    acceptsToppings: row.accepts_toppings ?? true,
     available: row.available,
     sortOrder: row.sort_order,
     sizes: sizeRows.filter((size) => size.product_id === row.id).map(toSize),
@@ -209,6 +211,7 @@ export interface ProductDraft {
   readonly baseStepTitle: string
   readonly baseStepSubtitle: string
   readonly baseLabel: string
+  readonly acceptsToppings: boolean
 }
 
 export const createProduct = async (
@@ -223,6 +226,7 @@ export const createProduct = async (
     base_step_title: draft.baseStepTitle.trim(),
     base_step_subtitle: draft.baseStepSubtitle.trim(),
     base_label: draft.baseLabel.trim(),
+    accepts_toppings: draft.acceptsToppings,
     sort_order: nextOrder(existing),
   })
   if (error) fail(error)
@@ -244,6 +248,7 @@ export const updateProduct = async (
         base_step_subtitle: patch.baseStepSubtitle.trim(),
       }),
       ...(patch.baseLabel !== undefined && { base_label: patch.baseLabel.trim() }),
+      ...(patch.acceptsToppings !== undefined && { accepts_toppings: patch.acceptsToppings }),
       ...(patch.available !== undefined && { available: patch.available }),
     })
     .eq('id', id)

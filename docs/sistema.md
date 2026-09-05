@@ -96,6 +96,7 @@ A tela tem dois blocos:
 **Produtos** (Açaí, Sorvete, Sundae, o que for). Cada produto tem:
 
 - Nome, emoji, **foto** e descrição
+- Chave **Leva complementos**, ligada por padrão
 - Como chamar a escolha: no açaí é "Base", no sorvete costuma ser "Sabor"
 - **Tamanhos**, com nome, medida, preço, etiqueta ("Mais pedido") e foto
 - **Bases ou sabores**, com nome, descrição e acréscimo de preço
@@ -126,6 +127,8 @@ tamanho, ela vence a foto de estúdio que o sistema escolhe pela medida.
 Regras que valem a pena saber:
 
 - Produto sem nenhum tamanho não aparece no site: sem tamanho não há preço
+- **Produto com um tamanho só não pergunta o tamanho**: o site escolhe sozinho e pula a etapa. Cadastrou um segundo tamanho, a etapa volta na hora
+- **"Leva complementos" desligado** tira a etapa de complementos desse produto e a cota grátis deixa de valer para ele. É o caso do sundae, que sai por um preço menor que o copo
 - Produto novo (um Sundae, por exemplo) é cadastro normal: **Novo produto**, foto, como chamar a escolha ("Sabor"), os tamanhos com preço e os sabores
 - Apagar um produto apaga os tamanhos e as bases dele; apagar uma categoria apaga os complementos dela
 - Desligar é diferente de apagar: desligado some do site e volta com um clique, apagado some do cadastro

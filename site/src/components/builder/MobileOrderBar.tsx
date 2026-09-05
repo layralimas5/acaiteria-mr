@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { sizeLabel } from '../../catalog/types'
 import type { BuildPricing, BuildSelection } from '../../lib/builder'
-import { missingSteps } from '../../lib/builder'
+import { acceptsToppings, missingSteps } from '../../lib/builder'
 import { formatPrice } from '../../lib/order'
 import { FreeToppingsMeter } from './FreeToppingsMeter'
 
@@ -32,6 +32,9 @@ export function MobileOrderBar({
   const missing = missingSteps(selection)
   const blocked = missing.length > 0
   const paidIds = pricing.paidToppings.map((topping) => topping.id)
+  /** Etapa que o produto não usa some do resumo, como some da trilha. */
+  const showSize = selection.product ? selection.product.sizes.length > 1 : true
+  const showToppings = acceptsToppings(selection)
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
@@ -65,19 +68,21 @@ export function MobileOrderBar({
                     <dt className="text-muted">Produto</dt>
                     <dd className="font-bold text-ink">{selection.product?.name ?? 'a escolher'}</dd>
                   </div>
-                  <div className="flex justify-between gap-4">
-                    <dt className="text-muted">Tamanho</dt>
-                    <dd className="font-bold text-ink">
-                      {selection.size ? sizeLabel(selection.size) : 'a escolher'}
-                    </dd>
-                  </div>
+                  {showSize && (
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-muted">Tamanho</dt>
+                      <dd className="font-bold text-ink">
+                        {selection.size ? sizeLabel(selection.size) : 'a escolher'}
+                      </dd>
+                    </div>
+                  )}
                   <div className="flex justify-between gap-4">
                     <dt className="text-muted">{selection.product?.baseLabel ?? 'Base'}</dt>
                     <dd className="font-bold text-ink">{selection.base?.name ?? 'a escolher'}</dd>
                   </div>
                 </dl>
 
-                {selection.size && (
+                {selection.size && showToppings && (
                   <div className="mt-4 border-t border-acai-100 pt-4">
                     <FreeToppingsMeter
                 limit={pricing.freeLimit}
@@ -87,7 +92,7 @@ export function MobileOrderBar({
                   </div>
                 )}
 
-                {selection.toppings.length > 0 && (
+                {showToppings && selection.toppings.length > 0 && (
                   <ul className="mt-3 flex flex-wrap gap-1.5">
                     {selection.toppings.map((topping) => {
                       const paid = paidIds.includes(topping.id)

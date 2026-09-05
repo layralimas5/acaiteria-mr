@@ -23,6 +23,7 @@ O plano gratuito atende com folga o volume de uma açaiteria.
    - `0002_create_order.sql`: a função que cria pedido pelo site
    - `0003_hardening.sql` a `0005_complemento_pago.sql`: ajustes de segurança, pagamento e preço do complemento
    - `0006_foto_do_produto.sql`: foto do produto e o espaço onde o painel guarda as imagens enviadas
+   - `0007_produto_sem_complementos.sql`: a chave que diz se o produto leva complemento
 
 Isso cria as tabelas, os índices, as funções e as regras de segurança (RLS).
 O banco nasce **vazio**: nenhum produto, nenhum preço. Quem cadastra o

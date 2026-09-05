@@ -128,6 +128,7 @@ interface ProductFormValues {
   readonly baseStepTitle: string
   readonly baseStepSubtitle: string
   readonly baseLabel: string
+  readonly acceptsToppings: boolean
 }
 
 export const emptyProductForm: ProductFormValues = {
@@ -138,6 +139,7 @@ export const emptyProductForm: ProductFormValues = {
   baseStepTitle: 'Escolha sua base',
   baseStepSubtitle: 'Uma por copo.',
   baseLabel: 'Base',
+  acceptsToppings: true,
 }
 
 export function ProductForm({
@@ -159,6 +161,7 @@ export function ProductForm({
           baseStepTitle: product.baseStepTitle,
           baseStepSubtitle: product.baseStepSubtitle,
           baseLabel: product.baseLabel,
+          acceptsToppings: product.acceptsToppings,
         }
       : emptyProductForm,
   )
@@ -222,6 +225,18 @@ export function ProductForm({
           placeholder="Uma base por copo."
           className="sm:col-span-2"
         />
+
+        <div className="rounded-xl border border-acai-200 bg-white px-3 py-2.5 sm:col-span-2">
+          <AvailableSwitch
+            checked={values.acceptsToppings}
+            onChange={(value) => set('acceptsToppings', value)}
+            label="Leva complementos"
+          />
+          <p className="mt-1 text-xs text-muted">
+            Desligado, o cliente não vê a etapa de complementos nesse produto e a cota grátis não
+            vale para ele. É o caso do sundae, que sai por um preço menor.
+          </p>
+        </div>
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">

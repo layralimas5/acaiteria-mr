@@ -6,7 +6,13 @@ import { productChoices, sizeLabel } from '../../catalog/types'
 import { useSellableCatalog } from '../../catalog/sellable'
 import type { Customer } from '../../orders/types'
 import type { BuildSelection } from '../../lib/builder'
-import { canAddTopping, emptySelection, priceBuild, toggleTopping } from '../../lib/builder'
+import {
+  acceptsToppings,
+  canAddTopping,
+  emptySelection,
+  priceBuild,
+  toggleTopping,
+} from '../../lib/builder'
 import { formatPrice } from '../../lib/order'
 import { MobileOrderBar } from './MobileOrderBar'
 import { BaseSelector } from './BaseSelector'
@@ -92,6 +98,27 @@ export function AcaiBuilder({
   useEffect(() => {
     if (cartRequest > 0) setView('order')
   }, [cartRequest])
+
+  /**
+   * Produto de tamanho único já entra escolhido.
+   *
+   * O sundae é servido numa taça só: parar o cliente numa etapa com um card
+   * para clicar é pedágio, não escolha. Cadastrar um segundo tamanho no painel
+   * traz a etapa de volta sozinha.
+   */
+  useEffect(() => {
+    const only = selection.product?.sizes.length === 1 ? selection.product.sizes[0] : null
+    if (only && selection.size?.id !== only.id) {
+      setSelection((current) => ({ ...current, size: only }))
+    }
+  }, [selection.product, selection.size])
+
+  // Produto que não leva complemento não carrega o que ficou do anterior.
+  useEffect(() => {
+    if (!acceptsToppings(selection) && selection.toppings.length > 0) {
+      setSelection((current) => ({ ...current, toppings: [] }))
+    }
+  }, [selection])
 
   const pricing = useMemo(() => priceBuild(selection, categories), [selection, categories])
 
@@ -180,23 +207,69 @@ export function AcaiBuilder({
   const choices = productChoices(productKinds)
   const choicesAnd = productChoices(productKinds, 'e').toLowerCase()
 
+  /**
+   * Etapa que não tem escolha nenhuma não vira tela.
+   *
+   * Tamanho aparece quando o produto tem mais de um; complementos, quando o
+   * produto os leva. Quem manda é o cardápio: cadastrar um segundo tamanho no
+   * painel devolve a etapa ao site na hora, sem tocar em código.
+   */
+  const showSize = !product || product.sizes.length > 1
+  const showToppings = acceptsToppings(selection)
+
   const steps: readonly StepInfo[] = [
     { id: 1, label: 'Produto', done: productDone, hint: product?.name ?? choices.toLowerCase() },
-    {
-      id: 2,
-      label: 'Tamanho',
-      done: sizeDone,
-      hint: selection.size ? sizeLabel(selection.size) : 'obrigatório',
-    },
+    ...(showSize
+      ? [
+          {
+            id: 2,
+            label: 'Tamanho',
+            done: sizeDone,
+            hint: selection.size ? sizeLabel(selection.size) : 'obrigatório',
+          },
+        ]
+      : []),
     { id: 3, label: baseLabel, done: baseDone, hint: selection.base?.name ?? 'obrigatório' },
-    {
-      id: 4,
-      label: 'Complementos',
-      done: toppingsDone,
-      hint: toppingsDone ? `${selection.toppings.length} escolhidos` : 'opcional',
-    },
+    ...(showToppings
+      ? [
+          {
+            id: 4,
+            label: 'Complementos',
+            done: toppingsDone,
+            hint: toppingsDone ? `${selection.toppings.length} escolhidos` : 'opcional',
+          },
+        ]
+      : []),
     { id: 5, label: 'Finalizar', done: false, hint: formatPrice(pricing.totalPrice) },
   ]
+
+  const stepIds = steps.map((item) => item.id)
+
+  /** Anda pela trilha que está no ar, pulando o que esse produto não usa. */
+  const stepAfter = (id: number): number => {
+    const at = stepIds.indexOf(id)
+    return stepIds[at + 1] ?? LAST_STEP
+  }
+
+  const stepBefore = (id: number): number => {
+    const at = stepIds.indexOf(id)
+    return stepIds[Math.max(0, at - 1)] ?? 1
+  }
+
+  const nextLabelFor = (id: number): string =>
+    id === 2
+      ? 'Escolher o tamanho'
+      : id === 3
+        ? `Escolher ${baseLabel.toLowerCase()}`
+        : id === 4
+          ? 'Escolher complementos'
+          : 'Ir para o resumo'
+
+  if (!stepIds.includes(step)) {
+    // A etapa aberta saiu do ar ao trocar de produto: segue para a próxima que
+    // existe, em vez de mostrar painel vazio.
+    setStep(stepAfter(step))
+  }
 
   if (loadingCatalog || productKinds.length === 0) {
     return (
@@ -263,8 +336,8 @@ export function AcaiBuilder({
                     done={productDone}
                     footer={
                       <StepFooter
-                        onNext={() => goToStep(2)}
-                        nextLabel="Escolher o tamanho"
+                        onNext={() => goToStep(stepAfter(1))}
+                        nextLabel={nextLabelFor(stepAfter(1))}
                         nextDisabled={!productDone}
                         disabledHint="Escolha um produto para continuar"
                       />
@@ -283,16 +356,20 @@ export function AcaiBuilder({
                     key="size"
                     title="Escolha seu tamanho"
                     subtitle={
-                      sizeDone
-                        ? `${selection.size ? sizeLabel(selection.size) : ''} · ${pricing.freeLimit} complementos grátis`
-                        : `Todo tamanho vem com ${pricing.freeLimit} complementos grátis inclusos.`
+                      showToppings
+                        ? sizeDone
+                          ? `${selection.size ? sizeLabel(selection.size) : ''} · ${pricing.freeLimit} complementos grátis`
+                          : `Todo tamanho vem com ${pricing.freeLimit} complementos grátis inclusos.`
+                        : sizeDone
+                          ? (selection.size ? sizeLabel(selection.size) : '')
+                          : 'Escolha o tamanho que você quer.'
                     }
                     done={sizeDone}
                     footer={
                       <StepFooter
-                        onBack={() => goToStep(1)}
-                        onNext={() => goToStep(3)}
-                        nextLabel={`Escolher ${baseLabel.toLowerCase()}`}
+                        onBack={() => goToStep(stepBefore(2))}
+                        onNext={() => goToStep(stepAfter(2))}
+                        nextLabel={nextLabelFor(stepAfter(2))}
                         nextDisabled={!sizeDone}
                         disabledHint="Escolha um tamanho para continuar"
                       />
@@ -319,9 +396,9 @@ export function AcaiBuilder({
                     done={baseDone}
                     footer={
                       <StepFooter
-                        onBack={() => goToStep(2)}
-                        onNext={() => goToStep(4)}
-                        nextLabel="Escolher complementos"
+                        onBack={() => goToStep(stepBefore(3))}
+                        onNext={() => goToStep(stepAfter(3))}
+                        nextLabel={nextLabelFor(stepAfter(3))}
                         nextDisabled={!baseDone}
                         disabledHint={`Escolha ${baseLabel.toLowerCase()} para continuar`}
                       />
@@ -347,7 +424,7 @@ export function AcaiBuilder({
                     done={toppingsDone}
                     footer={
                       <StepFooter
-                        onBack={() => goToStep(3)}
+                        onBack={() => goToStep(stepBefore(4))}
                         onNext={() => goToStep(5)}
                         nextLabel={toppingsDone ? 'Ir para o resumo' : 'Pular complementos'}
                       />
@@ -413,26 +490,30 @@ export function AcaiBuilder({
                   >
                     <div className="space-y-3">
                       <ReviewRow label="Produto" value={product?.name ?? null} onEdit={() => goToStep(1)} />
-                      <ReviewRow
-                        label="Tamanho"
-                        value={selection.size ? sizeLabel(selection.size) : null}
-                        onEdit={() => goToStep(2)}
-                      />
+                      {showSize && (
+                        <ReviewRow
+                          label="Tamanho"
+                          value={selection.size ? sizeLabel(selection.size) : null}
+                          onEdit={() => goToStep(2)}
+                        />
+                      )}
                       <ReviewRow
                         label={baseLabel}
                         value={selection.base?.name ?? null}
                         onEdit={() => goToStep(3)}
                       />
-                      <ReviewRow
-                        label="Complementos"
-                        value={
-                          selection.toppings.length > 0
-                            ? selection.toppings.map((topping) => topping.name).join(', ')
-                            : 'nenhum'
-                        }
-                        optional
-                        onEdit={() => goToStep(4)}
-                      />
+                      {showToppings && (
+                        <ReviewRow
+                          label="Complementos"
+                          value={
+                            selection.toppings.length > 0
+                              ? selection.toppings.map((topping) => topping.name).join(', ')
+                              : 'nenhum'
+                          }
+                          optional
+                          onEdit={() => goToStep(4)}
+                        />
+                      )}
                     </div>
 
                     <label className="mt-4 block">
@@ -494,7 +575,7 @@ export function AcaiBuilder({
                     <div className="mt-4 flex items-center justify-between gap-4">
                       <button
                         type="button"
-                        onClick={() => goToStep(4)}
+                        onClick={() => goToStep(stepBefore(5))}
                         className="text-sm font-semibold text-muted transition-colors hover:text-acai-800"
                       >
                         Voltar

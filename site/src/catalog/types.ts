@@ -53,6 +53,14 @@ export interface ProductKind {
   readonly baseStepSubtitle: string
   /** Como a base aparece no resumo do pedido. */
   readonly baseLabel: string
+  /**
+   * Se o produto leva complemento.
+   *
+   * A cota grátis é da categoria e valia para tudo que a loja vendesse. Só que
+   * o sundae não é o copo grande: dar nele os mesmos complementos de cortesia
+   * entrega o produto no prejuízo. Desligado, o montador pula a etapa.
+   */
+  readonly acceptsToppings: boolean
   readonly available: boolean
   readonly sortOrder: number
   readonly sizes: readonly CupSize[]
