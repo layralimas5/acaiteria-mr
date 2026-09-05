@@ -109,6 +109,39 @@ função respondeu.
 
 ---
 
+## O link nasce? (testado em 05/09/2026)
+
+Gerar link **não cobra ninguém**: é só uma tela de cobrança criada, que morre
+sozinha se ninguém pagar. Então dá para conferir a integração inteira até o
+checkout abrir, sem gastar nada, batendo direto na API:
+
+```bash
+curl -s -X POST https://api.checkout.infinitepay.io/links   -H "content-type: application/json"   -d '{"handle":"maria_regina_soares",
+       "order_nsu":"00000000-0000-4000-8000-000000000001",
+       "redirect_url":"https://acaiteriamr.netlify.app/",
+       "webhook_url":"https://acaiteriamr.netlify.app/api/infinitepay-webhook",
+       "items":[{"quantity":1,"price":100,"description":"Teste"}],
+       "customer":{"name":"Teste","phone_number":"27999999999"}}'
+```
+
+O que essa rodada mostrou:
+
+- **200 e link criado.** A página do link abre (200 também). O handle está
+  certo e a conta que recebe é a da loja.
+- **O campo volta como `url`, não `checkout_url`.** É por isso que a função
+  aceita os dois nomes. Esperar só `checkout_url` deixaria o pagamento sem
+  link nenhum hoje.
+- **`customer.name` e `customer.phone_number` são obrigatórios.** Vazio dá 422
+  com `"must be filled"`. O checkout do site já exige nome com duas letras e
+  telefone com dez dígitos, então na prática não chega vazio — mas se chegar, o
+  log da função diz qual campo foi recusado.
+- **Telefone formatado passa.** `(27) 99999-9999` é aceito como veio.
+
+O que isso **não** prova: que o webhook chega e que o `payment_check` confirma.
+Esses dois só um pagamento real exercita.
+
+---
+
 ## Modo de teste (pagamento de mentira)
 
 A InfinitePay não tem ambiente de testes: link de cobrança lá é cobrança de

@@ -155,15 +155,22 @@ export default async (request: Request): Promise<Response> => {
     // escrita chama o mesmo campo de `url`, então os dois são aceitos: assim o
     // pagamento não para se eles padronizarem para um lado ou para o outro.
     const payload = (await response.json().catch(() => null)) as
-      | { checkout_url?: string; url?: string }
+      | { checkout_url?: string; url?: string; errors?: Record<string, unknown> }
       | null
 
     const checkoutUrl = payload?.checkout_url ?? payload?.url
 
     if (!response.ok || !checkoutUrl) {
-      // Sem o corpo da resposta no log: ele volta com os dados do cliente que
-      // acabaram de subir na cobrança, e log de deploy não é lugar para isso.
-      console.error('InfinitePay recusou o link', response.status)
+      // O corpo inteiro não entra no log: ele volta com os dados do cliente
+      // que acabaram de subir na cobrança, e log de deploy não é lugar para
+      // isso. O nome dos campos recusados, sim — sem eles um 422 fica mudo e
+      // a recusa vira adivinhação. A InfinitePay exige `customer.name` e
+      // `customer.phone_number` preenchidos, que é o 422 mais provável aqui.
+      console.error(
+        'InfinitePay recusou o link',
+        response.status,
+        payload?.errors ? Object.keys(payload.errors).join(', ') : 'sem detalhe',
+      )
       return json({ error: 'Não foi possível abrir o pagamento agora.' }, 502)
     }
 
