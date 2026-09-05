@@ -9,7 +9,7 @@ interface ProductSelectorProps {
   readonly onSelect: (product: ProductKind) => void
 }
 
-/** Primeira escolha da jornada: açaí ou sorvete. */
+/** Primeira escolha da jornada: qual produto do cardápio. */
 export function ProductSelector({ products, selected, onSelect }: ProductSelectorProps) {
   return (
     <div role="radiogroup" aria-label="Produto" className="grid gap-3 sm:grid-cols-2">

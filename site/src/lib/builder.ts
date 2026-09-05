@@ -24,7 +24,7 @@ import type {
  */
 
 export interface BuildSelection {
-  /** Açaí ou sorvete: define quais tamanhos e bases aparecem. */
+  /** O produto escolhido: define quais tamanhos e bases aparecem. */
   readonly product: ProductKind | null
   readonly size: CupSize | null
   readonly base: AcaiBase | null

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { useCart } from '../../cart/CartContext'
 import type { AcaiBase, CupSize, ProductKind, Topping } from '../../catalog/types'
-import { sizeLabel } from '../../catalog/types'
+import { productChoices, sizeLabel } from '../../catalog/types'
 import { useSellableCatalog } from '../../catalog/sellable'
 import type { Customer } from '../../orders/types'
 import type { BuildSelection } from '../../lib/builder'
@@ -176,9 +176,12 @@ export function AcaiBuilder({
   const toppingsDone = selection.toppings.length > 0
   const canFinish = productDone && sizeDone && baseDone
   const baseLabel = product?.baseLabel ?? 'Base'
+  /** "Açaí ou Sundae": sai do cardápio, então acompanha o que a loja cadastra. */
+  const choices = productChoices(productKinds)
+  const choicesAnd = productChoices(productKinds, 'e').toLowerCase()
 
   const steps: readonly StepInfo[] = [
-    { id: 1, label: 'Produto', done: productDone, hint: product?.name ?? 'açaí ou sorvete' },
+    { id: 1, label: 'Produto', done: productDone, hint: product?.name ?? choices.toLowerCase() },
     {
       id: 2,
       label: 'Tamanho',
@@ -230,7 +233,7 @@ export function AcaiBuilder({
             {isBuilding ? 'Monte seu pedido' : 'Seu pedido'}
           </span>
           <h2 className="mt-1.5 text-[clamp(1.5rem,6vw,2.25rem)] font-extrabold tracking-tight text-ink max-sm:leading-[1.12] sm:mt-2 sm:text-4xl sm:leading-tight">
-            {isBuilding ? 'Açaí ou sorvete, do jeito que você monta' : 'Falta pouco para receber'}
+            {isBuilding ? `${choices}, do jeito que você monta` : 'Falta pouco para receber'}
           </h2>
           <p className="mt-2 text-[clamp(0.875rem,3.6vw,1rem)] leading-[1.5] text-muted sm:mt-3 sm:leading-normal">
             {isBuilding
@@ -256,7 +259,7 @@ export function AcaiBuilder({
                   <StepPanel
                     key="product"
                     title="O que você quer hoje?"
-                    subtitle={productDone ? (product?.name ?? '') : 'Escolha entre açaí e sorvete.'}
+                    subtitle={productDone ? (product?.name ?? '') : `Escolha entre ${choicesAnd}.`}
                     done={productDone}
                     footer={
                       <StepFooter
@@ -303,7 +306,7 @@ export function AcaiBuilder({
                         onSelect={selectSize}
                       />
                     ) : (
-                      <StepBlocked onGo={() => goToStep(1)} label="Escolha primeiro entre açaí e sorvete." />
+                      <StepBlocked onGo={() => goToStep(1)} label={`Escolha primeiro entre ${choicesAnd}.`} />
                     )}
                   </StepPanel>
                 )}
@@ -327,7 +330,7 @@ export function AcaiBuilder({
                     {product ? (
                       <BaseSelector bases={product.bases} selected={selection.base} onSelect={selectBase} />
                     ) : (
-                      <StepBlocked onGo={() => goToStep(1)} label="Escolha primeiro entre açaí e sorvete." />
+                      <StepBlocked onGo={() => goToStep(1)} label={`Escolha primeiro entre ${choicesAnd}.`} />
                     )}
                   </StepPanel>
                 )}

@@ -97,6 +97,25 @@ export const emptyCatalog: Catalog = {
 }
 
 /**
+ * Os produtos do cardápio numa frase: "Açaí ou Sundae".
+ *
+ * O montador anunciava "açaí ou sorvete" em texto fixo, escrito quando a loja
+ * só vendia isso. Cadastrar um Sundae no painel mudava a etapa 1 e não mudava
+ * a frase que a apresenta. Quem manda é o cardápio: entra produto, entra na
+ * frase; sai produto, sai da frase.
+ */
+export const productChoices = (
+  products: readonly ProductKind[],
+  conjunction: 'ou' | 'e' = 'ou',
+): string => {
+  const names = products.map((product) => product.name.trim()).filter((name) => name !== '')
+  if (names.length <= 1) return names[0] ?? ''
+
+  const last = names[names.length - 1] as string
+  return `${names.slice(0, -1).join(', ')} ${conjunction} ${last}`
+}
+
+/**
  * Como o tamanho se apresenta nas telas do cliente.
  *
  * O açaí se identifica pela medida ("500ml") e é ela que o cliente procura.
