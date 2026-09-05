@@ -109,6 +109,57 @@ função respondeu.
 
 ---
 
+## Modo de teste (pagamento de mentira)
+
+A InfinitePay não tem ambiente de testes: link de cobrança lá é cobrança de
+verdade, no cartão de verdade de alguém. Para andar o fluxo quantas vezes for
+preciso sem dinheiro nenhum trocar de mão, existe o modo de teste.
+
+Ligado, o botão "Pagar agora" não leva para o checkout da InfinitePay. Leva
+para uma tela do próprio site, com o valor do pedido e dois botões: **Aprovar
+pagamento** e **Recusar**. Aprovar carimba o pedido pela mesma função que o
+webhook real usa, então daí para frente tudo acontece igual: a tela de retorno
+confirma, o painel mostra o selo verde, o cupom sai.
+
+### Como ligar
+
+No Netlify, em **Site configuration → Environment variables**, criar:
+
+```
+PAGAMENTO_SIMULADO = 1
+```
+
+Marcar o escopo **Deploy previews** e **Branch deploys** — nunca Production.
+Depois é só abrir o site do preview e fazer um pedido normal escolhendo "Pix ou
+cartão pelo site".
+
+Para rodar na sua máquina, o mesmo vale com `netlify dev` e a variável no
+ambiente. Aí precisa também de `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` e
+`INFINITEPAY_HANDLE` locais, que são as mesmas do Netlify.
+
+### As duas travas
+
+O modo só abre quando **as duas** condições valem:
+
+- `PAGAMENTO_SIMULADO` é `1`;
+- `CONTEXT` **não** é `production` — o Netlify escreve isso sozinho no deploy
+  do domínio da loja.
+
+Ou seja: mesmo que a variável vá parar em produção por engano, a simulação não
+abre lá. Fora do modo de teste, a função `/api/pagamento-simulado` responde 404
+como se não existisse.
+
+### O que esse caminho NÃO testa
+
+A conversa com a InfinitePay: link gerado, webhook recebido, `payment_check`
+conferido, dinheiro caindo no app. Isso só um pagamento real mostra. O roteiro
+para isso é o da seção anterior — um Pix de valor baixo, estornado depois.
+
+O pedido de teste fica reconhecível no banco: o NSU gravado é `TESTE-<valor em
+centavos>`, em vez do número da transação da InfinitePay.
+
+---
+
 ## Como funciona por dentro (e por que assim)
 
 O caminho tem uma regra que não se negocia: **o preço nunca vem do navegador.**

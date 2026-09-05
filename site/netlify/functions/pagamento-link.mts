@@ -5,6 +5,7 @@ import {
   isForeignOrigin,
   json,
   rateLimited,
+  simulacaoDePagamento,
   toCents,
 } from './_shared.mts'
 
@@ -121,6 +122,15 @@ export default async (request: Request): Promise<Response> => {
     // deploy de preview o endereço do preview. Assim o cliente sempre volta
     // para o site de onde saiu, sem ninguém manter uma URL na mão.
     const site = new URL(request.url).origin
+
+    // Modo de teste: em vez do checkout da InfinitePay, o cliente vai para uma
+    // tela do próprio site que aprova ou recusa o pagamento na mão. Só abre
+    // fora de produção, e quem garante isso é a própria simulacaoDePagamento.
+    if (simulacaoDePagamento()) {
+      const { error: markError } = await db.rpc('start_online_payment', { p_order_id: order.id })
+      if (markError) console.error('Falha ao marcar pagamento iniciado', markError)
+      return json({ url: `${site}/api/pagamento-simulado?pedido=${order.id}` })
+    }
 
     const response = await fetch(`${CHECKOUT_API}/links`, {
       method: 'POST',
