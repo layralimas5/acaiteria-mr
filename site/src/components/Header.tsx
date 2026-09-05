@@ -78,7 +78,7 @@ export function Header({ onGoToCart }: HeaderProps) {
             href="/sistema"
             title="Sistema da loja"
             aria-label="Abrir o sistema da loja"
-            className="grid size-10 place-items-center rounded-full border border-white/25 text-white transition-colors hover:bg-white/10"
+            className="hidden size-10 place-items-center rounded-full border border-white/25 text-white transition-colors hover:bg-white/10 sm:grid"
           >
             <SystemIcon />
           </a>
@@ -117,13 +117,13 @@ export function Header({ onGoToCart }: HeaderProps) {
 
       {isOpen && (
         <nav id="menu-mobile" aria-label="Navegação mobile" className="border-t border-white/10 lg:hidden">
-          <ul className="mx-auto flex max-w-6xl flex-col px-5 py-2">
+          <ul className="mx-auto flex max-w-6xl flex-col gap-0.5 px-4 py-2">
             {links.map((link) => (
               <li key={link.href}>
                 <a
                   href={link.href}
                   onClick={() => setIsOpen(false)}
-                  className="block rounded-lg px-2 py-3 text-sm font-medium text-white hover:bg-white/10"
+                  className="block rounded-xl px-3 py-3.5 text-sm font-semibold text-white hover:bg-white/10"
                 >
                   {link.label}
                 </a>

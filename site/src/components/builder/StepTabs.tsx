@@ -15,9 +15,14 @@ interface StepTabsProps {
  * Trilha de etapas, sempre inteira na tela: no celular vira uma régua de
  * números conectados; a partir de sm, abas com nome e resumo da escolha.
  * Toda etapa é clicável: quem quiser pular direto para o fim, pode.
+ *
+ * O número mostrado é a posição na trilha, não a identidade da etapa: um
+ * produto de tamanho único e sem complemento tem três etapas, e elas se
+ * chamam 1, 2 e 3 — nunca 1, 3 e 5.
  */
 export function StepTabs({ steps, active, onSelect }: StepTabsProps) {
   const current = steps.find((step) => step.id === active)
+  const position = steps.findIndex((step) => step.id === active) + 1
 
   return (
     <nav aria-label="Etapas da montagem">
@@ -33,8 +38,8 @@ export function StepTabs({ steps, active, onSelect }: StepTabsProps) {
                   type="button"
                   onClick={() => onSelect(step.id)}
                   aria-current={isActive ? 'step' : undefined}
-                  aria-label={`Etapa ${step.id}: ${step.label}`}
-                  className={`grid size-9 shrink-0 place-items-center rounded-full text-sm font-extrabold transition-all duration-200 ${
+                  aria-label={`Etapa ${index + 1}: ${step.label}`}
+                  className={`grid size-10 shrink-0 place-items-center rounded-full text-sm font-extrabold transition-all duration-200 ${
                     isActive
                       ? 'bg-acai-800 text-white shadow-lg shadow-acai-900/25 ring-4 ring-acai-100'
                       : step.done
@@ -47,7 +52,7 @@ export function StepTabs({ steps, active, onSelect }: StepTabsProps) {
                       <path d="M4 10.5l4 4 8-9" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   ) : (
-                    step.id
+                    index + 1
                   )}
                 </button>
 
@@ -62,17 +67,20 @@ export function StepTabs({ steps, active, onSelect }: StepTabsProps) {
           })}
         </ol>
 
-        <p className="mt-3 flex items-baseline gap-2">
+        <p className="mt-2.5 flex items-baseline gap-2">
           <span className="text-sm font-extrabold text-ink">{current?.label}</span>
           <span className="truncate text-xs text-muted">
-            etapa {active} de {steps.length} · {current?.hint}
+            etapa {position} de {steps.length} · {current?.hint}
           </span>
         </p>
       </div>
 
       {/* Tablet e desktop: abas com nome e escolha atual. */}
-      <ol className="hidden gap-2 sm:grid sm:grid-cols-5">
-        {steps.map((step) => {
+      <ol
+        className="hidden gap-2 sm:grid"
+        style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}
+      >
+        {steps.map((step, index) => {
           const isActive = step.id === active
 
           return (
@@ -104,7 +112,7 @@ export function StepTabs({ steps, active, onSelect }: StepTabsProps) {
                       <path d="M4 10.5l4 4 8-9" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   ) : (
-                    step.id
+                    index + 1
                   )}
                 </span>
 

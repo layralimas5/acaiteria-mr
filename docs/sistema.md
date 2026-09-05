@@ -93,9 +93,10 @@ sistema começa vazio e a loja cadastra o que vende.
 
 A tela tem dois blocos:
 
-**Produtos** (Açaí, Sorvete, o que for). Cada produto tem:
+**Produtos** (Açaí, Sorvete, Sundae, o que for). Cada produto tem:
 
-- Nome, emoji e descrição
+- Nome, emoji, **foto** e descrição
+- Chave **Leva complementos**, ligada por padrão
 - Como chamar a escolha: no açaí é "Base", no sorvete costuma ser "Sabor"
 - **Tamanhos**, com nome, medida, preço, etiqueta ("Mais pedido") e foto
 - **Bases ou sabores**, com nome, descrição e acréscimo de preço
@@ -106,13 +107,29 @@ caldas). A categoria é quem carrega a regra:
 - **Quantos vêm grátis** já inclusos no preço do copo
 - **Máximo por copo**, opcional (é como se limita caldas a 2, por exemplo)
 
-Cada item tem chave de disponibilidade, setas para reordenar, lápis para
+Cada item tem chave de disponibilidade, **alça para arrastar**, lápis para
 editar e lixeira para apagar. **O que for salvo vale no site na hora**, sem
 publicar nada.
+
+**Para mudar a ordem**, segure a alça (as bolinhas à esquerda da linha) e
+arraste o item para onde ele deve ficar: produto, tamanho, base, categoria e
+complemento, todos. A lista se organiza enquanto você arrasta e grava quando
+solta. Quem prefere o teclado põe o foco na alça e usa as setas: cima e baixo
+movem uma posição, Home leva ao começo, End ao fim.
+
+**Foto de qualquer item**: no lápis do produto, do tamanho ou do complemento
+há o botão **Enviar foto**. Escolhe o arquivo do computador ou do celular, ele
+sobe na hora e já aparece no site. Não é preciso pedir nada para o
+desenvolvedor. Formatos JPG, PNG, WebP, AVIF ou GIF, até 5 MB. No produto, a
+foto substitui o emoji no card de escolha; no complemento, o ícone; no
+tamanho, ela vence a foto de estúdio que o sistema escolhe pela medida.
 
 Regras que valem a pena saber:
 
 - Produto sem nenhum tamanho não aparece no site: sem tamanho não há preço
+- **Produto com um tamanho só não pergunta o tamanho**: o site escolhe sozinho e pula a etapa. Cadastrou um segundo tamanho, a etapa volta na hora
+- **"Leva complementos" desligado** tira a etapa de complementos desse produto e a cota grátis deixa de valer para ele. É o caso do sundae, que sai por um preço menor que o copo
+- Produto novo (um Sundae, por exemplo) é cadastro normal: **Novo produto**, foto, como chamar a escolha ("Sabor"), os tamanhos com preço e os sabores
 - Apagar um produto apaga os tamanhos e as bases dele; apagar uma categoria apaga os complementos dela
 - Desligar é diferente de apagar: desligado some do site e volta com um clique, apagado some do cadastro
 - Pedido antigo nunca muda. A montagem inteira fica congelada no pedido, então mexer no preço hoje não reescreve o que foi vendido ontem
@@ -207,11 +224,21 @@ bobina térmica e gastaria tinta à toa na impressora comum. Se a logo mudar,
 gere a versão de impressão de novo (grayscale + invertido) e substitua esse
 arquivo. Se a imagem falhar em carregar, o cupom cai no nome da loja em texto.
 
-**Papel:** o cupom é desenhado para bobina térmica de **80mm** (as
-impressoras de pedido comuns, tipo Elgin/Epson/Bematech em modo texto ou
-driver Windows). Em impressora comum de folha A4 ele sai centralizado no alto
-da página, sem quebrar. Se a loja usar bobina de 58mm, dá para ajustar em
-`site/src/orders/receipt.ts` (bloco `@page` e a largura do `body`).
+**Papel:** o cupom é desenhado para a térmica portátil Bluetooth da loja, a
+**Altomex/LTOMEX AL-3179**: bobina de **58mm**, com área útil de impressão de
+**48mm**. O que passar dessa faixa é cortado no papel, não reduzido, por isso o
+layout inteiro é medido pelas constantes `paperWidthMm`, `printWidthMm` e
+`feedMm` no topo de `site/src/orders/receipt.ts`. Trocar de impressora é trocar
+esses números (bobina de 80mm, por exemplo, é `80` e `72`).
+
+O `feedMm` existe porque na portátil a serrilha fica alguns milímetros acima da
+cabeça de impressão: sem essa sobra no fim, o rodapé fica preso dentro do
+mecanismo e só sai no começo do cupom seguinte.
+
+Na hora de imprimir, no diálogo do navegador: escolher a AL-3179, margem
+**Nenhuma** e desmarcar "cabeçalhos e rodapés" (senão o Chrome escreve a URL do
+painel na bobina). Em impressora comum de folha A4 o cupom continua saindo
+centralizado no alto da página, sem quebrar.
 
 **Imprimir sozinho, sem clicar:** o navegador não deixa disparar impressão sem
 uma ação do usuário. Para o cupom sair automático quando o pedido entra,

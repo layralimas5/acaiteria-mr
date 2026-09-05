@@ -1,9 +1,10 @@
 import { useCallback, useState } from 'react'
-import { createCategory, createProduct } from '../../catalog/api'
+import { createCategory, createProduct, saveOrder } from '../../catalog/api'
 import { useCatalog } from '../../catalog/useCatalog'
 import { totalFreeToppings } from '../../catalog/types'
 import { errorMessage } from '../../lib/supabase'
 import { CategoryEditor, CategoryForm } from './CategoryEditor'
+import { DragList } from './DragList'
 import { ProductEditor, ProductForm } from './ProductEditor'
 import { ErrorNote, GhostButton, PrimaryButton } from './ui'
 
@@ -52,6 +53,7 @@ export function MenuView() {
           <h1 className="text-xl font-extrabold text-ink">Cardápio</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted">
             O que o cliente monta no site. Salvou aqui, está no ar na hora, sem publicar de novo.
+            Para mudar a ordem, arraste o item pela alça à esquerda.
           </p>
         </div>
         {busy && <span className="text-xs font-bold text-acai-700">Salvando...</span>}
@@ -94,17 +96,18 @@ export function MenuView() {
                 onAction={() => setAddingProduct(true)}
               />
             ) : (
-              <div className="mt-3 space-y-3">
-                {catalog.products.map((product) => (
-                  <ProductEditor
-                    key={product.id}
-                    product={product}
-                    siblings={catalog.products}
-                    run={run}
-                    busy={busy}
-                  />
-                ))}
-              </div>
+              <DragList
+                items={catalog.products}
+                itemLabel="produto"
+                nameOf={(product) => product.name}
+                disabled={busy}
+                onReorder={(ids) => run(() => saveOrder('products', ids))}
+                className="mt-3 space-y-3"
+              >
+                {(product, handle) => (
+                  <ProductEditor product={product} handle={handle} run={run} busy={busy} />
+                )}
+              </DragList>
             )}
           </section>
 
@@ -151,18 +154,24 @@ export function MenuView() {
                 onAction={() => setAddingCategory(true)}
               />
             ) : (
-              <div className="mt-3 space-y-3">
-                {catalog.categories.map((category) => (
+              <DragList
+                items={catalog.categories}
+                itemLabel="categoria"
+                nameOf={(category) => category.title}
+                disabled={busy}
+                onReorder={(ids) => run(() => saveOrder('topping_categories', ids))}
+                className="mt-3 space-y-3"
+              >
+                {(category, handle) => (
                   <CategoryEditor
-                    key={category.id}
                     category={category}
-                    siblings={catalog.categories}
+                    handle={handle}
                     toppings={catalog.toppingsByCategory(category.id)}
                     run={run}
                     busy={busy}
                   />
-                ))}
-              </div>
+                )}
+              </DragList>
             )}
           </section>
         </>

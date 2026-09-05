@@ -49,15 +49,15 @@ export function Testimonials() {
   const average = reviews.reduce((sum, item) => sum + item.rating, 0) / reviews.length
 
   return (
-    <section id="depoimentos" className="scroll-mt-24 bg-white py-14 sm:py-24">
+    <section id="depoimentos" className="scroll-mt-20 bg-white py-11 sm:py-24">
       <div className="mx-auto max-w-6xl px-5">
         <div className="max-w-xl">
           <span className="text-xs font-bold uppercase tracking-[0.18em] text-acai-700">Depoimentos</span>
-          <h2 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
+          <h2 className="mt-1.5 text-[clamp(1.5rem,6vw,2.25rem)] font-extrabold tracking-tight text-ink max-sm:leading-[1.12] sm:mt-2 sm:text-4xl sm:leading-tight">
             Quem pediu, voltou a pedir
           </h2>
 
-          <div className="mt-4 flex flex-wrap items-center gap-3">
+          <div className="mt-3 flex flex-wrap items-center gap-3 sm:mt-4">
             <Stars rating={average} />
             <span className="text-sm font-bold text-ink">
               {average.toFixed(1).replace('.', ',')} de {MAX_RATING}
@@ -68,7 +68,7 @@ export function Testimonials() {
           </div>
         </div>
 
-        <div className="mt-7 grid gap-3 sm:mt-10 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+        <div className="mt-5 grid gap-2.5 sm:mt-10 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {reviews.map((review, index) => (
             <TestimonialCard key={review.id} review={review} index={index} />
           ))}
@@ -96,18 +96,18 @@ function TestimonialCard({ review, index }: TestimonialCardProps) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-60px' }}
       transition={{ duration: 0.3, delay: index * 0.06 }}
-      className="flex h-full flex-col rounded-card border border-acai-100 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-acai-900/10 sm:p-6"
+      className="flex h-full flex-col rounded-card border border-acai-100 bg-white p-3.5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-acai-900/10 sm:p-6"
     >
       <Stars rating={review.rating} />
 
-      <blockquote className="mt-3 flex-1 text-sm leading-relaxed text-ink sm:text-base">
+      <blockquote className="mt-2.5 flex-1 text-sm leading-[1.5] text-ink sm:mt-3 sm:text-base sm:leading-relaxed">
         “{review.text}”
       </blockquote>
 
-      <figcaption className="mt-4 flex items-center gap-3 border-t border-acai-100 pt-4">
+      <figcaption className="mt-3 flex items-center gap-2.5 border-t border-acai-100 pt-3 sm:mt-4 sm:gap-3 sm:pt-4">
         <span
           aria-hidden="true"
-          className="grid size-10 shrink-0 place-items-center rounded-full bg-acai-100 text-sm font-extrabold text-acai-800"
+          className="grid size-9 shrink-0 place-items-center rounded-full bg-acai-100 text-sm font-extrabold text-acai-800 sm:size-10"
         >
           {initial}
         </span>

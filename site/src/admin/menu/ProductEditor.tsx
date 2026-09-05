@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import {
   createBase,
   createSize,
   deleteBase,
   deleteProduct,
   deleteSize,
-  swapOrder,
+  saveOrder,
   updateBase,
   updateProduct,
   updateSize,
@@ -13,17 +14,17 @@ import {
 import { sizeImage } from '../../catalog/productImage'
 import type { AcaiBase, CupSize, ProductKind } from '../../catalog/types'
 import { formatPrice } from '../../lib/order'
+import { DragList } from './DragList'
 import {
   AvailableSwitch,
-  DownIcon,
   Field,
   GhostButton,
   IconButton,
+  ImageField,
   NumberField,
   PencilIcon,
   PrimaryButton,
   TrashIcon,
-  UpIcon,
 } from './ui'
 
 /**
@@ -35,19 +36,16 @@ import {
 
 interface ProductEditorProps {
   readonly product: ProductKind
-  readonly siblings: readonly ProductKind[]
+  /** Alça de arrastar da linha, criada pela lista que ordena os produtos. */
+  readonly handle: ReactNode
   /** Executa a ação no banco, cuidando de erro e recarga do cardápio. */
   readonly run: (action: () => Promise<void>) => void
   readonly busy: boolean
 }
 
-export function ProductEditor({ product, siblings, run, busy }: ProductEditorProps) {
+export function ProductEditor({ product, handle, run, busy }: ProductEditorProps) {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(false)
-
-  const index = siblings.findIndex((item) => item.id === product.id)
-  const previous = siblings[index - 1]
-  const next = siblings[index + 1]
 
   const confirmDelete = () => {
     const message = `Apagar "${product.name}" do cardápio? Os tamanhos e as bases dele também somem. Pedidos antigos não mudam.`
@@ -57,15 +55,20 @@ export function ProductEditor({ product, siblings, run, busy }: ProductEditorPro
   return (
     <article className="rounded-card border border-acai-100 bg-white shadow-sm">
       <header className="flex flex-wrap items-center gap-x-3 gap-y-2 p-4">
+        {handle}
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
           aria-expanded={open}
           className="flex min-w-0 flex-1 items-center gap-3 text-left"
         >
-          <span aria-hidden="true" className="text-2xl">
-            {product.emoji || '🍨'}
-          </span>
+          {product.image ? (
+            <img src={product.image} alt="" className="size-9 shrink-0 rounded-xl object-cover" />
+          ) : (
+            <span aria-hidden="true" className="text-2xl">
+              {product.emoji || '🍨'}
+            </span>
+          )}
           <span className="min-w-0">
             <span className="block truncate text-sm font-extrabold text-ink">{product.name}</span>
             <span className="block truncate text-xs text-muted">
@@ -83,20 +86,6 @@ export function ProductEditor({ product, siblings, run, busy }: ProductEditorPro
         />
 
         <div className="flex items-center gap-1">
-          <IconButton
-            label="Subir"
-            disabled={busy || !previous}
-            onClick={() => previous && run(() => swapOrder('products', product, previous))}
-          >
-            <UpIcon />
-          </IconButton>
-          <IconButton
-            label="Descer"
-            disabled={busy || !next}
-            onClick={() => next && run(() => swapOrder('products', product, next))}
-          >
-            <DownIcon />
-          </IconButton>
           <IconButton label="Editar produto" disabled={busy} onClick={() => setEditing((v) => !v)}>
             <PencilIcon />
           </IconButton>
@@ -135,18 +124,22 @@ interface ProductFormValues {
   readonly name: string
   readonly description: string
   readonly emoji: string
+  readonly image: string
   readonly baseStepTitle: string
   readonly baseStepSubtitle: string
   readonly baseLabel: string
+  readonly acceptsToppings: boolean
 }
 
 export const emptyProductForm: ProductFormValues = {
   name: '',
   description: '',
   emoji: '',
+  image: '',
   baseStepTitle: 'Escolha sua base',
   baseStepSubtitle: 'Uma por copo.',
   baseLabel: 'Base',
+  acceptsToppings: true,
 }
 
 export function ProductForm({
@@ -164,9 +157,11 @@ export function ProductForm({
           name: product.name,
           description: product.description,
           emoji: product.emoji,
+          image: product.image ?? '',
           baseStepTitle: product.baseStepTitle,
           baseStepSubtitle: product.baseStepSubtitle,
           baseLabel: product.baseLabel,
+          acceptsToppings: product.acceptsToppings,
         }
       : emptyProductForm,
   )
@@ -190,7 +185,16 @@ export function ProductForm({
           onChange={(value) => set('emoji', value)}
           placeholder="🍇"
           maxLength={4}
-          hint="Aparece no card de escolha do produto"
+          hint="Usado no card de escolha quando não houver foto"
+        />
+        <ImageField
+          label="Foto do produto"
+          value={values.image}
+          onChange={(value) => set('image', value)}
+          folder="produtos"
+          placeholder={values.emoji.trim() || '🍨'}
+          hint="Aparece no card de escolha, no lugar do emoji"
+          className="sm:col-span-2"
         />
         <Field
           label="Descrição"
@@ -221,6 +225,18 @@ export function ProductForm({
           placeholder="Uma base por copo."
           className="sm:col-span-2"
         />
+
+        <div className="rounded-xl border border-acai-200 bg-white px-3 py-2.5 sm:col-span-2">
+          <AvailableSwitch
+            checked={values.acceptsToppings}
+            onChange={(value) => set('acceptsToppings', value)}
+            label="Leva complementos"
+          />
+          <p className="mt-1 text-xs text-muted">
+            Desligado, o cliente não vê a etapa de complementos nesse produto e a cota grátis não
+            vale para ele. É o caso do sundae, que sai por um preço menor.
+          </p>
+        </div>
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -277,14 +293,17 @@ function SizeList({
         </p>
       )}
 
-      <ul className="mt-2 space-y-2">
-        {product.sizes.map((size, index) => {
-          const previous = product.sizes[index - 1]
-          const next = product.sizes[index + 1]
-
-          return (
-            <li key={size.id} className="rounded-2xl border border-acai-100">
+      <DragList
+        items={product.sizes}
+        itemLabel="tamanho"
+        nameOf={(size) => size.name}
+        disabled={busy}
+        onReorder={(ids) => run(() => saveOrder('product_sizes', ids))}
+      >
+        {(size, handle) => (
+          <div className="rounded-2xl border border-acai-100">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5">
+                {handle}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-bold text-ink">{size.name}</span>
                   <span className="block truncate text-xs text-muted">
@@ -301,20 +320,6 @@ function SizeList({
                 />
 
                 <div className="flex items-center gap-1">
-                  <IconButton
-                    label="Subir"
-                    disabled={busy || !previous}
-                    onClick={() => previous && run(() => swapOrder('product_sizes', size, previous))}
-                  >
-                    <UpIcon />
-                  </IconButton>
-                  <IconButton
-                    label="Descer"
-                    disabled={busy || !next}
-                    onClick={() => next && run(() => swapOrder('product_sizes', size, next))}
-                  >
-                    <DownIcon />
-                  </IconButton>
                   <IconButton
                     label="Editar tamanho"
                     disabled={busy}
@@ -346,10 +351,9 @@ function SizeList({
                   }}
                 />
               )}
-            </li>
-          )
-        })}
-      </ul>
+          </div>
+        )}
+      </DragList>
 
       {adding && (
         <div className="mt-2 rounded-2xl border border-acai-200">
@@ -447,15 +451,17 @@ function SizeForm({
           onChange={(value) => set('highlight', value)}
           placeholder="Mais pedido"
         />
-        <Field
+        <ImageField
           label="Foto"
           value={values.image}
           onChange={(value) => set('image', value)}
-          placeholder={suggestedImage ?? '/imagem/pote-500ml.webp'}
+          folder="tamanhos"
+          fallback={suggestedImage}
+          placeholder={values.volume.trim() || '🥤'}
           hint={
-            chosenImage || !suggestedImage
-              ? 'Caminho de um arquivo já publicado na pasta public'
-              : `Vazio, o site usa ${suggestedImage} por causa da medida`
+            suggestedImage
+              ? 'Sem foto enviada, o site usa a foto da medida'
+              : 'JPG, PNG ou WebP, até 5 MB'
           }
           className="sm:col-span-2"
         />
@@ -516,14 +522,17 @@ function BaseList({
         </p>
       )}
 
-      <ul className="mt-2 space-y-2">
-        {product.bases.map((base, index) => {
-          const previous = product.bases[index - 1]
-          const next = product.bases[index + 1]
-
-          return (
-            <li key={base.id} className="rounded-2xl border border-acai-100">
+      <DragList
+        items={product.bases}
+        itemLabel={label}
+        nameOf={(base) => base.name}
+        disabled={busy}
+        onReorder={(ids) => run(() => saveOrder('product_bases', ids))}
+      >
+        {(base, handle) => (
+          <div className="rounded-2xl border border-acai-100">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5">
+                {handle}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-bold text-ink">{base.name}</span>
                   <span className="block truncate text-xs text-muted">
@@ -539,20 +548,6 @@ function BaseList({
                 />
 
                 <div className="flex items-center gap-1">
-                  <IconButton
-                    label="Subir"
-                    disabled={busy || !previous}
-                    onClick={() => previous && run(() => swapOrder('product_bases', base, previous))}
-                  >
-                    <UpIcon />
-                  </IconButton>
-                  <IconButton
-                    label="Descer"
-                    disabled={busy || !next}
-                    onClick={() => next && run(() => swapOrder('product_bases', base, next))}
-                  >
-                    <DownIcon />
-                  </IconButton>
                   <IconButton
                     label="Editar"
                     disabled={busy}
@@ -582,10 +577,9 @@ function BaseList({
                   }}
                 />
               )}
-            </li>
-          )
-        })}
-      </ul>
+          </div>
+        )}
+      </DragList>
 
       {adding && (
         <div className="mt-2 rounded-2xl border border-acai-200">

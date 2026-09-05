@@ -7,14 +7,31 @@ import { paymentLabels } from './types'
  * Comprovante de pedido para impressão. Não é documento fiscal: é o cupom que
  * a loja imprime para separar o pedido e mandar junto com a entrega.
  *
- * A largura é a da bobina térmica (80mm). Em impressora comum (A4) o mesmo
- * cupom sai centralizado no alto da folha, sem quebrar.
+ * A loja imprime numa térmica portátil Bluetooth (Altomex/LTOMEX AL-3179):
+ * bobina de 58mm, área útil de 48mm, 203dpi. Todo o layout é medido pelas
+ * constantes abaixo, então trocar de impressora é trocar esses números.
  */
+
+/** Largura física da bobina. */
+const paperWidthMm = 58
+
+/**
+ * Faixa que a cabeça térmica realmente marca. O resto da bobina é margem morta:
+ * o que passar disso é cortado no papel, não redimensionado.
+ */
+const printWidthMm = 48
+
+/**
+ * Avanço no fim do cupom. Na portátil a serrilha fica alguns milímetros acima
+ * da cabeça de impressão: sem essa sobra, o rodapé morre dentro do mecanismo e
+ * só aparece no começo do cupom seguinte.
+ */
+const feedMm = 12
 
 /**
  * Logo impressa no topo do cupom. É uma versão preto e branco da marca
  * (`logo-print.png`), não a oficial: o fundo roxo da arte original viraria um
- * bloco preto na bobina térmica e comeria tinta na impressora comum.
+ * bloco preto na bobina térmica.
  */
 const logoPath = '/imagem/logo-print.png'
 
@@ -53,7 +70,7 @@ const itemsHtml = (order: Order): string =>
         <div class="item">
           <div class="row">
             <span class="strong">${item.quantity}x ${escapeHtml(item.size.name)}</span>
-            <span class="strong">${formatPrice(item.unitPrice * item.quantity)}</span>
+            <span class="strong nowrap">${formatPrice(item.unitPrice * item.quantity)}</span>
           </div>
           <div class="small">${escapeHtml(detail)}</div>
           ${item.notes ? `<div class="small strong">Obs.: ${escapeHtml(item.notes)}</div>` : ''}
@@ -66,15 +83,15 @@ const totalsHtml = (order: Order): string => {
   const fee = order.deliveryFee
 
   return `
-    <div class="row"><span>Subtotal</span><span>${formatPrice(subtotal)}</span></div>
+    <div class="row"><span>Subtotal</span><span class="nowrap">${formatPrice(subtotal)}</span></div>
     ${
       fee === undefined
         ? ''
-        : `<div class="row"><span>Entrega</span><span>${
+        : `<div class="row"><span>Entrega</span><span class="nowrap">${
             fee > 0 ? formatPrice(fee) : 'Grátis'
           }</span></div>`
     }
-    <div class="row total"><span>TOTAL</span><span>${formatPrice(order.total)}</span></div>`
+    <div class="row total"><span>TOTAL</span><span class="nowrap">${formatPrice(order.total)}</span></div>`
 }
 
 /** HTML completo do cupom, isolado do CSS do painel. */
@@ -90,31 +107,47 @@ export const receiptHtml = (order: Order): string => {
 <meta charset="utf-8" />
 <title>Pedido #${escapeHtml(order.code)}</title>
 <style>
-  @page { size: 80mm auto; margin: 4mm; }
+  /* Margem zerada no @page e recuo feito no body: driver de térmica portátil
+     costuma ignorar a margem da página e imprimir colado na borda. */
+  @page { size: ${paperWidthMm}mm auto; margin: 0; }
+
   * { box-sizing: border-box; }
+
   body {
+    width: ${printWidthMm}mm;
     margin: 0 auto;
-    width: 72mm;
+    padding: 2mm 0 ${feedMm}mm;
     font-family: ui-monospace, "Courier New", monospace;
-    font-size: 12px;
-    line-height: 1.35;
+    font-size: 10px;
+    line-height: 1.3;
     color: #000;
+    background: #fff;
+    /* Térmica só marca preto: cinza vira chuvisco ou some no papel. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
-  h1 { margin: 0; font-size: 15px; text-align: center; text-transform: uppercase; }
-  .logo { display: block; width: 26mm; height: auto; margin: 0 auto 4px; }
+
+  /* Endereço e nome de complemento passam fácil dos ~32 caracteres da linha. */
+  body, .row > span, dd { overflow-wrap: anywhere; }
+
+  h1 { margin: 0; font-size: 13px; text-align: center; text-transform: uppercase; }
+  /* Logo enxuta de propósito: cada milímetro dela é bobina gasta em todo pedido. */
+  .logo { display: block; width: ${printWidthMm - 20}mm; height: auto; margin: 0 auto 3px; }
   [hidden] { display: none; }
   .center { text-align: center; }
-  .small { font-size: 11px; }
+  .small { font-size: 9px; }
   .strong { font-weight: 700; }
-  .code { margin: 6px 0; font-size: 20px; font-weight: 700; text-align: center; }
-  hr { border: 0; border-top: 1px dashed #000; margin: 6px 0; }
-  .row { display: flex; justify-content: space-between; gap: 8px; }
-  .item { margin-bottom: 6px; }
-  .total { margin-top: 4px; font-size: 15px; font-weight: 700; }
+  /* Preço nunca quebra no meio: R$ 1 / 8,90 em linhas diferentes é ilegível. */
+  .nowrap { overflow-wrap: normal; white-space: nowrap; }
+  .code { margin: 5px 0 2px; font-size: 16px; font-weight: 700; text-align: center; }
+  hr { border: 0; border-top: 1px dashed #000; margin: 5px 0; }
+  .row { display: flex; align-items: baseline; justify-content: space-between; gap: 4px; }
+  .item { margin-bottom: 5px; }
+  .total { margin-top: 3px; font-size: 13px; font-weight: 700; }
   dl { margin: 0; }
   dt { font-weight: 700; }
   dd { margin: 0 0 4px; }
-  footer { margin-top: 8px; text-align: center; font-size: 10px; }
+  footer { margin-top: 6px; text-align: center; font-size: 9px; }
 </style>
 </head>
 <body>

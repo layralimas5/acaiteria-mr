@@ -24,7 +24,7 @@ import type {
  */
 
 export interface BuildSelection {
-  /** Açaí ou sorvete: define quais tamanhos e bases aparecem. */
+  /** O produto escolhido: define quais tamanhos e bases aparecem. */
   readonly product: ProductKind | null
   readonly size: CupSize | null
   readonly base: AcaiBase | null
@@ -91,11 +91,28 @@ const freeIn = (
 /** Cota de uma categoria que o cardápio não conhece mais: nada grátis, sem teto. */
 const noRule: ToppingRule = { free: 0, max: null }
 
+/** Produto que não leva complemento não tem cota grátis nem adicional. */
+export const acceptsToppings = (selection: BuildSelection): boolean =>
+  selection.product?.acceptsToppings ?? true
+
 export const priceBuild = (
   selection: BuildSelection,
   categories: readonly ToppingCategory[],
 ): BuildPricing => {
   const basePrice = (selection.size?.basePrice ?? 0) + (selection.base?.extraPrice ?? 0)
+
+  if (!acceptsToppings(selection)) {
+    return {
+      basePrice,
+      freeLimit: 0,
+      freeUsed: 0,
+      paidToppings: [],
+      additionalPrice: 0,
+      subtotal: basePrice,
+      totalPrice: basePrice,
+      byCategory: {},
+    }
+  }
 
   const paidByCategory = new Map(
     categories.map((category) => [category.id, chargedIn(selection.toppings, category)]),

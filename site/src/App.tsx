@@ -117,7 +117,7 @@ export default function App() {
 
       <Header onGoToCart={goToCart} />
 
-      <main className="pb-20 sm:pb-0">
+      <main className="pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pb-0">
         <Hero />
         <Marquee />
 

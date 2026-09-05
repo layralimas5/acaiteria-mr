@@ -166,7 +166,7 @@ export function CheckoutForm({
 
   return (
     <form
-      className="space-y-7"
+      className="space-y-6 sm:space-y-7"
       onSubmit={(event) => {
         event.preventDefault()
         setTouched(true)
@@ -182,7 +182,7 @@ export function CheckoutForm({
             maxLength={80}
             onChange={(event) => update('name', event.target.value)}
             autoComplete="name"
-            className="w-full rounded-xl border border-acai-200 px-3 py-2.5 text-sm text-ink outline-none focus:border-acai-700"
+            className="w-full rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
           />
         </Field>
 
@@ -195,7 +195,7 @@ export function CheckoutForm({
             onChange={(event) => update('phone', event.target.value)}
             placeholder="(27) 90000-0000"
             autoComplete="tel"
-            className="w-full rounded-xl border border-acai-200 px-3 py-2.5 text-sm text-ink outline-none focus:border-acai-700"
+            className="w-full rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
           />
         </Field>
       </Block>
@@ -219,7 +219,7 @@ export function CheckoutForm({
             }}
             placeholder="Rua, número"
             autoComplete="street-address"
-            className="w-full rounded-xl border border-acai-200 px-3 py-2.5 text-sm text-ink outline-none focus:border-acai-700"
+            className="w-full rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
           />
         </Field>
 
@@ -232,7 +232,7 @@ export function CheckoutForm({
               onChange={(event) => update('district', event.target.value)}
               placeholder="Campo Grande"
               autoComplete="address-level3"
-              className="w-full rounded-xl border border-acai-200 px-3 py-2.5 text-sm text-ink outline-none focus:border-acai-700"
+              className="w-full rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
             />
           </Field>
 
@@ -254,7 +254,7 @@ export function CheckoutForm({
               placeholder="Viana"
               list="municipios-atendidos"
               autoComplete="address-level2"
-              className="w-full rounded-xl border border-acai-200 px-3 py-2.5 text-sm text-ink outline-none focus:border-acai-700"
+              className="w-full rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
             />
             <datalist id="municipios-atendidos">
               {areas.map((option) => (
@@ -303,7 +303,7 @@ export function CheckoutForm({
             maxLength={160}
             onChange={(event) => update('reference', event.target.value)}
             placeholder="Portão azul, ao lado da padaria..."
-            className="w-full rounded-xl border border-acai-200 px-3 py-2.5 text-sm text-ink outline-none focus:border-acai-700"
+            className="w-full rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
           />
         </Field>
       </Block>
@@ -361,12 +361,12 @@ export function CheckoutForm({
           <Field label="Troco para quanto? (opcional)" error={null}>
             <input
               type="text"
-              inputMode="numeric"
+              inputMode="decimal"
               value={customer.changeFor}
               maxLength={20}
               onChange={(event) => update('changeFor', event.target.value)}
               placeholder="R$ 50,00"
-              className="w-full rounded-xl border border-acai-200 px-3 py-2.5 text-sm text-ink outline-none focus:border-acai-700"
+              className="w-full rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
             />
           </Field>
         )}
@@ -380,7 +380,7 @@ export function CheckoutForm({
             onChange={(event) => update('notes', event.target.value)}
             rows={2}
             placeholder="Sem granola, capricha na calda..."
-            className="w-full resize-none rounded-xl border border-acai-200 px-3 py-2.5 text-sm text-ink outline-none focus:border-acai-700"
+            className="w-full resize-none rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
           />
         </Field>
       </Block>
@@ -413,7 +413,7 @@ export function CheckoutForm({
         </p>
       )}
 
-      <div className="flex flex-col gap-2 sm:flex-row-reverse">
+      <div className="flex flex-col gap-2.5 sm:flex-row-reverse">
         <button
           type="submit"
           disabled={sending}
@@ -443,7 +443,7 @@ export function CheckoutForm({
 
 function Block({ title, children }: { readonly title: string; readonly children: ReactNode }) {
   return (
-    <section className="space-y-3">
+    <section className="space-y-2.5 sm:space-y-3">
       <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-acai-700">{title}</h3>
       {children}
     </section>
@@ -459,7 +459,7 @@ interface FieldProps {
 function Field({ label, error, children }: FieldProps) {
   return (
     <label className="block">
-      <span className="text-xs font-semibold text-muted">{label}</span>
+      <span className="text-[0.8125rem] font-semibold text-muted sm:text-xs">{label}</span>
       <span className="mt-1.5 block">{children}</span>
       {error && <span className="mt-1 block text-xs font-semibold text-amber-700">{error}</span>}
     </label>

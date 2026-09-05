@@ -1,4 +1,12 @@
-import { CHECKOUT_API, admin, infinitePayHandle, json, toCents } from './_shared.mts'
+import {
+  CHECKOUT_API,
+  admin,
+  infinitePayHandle,
+  isForeignOrigin,
+  json,
+  rateLimited,
+  toCents,
+} from './_shared.mts'
 
 /**
  * Gera o link de pagamento da InfinitePay para um pedido que já existe.
@@ -9,11 +17,21 @@ import { CHECKOUT_API, admin, infinitePayHandle, json, toCents } from './_shared
  * navegador atravessa até a cobrança.
  *
  * POST /api/pagamento-link  { "code": "1042" }  ->  { "url": "https://..." }
+ *
+ * O número do pedido é sequencial e curto, então serve de chave para quem
+ * quiser varrer: #1000, #1001, #1002. Contra isso valem três cercas — a
+ * chamada precisa vir da própria loja quando vem de navegador, o endereço de
+ * rede tem um teto de tentativas, e só pedido recente gera cobrança. Pedido de
+ * ontem não abre checkout para estranho nenhum.
  */
+
+/** Depois disso o pedido é assunto encerrado: quem for pagar, pagou. */
+const JANELA_DE_PAGAMENTO_MS = 2 * 60 * 60 * 1000
 
 interface OrderRow {
   readonly id: string
   readonly code: string
+  readonly created_at: string
   readonly total: number
   readonly subtotal: number
   readonly delivery_fee: number
@@ -66,6 +84,8 @@ const checkoutItems = (order: OrderRow): readonly CheckoutItem[] => {
 
 export default async (request: Request): Promise<Response> => {
   if (request.method !== 'POST') return json({ error: 'Método não permitido' }, 405)
+  if (isForeignOrigin(request)) return json({ error: 'Origem não permitida' }, 403)
+  if (rateLimited(request, 12, 60_000)) return json({ error: 'Muitas tentativas. Aguarde.' }, 429)
 
   let code: string
   try {
@@ -82,7 +102,7 @@ export default async (request: Request): Promise<Response> => {
 
     const { data, error } = await db
       .from('orders')
-      .select('id, code, total, subtotal, delivery_fee, payment_status, items, customer')
+      .select('id, code, created_at, total, subtotal, delivery_fee, payment_status, items, customer')
       .eq('code', code)
       .maybeSingle()
 
@@ -91,6 +111,11 @@ export default async (request: Request): Promise<Response> => {
     if (!order) return json({ error: 'Pedido não encontrado' }, 404)
     if (order.payment_status === 'pago') return json({ error: 'Este pedido já foi pago' }, 409)
     if (order.total <= 0) return json({ error: 'Pedido sem valor a cobrar' }, 422)
+
+    const idade = Date.now() - new Date(order.created_at).getTime()
+    if (!Number.isFinite(idade) || idade > JANELA_DE_PAGAMENTO_MS) {
+      return json({ error: 'Pedido antigo demais para pagar pelo site.' }, 410)
+    }
 
     // A origem do próprio pedido HTTP: em produção o domínio da loja, no
     // deploy de preview o endereço do preview. Assim o cliente sempre volta
@@ -126,7 +151,9 @@ export default async (request: Request): Promise<Response> => {
     const checkoutUrl = payload?.checkout_url ?? payload?.url
 
     if (!response.ok || !checkoutUrl) {
-      console.error('InfinitePay recusou o link', response.status, payload)
+      // Sem o corpo da resposta no log: ele volta com os dados do cliente que
+      // acabaram de subir na cobrança, e log de deploy não é lugar para isso.
+      console.error('InfinitePay recusou o link', response.status)
       return json({ error: 'Não foi possível abrir o pagamento agora.' }, 502)
     }
 

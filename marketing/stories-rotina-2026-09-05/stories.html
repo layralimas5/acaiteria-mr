@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Açaiteria MR — stories de rotina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  /* =====================================================================
+     Açaiteria MR — 8 stories 1080x1920 (9:16) de rotina.
+     Mesma linguagem visual dos stories de inauguração. Tudo que é texto
+     está no bloco DADOS, no fim do arquivo: mudou lá, roda `node render.js`.
+     ===================================================================== */
+
+  :root {
+    --roxo-950: #100518;
+    --roxo-900: #1a0b29;
+    --roxo-800: #2c1642;
+    --roxo-700: #422260;
+    --roxo-500: #6d4296;
+    --cream: #faf6f0;
+    --gold: #ffc94a;
+    --ink: #150c1c;
+
+    /* Faixas que a interface do Instagram cobre. Nada de texto aqui dentro. */
+    --safe-top: 220px;
+    --safe-bottom: 250px;
+    --pad: 96px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', system-ui, sans-serif;
+    background: #14161a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+    padding: 48px;
+  }
+
+  .story {
+    position: relative;
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+    background: var(--roxo-900);
+    color: var(--cream);
+    display: flex;
+    flex-direction: column;
+    isolation: isolate;
+  }
+
+  .story::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(120% 70% at 50% 20%, #6d4296 0%, #2c1642 46%, #150720 100%);
+    z-index: -2;
+  }
+
+  .safe {
+    position: relative;
+    z-index: 3;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: var(--safe-top) var(--pad) var(--safe-bottom);
+  }
+
+  /* ---------- tipos ---------- */
+  .kicker {
+    font-size: 26px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+  }
+
+  .rule {
+    width: 84px;
+    height: 5px;
+    background: var(--gold);
+    border-radius: 4px;
+    margin: 28px 0 34px;
+  }
+
+  h1 {
+    font-size: 106px;
+    font-weight: 900;
+    line-height: 0.96;
+    letter-spacing: -0.045em;
+  }
+
+  h2 {
+    font-size: 78px;
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+  }
+
+  .lead {
+    font-size: 34px;
+    font-weight: 500;
+    line-height: 1.42;
+    color: rgba(250, 246, 240, 0.82);
+    max-width: 800px;
+  }
+
+  .handle { font-size: 30px; font-weight: 700; }
+
+  /* ---------- marca no topo ---------- */
+  .topbar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 56px;
+  }
+  .badge {
+    width: 290px;
+    height: 290px;
+    border-radius: 50%;
+    background-image: url('../../site/public/imagem/logo-oficial.webp');
+    background-size: 126%;
+    background-position: center;
+    flex: none;
+    box-shadow: 0 0 0 3px rgba(250, 246, 240, 0.22);
+  }
+  .topbar .meta {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    opacity: 0.78;
+  }
+  /* Versão menor da marca, pros stories que têm muito conteúdo no meio. */
+  .topbar.slim { margin-bottom: 40px; }
+  .topbar.slim .badge { width: 200px; height: 200px; }
+
+  /* ---------- arte ---------- */
+  .band {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: auto;
+    z-index: 0;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 210px, #000 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 210px, #000 100%);
+  }
+  .veil {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(to bottom, rgba(21, 7, 32, 0.86) 0%, rgba(21, 7, 32, 0.5) 40%, rgba(21, 7, 32, 0) 62%);
+  }
+
+  /* Foto de produto solta no meio do story. As fotos já vêm com fundo roxo
+     escuro, então a máscara redonda funde a foto no fundo da arte sem
+     desenhar caixa nem borda. */
+  .shot {
+    width: 700px;
+    align-self: center;
+    margin-top: 10px;
+    -webkit-mask-image: radial-gradient(closest-side, #000 56%, transparent 100%);
+    mask-image: radial-gradient(closest-side, #000 56%, transparent 100%);
+  }
+
+  /* ---------- listas e cards ---------- */
+  .sizes {
+    display: flex;
+    gap: 18px;
+    margin-top: 46px;
+  }
+  .sizes span {
+    border: 2px solid rgba(250, 246, 240, 0.34);
+    border-radius: 999px;
+    padding: 16px 34px;
+    font-size: 32px;
+    font-weight: 700;
+  }
+  .sizes.center { justify-content: center; }
+
+  /* Linhas de dia e horário, e de cidade e taxa: mesmo desenho. */
+  .rows { margin-top: 52px; display: flex; flex-direction: column; }
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 24px;
+    padding: 28px 0;
+    border-bottom: 1px solid rgba(250, 246, 240, 0.16);
+  }
+  .row:last-child { border-bottom: 0; }
+  .row span { font-size: 40px; font-weight: 700; }
+  .row em {
+    font-style: normal;
+    font-size: 40px;
+    font-weight: 800;
+    color: var(--gold);
+    white-space: nowrap;
+  }
+  /* Dia fechado: fica na lista, mas apagado. */
+  .row.off span, .row.off em { color: rgba(250, 246, 240, 0.42); font-weight: 600; }
+
+  .cards { margin-top: 56px; display: flex; flex-direction: column; gap: 26px; }
+  .card {
+    background: rgba(250, 246, 240, 0.07);
+    border: 1px solid rgba(250, 246, 240, 0.16);
+    border-radius: 34px;
+    padding: 40px 44px;
+  }
+  .card b { display: block; font-size: 46px; font-weight: 800; letter-spacing: -0.03em; }
+  .card p {
+    margin-top: 12px;
+    font-size: 30px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: rgba(250, 246, 240, 0.72);
+  }
+
+  /* Opções da enquete: a figurinha nativa do Instagram entra por cima. */
+  .options { margin-top: 58px; display: flex; flex-direction: column; gap: 28px; }
+  .option {
+    border: 3px solid rgba(250, 246, 240, 0.28);
+    border-radius: 999px;
+    padding: 32px 0;
+    text-align: center;
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  .footline {
+    margin-top: auto;
+    padding-top: 44px;
+    border-top: 1px solid rgba(250, 246, 240, 0.16);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footline small { font-size: 26px; font-weight: 500; opacity: 0.7; }
+
+  /* ---------- selo de aberto ---------- */
+  .live {
+    align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    background: var(--gold);
+    color: var(--roxo-900);
+    border-radius: 999px;
+    padding: 18px 40px;
+    font-size: 34px;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .live i {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--roxo-900);
+    display: block;
+  }
+
+  /* ---------- CTA ---------- */
+  .arrow-wrap {
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: -26px 0 34px;
+  }
+  .arrow-head {
+    width: 100px;
+    height: 100px;
+    border-left: 20px solid var(--gold);
+    border-top: 20px solid var(--gold);
+    border-radius: 8px;
+    transform: rotate(45deg);
+  }
+  .arrow-tail {
+    width: 20px;
+    height: 120px;
+    background: var(--gold);
+    border-radius: 12px;
+    margin-top: -44px;
+  }
+  .pill {
+    align-self: center;
+    margin-top: 44px;
+    background: var(--gold);
+    color: var(--roxo-900);
+    border-radius: 999px;
+    padding: 24px 58px;
+    font-size: 60px;
+    font-weight: 900;
+    letter-spacing: -0.035em;
+  }
+  /* Mesma pílula, sem o dourado: usada quando ela carrega um endereço, não
+     um nome, e não pode competir com o título. */
+  .pill.ghost {
+    background: transparent;
+    color: var(--cream);
+    border: 3px solid rgba(250, 246, 240, 0.34);
+    font-size: 44px;
+  }
+  .center { text-align: center; align-items: center; }
+</style>
+</head>
+<body>
+
+<!-- ===================== 1 · ABERTO AGORA ===================== -->
+<section class="story" id="s1">
+  <img class="band" style="bottom: 0; width: 122%; left: -11%" src="../../site/public/imagem/banner-2.webp" alt="" />
+  <div class="veil"></div>
+  <div class="safe">
+    <div class="topbar">
+      <div class="badge"></div>
+      <span class="meta" data-var="handle">@mracai9</span>
+    </div>
+    <div class="live"><i></i><span data-var="selo1">Aberto agora</span></div>
+    <h1 style="margin-top: 40px" data-var="titulo1">Tá batido<br />e tá saindo</h1>
+    <p class="lead" style="margin-top: 36px" data-var="lead1">
+      Pedido pelo site, açaí montado na hora e entrega na sua porta. É só escolher o tamanho.
+    </p>
+    <p class="lead" style="margin-top: 28px; font-weight: 700; color: #ffc94a" data-var="horario1">
+      Hoje até 23h
+    </p>
+  </div>
+</section>
+
+<!-- ===================== 2 · HORÁRIO DA SEMANA ===================== -->
+<section class="story" id="s2">
+  <div class="safe">
+    <div class="topbar slim">
+      <div class="badge"></div>
+    </div>
+    <div class="kicker" data-var="kicker2">Nossa semana</div>
+    <div class="rule"></div>
+    <h2 data-var="titulo2">Anota o<br />horário</h2>
+    <div class="rows">
+      <div class="row"><span data-var="dia1">Segunda</span><em data-var="hora1">18h30 às 23h</em></div>
+      <div class="row"><span data-var="dia2">Terça</span><em data-var="hora2">18h30 às 23h</em></div>
+      <div class="row"><span data-var="dia3">Quarta</span><em data-var="hora3">18h30 às 23h</em></div>
+      <div class="row off"><span data-var="dia4">Quinta</span><em data-var="hora4">fechado</em></div>
+      <div class="row"><span data-var="dia5">Sexta</span><em data-var="hora5">18h30 às 23h</em></div>
+      <div class="row"><span data-var="dia6">Sábado</span><em data-var="hora6">18h30 às 23h</em></div>
+      <div class="row off"><span data-var="dia7">Domingo</span><em data-var="hora7">fechado</em></div>
+    </div>
+    <div class="footline">
+      <span class="handle" data-var="handle">@mracai9</span>
+      <small data-var="rodape2">Viana e Cariacica · só delivery</small>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 3 · O POTE DE 1 LITRO ===================== -->
+<section class="story" id="s3">
+  <div class="safe center">
+    <div class="topbar slim">
+      <div class="badge"></div>
+    </div>
+    <div class="kicker" data-var="kicker3">Pra dividir (ou não)</div>
+    <img class="shot" src="../../site/public/imagem/1-litro.webp" alt="" />
+    <h2 class="center" style="margin-top: -10px" data-var="titulo3">1 litro cheio,<br />sem economia</h2>
+    <p class="lead center" style="margin-top: 26px" data-var="lead3">
+      Três complementos grátis, do mesmo jeito que no copo pequeno.
+    </p>
+    <div class="sizes center">
+      <span data-var="tam1">500ml</span><span data-var="tam2">700ml</span><span data-var="tam3">1 litro</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 4 · SEM APP, SEM CADASTRO ===================== -->
+<section class="story" id="s4">
+  <img class="band" style="bottom: 0; width: 165%; left: -58%" src="../../site/public/imagem/banner.webp" alt="" />
+  <div class="veil"></div>
+  <div class="safe">
+    <div class="topbar">
+      <div class="badge"></div>
+    </div>
+    <div class="kicker" data-var="kicker4">Pedido pelo site</div>
+    <div class="rule"></div>
+    <h2 data-var="titulo4">Sem app,<br />sem cadastro</h2>
+    <p class="lead" style="margin-top: 34px" data-var="lead4">
+      Abre o link, monta o copo do seu jeito e confirma. Leva menos tempo que escolher a série.
+    </p>
+    <div class="pill ghost" style="align-self: flex-start; margin-top: 44px" data-var="site4">acaiteria-mr.netlify.app</div>
+  </div>
+</section>
+
+<!-- ===================== 5 · COMO PAGAR ===================== -->
+<section class="story" id="s5">
+  <div class="safe">
+    <div class="topbar slim">
+      <div class="badge"></div>
+    </div>
+    <div class="kicker" data-var="kicker5">Como pagar</div>
+    <div class="rule"></div>
+    <h2 data-var="titulo5">Paga pelo site<br />e só espera</h2>
+    <div class="cards" style="margin-top: auto; margin-bottom: auto">
+      <div class="card">
+        <b data-var="pag1t">Pix na hora</b>
+        <p data-var="pag1p">QR Code e copia e cola na própria tela, com o valor já fechado. Você não digita chave nem valor.</p>
+      </div>
+      <div class="card">
+        <b data-var="pag2t">Cartão em até 12x</b>
+        <p data-var="pag2p">Crédito direto no site, em ambiente seguro, sem maquininha na porta.</p>
+      </div>
+    </div>
+    <div class="footline">
+      <span class="handle" data-var="handle">@mracai9</span>
+      <small data-var="rodape5">O entregador sai só com o açaí</small>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 6 · ENTREGA ===================== -->
+<section class="story" id="s6">
+  <div class="safe">
+    <div class="topbar slim">
+      <div class="badge"></div>
+    </div>
+    <div class="kicker" data-var="kicker6">Entrega</div>
+    <div class="rule"></div>
+    <h2 data-var="titulo6">A gente leva<br />até você</h2>
+    <div class="rows" style="margin-top: auto">
+      <div class="row"><span data-var="cidade1">Viana</span><em data-var="taxa1">R$ 3</em></div>
+      <div class="row"><span data-var="cidade2">Cariacica</span><em data-var="taxa2">R$ 6</em></div>
+      <div class="row"><span data-var="cidade3">Chega em</span><em data-var="taxa3">a partir de 40 min</em></div>
+    </div>
+    <p class="lead" style="margin: 44px 0 auto" data-var="lead6">
+      Só delivery: sem fila, sem sair do sofá e sem esperar em pé.
+    </p>
+    <div class="footline">
+      <span class="handle" data-var="handle">@mracai9</span>
+      <small data-var="rodape6">(27) 99285-3101</small>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 7 · ENQUETE ===================== -->
+<section class="story" id="s7">
+  <div class="safe">
+    <div class="topbar slim">
+      <div class="badge"></div>
+    </div>
+    <div class="kicker" data-var="kicker7">Responde aí</div>
+    <div class="rule"></div>
+    <h2 data-var="titulo7">Qual complemento<br />não pode faltar<br />no seu?</h2>
+    <div class="options" style="margin-top: auto; margin-bottom: auto">
+      <div class="option" data-var="opcao1">Leite ninho</div>
+      <div class="option" data-var="opcao2">Morango</div>
+      <div class="option" data-var="opcao3">Paçoca</div>
+    </div>
+    <div class="footline">
+      <span class="handle" data-var="handle">@mracai9</span>
+      <small data-var="rodape7">Três entram de graça em qualquer tamanho</small>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 8 · PEDE O SEU ===================== -->
+<section class="story" id="s8">
+  <img class="band" style="bottom: -130px; width: 152%; left: -26%" src="../../site/public/imagem/banner-2.webp" alt="" />
+  <div class="veil"></div>
+  <div class="safe center">
+    <div class="topbar">
+      <div class="badge"></div>
+    </div>
+    <div class="arrow-wrap">
+      <div class="arrow-head"></div>
+      <div class="arrow-tail"></div>
+    </div>
+    <h2 class="center" data-var="titulo8">Pede o seu<br />no link aqui em cima</h2>
+    <p class="lead center" style="margin-top: 28px" data-var="lead8">
+      Monta do seu jeito, paga pelo site e recebe em casa hoje mesmo.
+    </p>
+    <div class="pill" data-var="handle">@mracai9</div>
+  </div>
+</section>
+
+<script>
+  /* =====================================================================
+     DADOS — mexe só aqui.
+     A chave bate com o data-var do HTML. Aceita <br> e <small>.
+     Tirar uma chave daqui mantém o texto que já está escrito no HTML.
+     ===================================================================== */
+  const DADOS = {
+    handle: '@mracai9',
+
+    // Story 1 — aberto agora
+    selo1: 'Aberto agora',
+    titulo1: 'Tá batido<br />e tá saindo',
+    lead1: 'Pedido pelo site, açaí montado na hora e entrega na sua porta. É só escolher o tamanho.',
+    horario1: 'Hoje até 23h',
+
+    // Story 2 — horário da semana
+    kicker2: 'Nossa semana',
+    titulo2: 'Anota o<br />horário',
+    dia1: 'Segunda', hora1: '18h30 às 23h',
+    dia2: 'Terça', hora2: '18h30 às 23h',
+    dia3: 'Quarta', hora3: '18h30 às 23h',
+    dia4: 'Quinta', hora4: 'fechado',
+    dia5: 'Sexta', hora5: '18h30 às 23h',
+    dia6: 'Sábado', hora6: '18h30 às 23h',
+    dia7: 'Domingo', hora7: 'fechado',
+    rodape2: 'Viana e Cariacica · só delivery',
+
+    // Story 3 — pote de 1 litro
+    kicker3: 'Pra dividir (ou não)',
+    titulo3: '1 litro cheio,<br />sem economia',
+    lead3: 'Três complementos grátis, do mesmo jeito que no copo pequeno.',
+    tam1: '500ml',
+    tam2: '700ml',
+    tam3: '1 litro',
+
+    // Story 4 — pedido pelo site
+    kicker4: 'Pedido pelo site',
+    titulo4: 'Sem app,<br />sem cadastro',
+    lead4: 'Abre o link, monta o copo do seu jeito e confirma. Leva menos tempo que escolher a série.',
+    site4: 'acaiteria-mr.netlify.app',
+
+    // Story 5 — pagamento
+    kicker5: 'Como pagar',
+    titulo5: 'Paga pelo site<br />e só espera',
+    pag1t: 'Pix na hora',
+    pag1p: 'QR Code e copia e cola na própria tela, com o valor já fechado. Você não digita chave nem valor.',
+    pag2t: 'Cartão em até 12x',
+    pag2p: 'Crédito direto no site, em ambiente seguro, sem maquininha na porta.',
+    rodape5: 'O entregador sai só com o açaí',
+
+    // Story 6 — entrega
+    kicker6: 'Entrega',
+    titulo6: 'A gente leva<br />até você',
+    cidade1: 'Viana', taxa1: 'R$ 3',
+    cidade2: 'Cariacica', taxa2: 'R$ 6',
+    cidade3: 'Chega em', taxa3: 'a partir de 40 min',
+    lead6: 'Só delivery: sem fila, sem sair do sofá e sem esperar em pé.',
+    rodape6: '(27) 99285-3101',
+
+    // Story 7 — enquete
+    kicker7: 'Responde aí',
+    titulo7: 'Qual complemento<br />não pode faltar<br />no seu?',
+    opcao1: 'Leite ninho',
+    opcao2: 'Morango',
+    opcao3: 'Paçoca',
+    rodape7: 'Três entram de graça em qualquer tamanho',
+
+    // Story 8 — CTA
+    titulo8: 'Pede o seu<br />no link aqui em cima',
+    lead8: 'Monta do seu jeito, paga pelo site e recebe em casa hoje mesmo.',
+  }
+
+  for (const [chave, valor] of Object.entries(DADOS)) {
+    document.querySelectorAll('[data-var="' + chave + '"]').forEach(function (el) {
+      el.innerHTML = valor
+    })
+  }
+</script>
+</body>
+</html>

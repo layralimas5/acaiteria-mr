@@ -111,7 +111,7 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
       <div className="py-6 text-center">
         <p className="text-base font-bold text-ink">Seu pedido está vazio</p>
         <p className="mx-auto mt-2 max-w-xs text-sm text-muted">
-          Monte um açaí ou sorvete do seu jeito, escolhendo tamanho, sabor e complementos.
+          Monte o seu do jeito que quiser, escolhendo tamanho, sabor e complementos.
         </p>
         <button
           type="button"

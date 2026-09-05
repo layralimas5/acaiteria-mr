@@ -1,4 +1,8 @@
+import { useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { ACCEPTED_IMAGE_TYPES, uploadCatalogImage } from '../../catalog/upload'
+import type { ImageFolder } from '../../catalog/upload'
+import { errorMessage } from '../../lib/supabase'
 
 /**
  * Peças de formulário do cardápio.
@@ -53,39 +57,192 @@ interface NumberFieldProps {
   readonly onChange: (value: number) => void
   readonly min?: number
   readonly max?: number
-  readonly step?: number
+  /** Casas decimais aceitas. Zero nos campos de contagem. */
+  readonly decimals?: number
   readonly hint?: string
   readonly className?: string
 }
 
+/** "6,50", "6.50", "R$ 6,50" e "6" chegam todos como 6,5. */
+const parseNumber = (text: string): number | null => {
+  const clean = text.replace(/[^0-9,.-]/g, '').replace(',', '.')
+  if (clean === '' || clean === '-' || clean === '.' || clean === '-.') return null
+
+  const parsed = Number(clean)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+/**
+ * Campo de número do cardápio: preço, acréscimo, cota grátis, teto.
+ *
+ * Aqui se digita preço, e no Brasil preço se escreve com vírgula. O campo era
+ * `type="number"`, que em navegador de locale inglês descarta a vírgula: "6,50"
+ * virava vazio, o botão Salvar continuava apagado e o cadastro do tamanho não
+ * ia para o banco — o produto ficava sem preço e sumia do site sem dizer por
+ * quê. Agora o texto é lido por conta própria, com vírgula ou ponto, e a tela
+ * mostra de volta o número já formatado quando o campo perde o foco.
+ */
 export function NumberField({
   label,
   value,
   onChange,
   min = 0,
   max,
-  step = 0.5,
+  decimals = 2,
   hint,
   className = '',
 }: NumberFieldProps) {
+  const show = (amount: number): string =>
+    Number.isFinite(amount) ? String(amount).replace('.', ',') : ''
+
+  /** O que está escrito enquanto se digita: "6," não é número, mas é caminho. */
+  const [text, setText] = useState(() => show(value))
+  const [typing, setTyping] = useState(false)
+
+  // Valor trocado de fora (abriu outra ficha, salvou, cancelou).
+  if (!typing && parseNumber(text) !== value) setText(show(value))
+
+  const clamp = (amount: number): number => {
+    const rounded = Number(amount.toFixed(decimals))
+    const floored = Math.max(min, rounded)
+    return max === undefined ? floored : Math.min(max, floored)
+  }
+
   return (
     <label className={`block ${className}`}>
       <span className="text-xs font-bold text-acai-700">{label}</span>
       <input
-        type="number"
-        value={Number.isFinite(value) ? value : 0}
-        onChange={(event) => {
-          const parsed = Number(event.target.value)
-          onChange(Number.isFinite(parsed) ? parsed : 0)
-        }}
-        min={min}
-        max={max}
-        step={step}
+        type="text"
         inputMode="decimal"
+        value={text}
+        onFocus={() => setTyping(true)}
+        onChange={(event) => {
+          setText(event.target.value)
+          const parsed = parseNumber(event.target.value)
+          onChange(parsed === null ? 0 : clamp(parsed))
+        }}
+        onBlur={() => {
+          setTyping(false)
+          const parsed = parseNumber(text)
+          const final = parsed === null ? 0 : clamp(parsed)
+          onChange(final)
+          setText(show(final))
+        }}
         className="mt-1 w-full rounded-xl border border-acai-200 px-3 py-2 text-sm text-ink outline-none focus:border-acai-700"
       />
       {hint && <span className="mt-1 block text-xs text-muted">{hint}</span>}
     </label>
+  )
+}
+
+interface ImageFieldProps {
+  readonly label: string
+  readonly value: string
+  readonly onChange: (value: string) => void
+  /** Pasta do bucket, para a foto do produto não se misturar com a do complemento. */
+  readonly folder: ImageFolder
+  /** Foto que o site usaria sozinho se este campo ficar vazio. */
+  readonly fallback?: string | null
+  /** O que aparece no quadrado quando não há foto nenhuma. */
+  readonly placeholder?: ReactNode
+  readonly hint?: string
+  readonly className?: string
+}
+
+/**
+ * Foto de um item do cardápio, escolhida do computador ou do celular.
+ *
+ * A loja aperta "Enviar foto", escolhe o arquivo e pronto: ele sobe para o
+ * Storage e o cadastro guarda a URL. Ninguém precisa publicar arquivo em pasta
+ * nem colar caminho, embora colar continue funcionando para as fotos de
+ * estúdio que já vivem no site.
+ */
+export function ImageField({
+  label,
+  value,
+  onChange,
+  folder,
+  fallback = null,
+  placeholder,
+  hint,
+  className = '',
+}: ImageFieldProps) {
+  const input = useRef<HTMLInputElement>(null)
+  const [sending, setSending] = useState(false)
+  const [failure, setFailure] = useState<string | null>(null)
+
+  const chosen = value.trim()
+  const preview = chosen || fallback
+
+  const send = (file: File | undefined) => {
+    if (!file) return
+    setSending(true)
+    setFailure(null)
+
+    uploadCatalogImage(file, folder)
+      .then((url) => onChange(url))
+      .catch((cause: unknown) => setFailure(errorMessage(cause)))
+      .finally(() => {
+        setSending(false)
+        if (input.current) input.current.value = ''
+      })
+  }
+
+  return (
+    <div className={className}>
+      <span className="text-xs font-bold text-acai-700">
+        {label}
+        <span className="font-semibold text-muted"> (opcional)</span>
+      </span>
+
+      <div className="mt-1 flex items-center gap-3 rounded-xl border border-acai-200 bg-white p-2">
+        <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-lg bg-acai-50">
+          {preview ? (
+            <img src={preview} alt="" className="size-full object-cover" />
+          ) : (
+            <span className="text-xl" aria-hidden="true">
+              {placeholder ?? '🖼️'}
+            </span>
+          )}
+        </span>
+
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <input
+            ref={input}
+            type="file"
+            accept={ACCEPTED_IMAGE_TYPES}
+            className="sr-only"
+            onChange={(event) => send(event.target.files?.[0])}
+          />
+          <button
+            type="button"
+            onClick={() => input.current?.click()}
+            disabled={sending}
+            className="rounded-full border border-acai-200 px-3.5 py-1.5 text-xs font-bold text-acai-800 transition-colors hover:bg-acai-50 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {sending ? 'Enviando...' : chosen ? 'Trocar foto' : 'Enviar foto'}
+          </button>
+          {chosen && (
+            <button
+              type="button"
+              onClick={() => onChange('')}
+              className="rounded-full px-3 py-1.5 text-xs font-semibold text-muted transition-colors hover:text-red-700"
+            >
+              Remover
+            </button>
+          )}
+          <span className="w-full truncate text-[11px] text-muted">
+            {chosen ? chosen : (hint ?? 'JPG, PNG ou WebP, até 5 MB')}
+          </span>
+        </div>
+      </div>
+
+      {failure && (
+        <p role="alert" className="mt-1 text-xs font-semibold text-red-700">
+          {failure}
+        </p>
+      )}
+    </div>
   )
 }
 
@@ -131,22 +288,6 @@ export function IconButton({ onClick, label, disabled = false, children }: Actio
     >
       {children}
     </button>
-  )
-}
-
-export function UpIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-3.5 stroke-current stroke-2 fill-none">
-      <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-export function DownIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-3.5 stroke-current stroke-2 fill-none">
-      <path d="M12 5v14M19 12l-7 7-7-7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   )
 }
 

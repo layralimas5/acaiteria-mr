@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import type { CupSize } from '../../catalog/types'
+import { sizeLabel } from '../../catalog/types'
 import { formatPrice } from '../../lib/order'
 import { SelectedCheck } from './SelectedCheck'
 
@@ -46,13 +47,15 @@ export function SizeSelector({ sizes, freeToppings, selected, onSelect }: SizeSe
                   }`}
                 />
               ) : (
-                <span className="text-xl font-extrabold text-white/90">{size.volume}</span>
+                <span className="text-xl font-extrabold text-white/90">{sizeLabel(size)}</span>
               )}
             </span>
 
             <span className="min-w-0 sm:mt-3">
               <span className="flex items-baseline gap-2">
-                <span className="text-base font-extrabold tracking-tight text-ink sm:text-lg">{size.volume}</span>
+                <span className="text-base font-extrabold tracking-tight text-ink sm:text-lg">
+                  {sizeLabel(size)}
+                </span>
                 {size.highlight && (
                   <span className="rounded-full bg-acai-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-acai-800">
                     {size.highlight}

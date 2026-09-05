@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
+import { sizeLabel } from '../../catalog/types'
 import type { BuildPricing, BuildSelection } from '../../lib/builder'
-import { missingSteps } from '../../lib/builder'
+import { acceptsToppings, missingSteps } from '../../lib/builder'
 import { formatPrice } from '../../lib/order'
 import { FreeToppingsMeter } from './FreeToppingsMeter'
 
@@ -15,6 +16,9 @@ export function OrderSummary({ selection, pricing, onAdd, onReset }: OrderSummar
   const missing = missingSteps(selection)
   const paidIds = pricing.paidToppings.map((topping) => topping.id)
   const started = Boolean(selection.product ?? selection.size) || selection.toppings.length > 0
+  /** Etapa que o produto não usa some do resumo, como some da trilha. */
+  const showSize = selection.product ? selection.product.sizes.length > 1 : true
+  const showToppings = acceptsToppings(selection)
 
   return (
     <aside className="overflow-hidden rounded-card border border-acai-100 bg-white shadow-xl shadow-acai-900/5 lg:sticky lg:top-28">
@@ -31,11 +35,13 @@ export function OrderSummary({ selection, pricing, onAdd, onReset }: OrderSummar
       <div className="px-6 py-5">
         <ul className="space-y-3 text-sm">
           <SummaryRow label="Produto" value={selection.product?.name ?? null} />
-          <SummaryRow label="Tamanho" value={selection.size?.volume ?? null} />
+          {showSize && (
+            <SummaryRow label="Tamanho" value={selection.size ? sizeLabel(selection.size) : null} />
+          )}
           <SummaryRow label={selection.product?.baseLabel ?? 'Base'} value={selection.base?.name ?? null} />
         </ul>
 
-        <div className="mt-5 border-t border-acai-100 pt-5">
+        <div className={`mt-5 border-t border-acai-100 pt-5 ${showToppings ? '' : 'hidden'}`}>
           <div className="flex items-center justify-between gap-3">
             <span className="text-sm font-bold text-ink">Complementos</span>
             <span className="text-sm font-bold text-ink">{selection.toppings.length}</span>

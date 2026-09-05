@@ -23,7 +23,7 @@ export function BrandGallery() {
   return (
     <section
       id="a-marca"
-      className="relative scroll-mt-24 bg-acai-950 sm:px-6 sm:py-10 lg:px-8 lg:py-14"
+      className="relative scroll-mt-20 bg-acai-950 sm:px-6 sm:py-10 lg:px-8 lg:py-14"
     >
       <div className="relative mx-auto w-full max-w-6xl">
         <div className="relative aspect-[4/3] max-h-[85vh] sm:aspect-[16/9] sm:max-h-[78vh]">
@@ -61,7 +61,7 @@ export function BrandGallery() {
           />
 
           {artworks.length > 1 && (
-            <div className="absolute right-5 top-5 flex gap-2 sm:right-8 sm:top-8">
+            <div className="absolute right-5 top-4 flex gap-2.5 sm:right-8 sm:top-8 sm:gap-2">
               {artworks.map((item, index) => (
                 <button
                   key={item.src}
@@ -69,10 +69,19 @@ export function BrandGallery() {
                   onClick={() => goTo(index)}
                   aria-label={`Ver arte ${index + 1} de ${artworks.length}`}
                   aria-current={index === current}
-                  className={`h-1.5 rounded-full shadow-sm transition-all duration-300 ${
-                    index === current ? 'w-8 bg-white' : 'w-3 bg-white/50 hover:bg-white/80'
-                  }`}
-                />
+                  className="group/dot flex items-center max-sm:-my-3 max-sm:h-11 max-sm:py-3"
+                >
+                  {/* Igual ao hero: a barra continua fina, quem cresce no
+                      celular é a área de toque em volta dela. */}
+                  <span
+                    aria-hidden="true"
+                    className={`block h-1.5 rounded-full shadow-sm transition-all duration-300 ${
+                      index === current
+                        ? 'w-8 bg-white'
+                        : 'w-3 bg-white/50 group-hover/dot:bg-white/80'
+                    }`}
+                  />
+                </button>
               ))}
             </div>
           )}
@@ -81,8 +90,8 @@ export function BrandGallery() {
         {/* No celular corre no fluxo, abaixo da arte. Do tablet para cima volta
             para dentro do cartão, ancorado no rodapé. */}
         <div className="relative sm:absolute sm:inset-x-0 sm:bottom-0">
-          <div className="px-5 pb-10 pt-6 sm:px-8 sm:pb-10 sm:pt-0 lg:px-12 lg:pb-14">
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
+          <div className="px-5 pb-9 pt-5 sm:px-8 sm:pb-10 sm:pt-0 lg:px-12 lg:pb-14">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={current}
@@ -97,13 +106,13 @@ export function BrandGallery() {
                   </span>
 
                   {artwork?.headline && (
-                    <h2 className="mt-2 text-balance text-2xl font-extrabold leading-[1.15] tracking-tight sm:text-4xl sm:drop-shadow-lg lg:text-5xl">
+                    <h2 className="mt-1.5 text-balance text-[clamp(1.5rem,6vw,2.25rem)] font-extrabold leading-[1.15] tracking-tight sm:mt-2 sm:text-4xl sm:drop-shadow-lg lg:text-5xl">
                       {artwork.headline}
                     </h2>
                   )}
 
                   {artwork?.subline && (
-                    <p className="mt-2.5 max-w-md text-pretty text-[13px] leading-relaxed text-acai-100/85 sm:mt-3 sm:max-w-none sm:text-base sm:text-acai-100/90">
+                    <p className="mt-2 max-w-md text-pretty text-[clamp(0.875rem,3.6vw,1rem)] leading-[1.5] text-acai-100/85 sm:mt-3 sm:max-w-none sm:leading-relaxed sm:text-acai-100/90">
                       {artwork.subline}
                     </p>
                   )}
