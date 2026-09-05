@@ -46,6 +46,8 @@ export interface ProductKind {
   readonly name: string
   readonly description: string
   readonly emoji: string
+  /** Foto do produto no card de escolha. Sem ela, o card mostra o emoji. */
+  readonly image?: string
   /** Título da etapa de base, que muda de nome conforme o produto. */
   readonly baseStepTitle: string
   readonly baseStepSubtitle: string

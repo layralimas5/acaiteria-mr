@@ -20,6 +20,7 @@ interface ProductRow {
   name: string
   description: string
   emoji: string
+  image: string | null
   base_step_title: string
   base_step_subtitle: string
   base_label: string
@@ -159,6 +160,7 @@ export const fetchCatalog = async (): Promise<Catalog> => {
     name: row.name,
     description: row.description,
     emoji: row.emoji,
+    ...(row.image ? { image: row.image } : {}),
     baseStepTitle: row.base_step_title,
     baseStepSubtitle: row.base_step_subtitle,
     baseLabel: row.base_label,
@@ -203,6 +205,7 @@ export interface ProductDraft {
   readonly name: string
   readonly description: string
   readonly emoji: string
+  readonly image: string
   readonly baseStepTitle: string
   readonly baseStepSubtitle: string
   readonly baseLabel: string
@@ -216,6 +219,7 @@ export const createProduct = async (
     name: draft.name.trim(),
     description: draft.description.trim(),
     emoji: draft.emoji.trim(),
+    image: draft.image.trim() || null,
     base_step_title: draft.baseStepTitle.trim(),
     base_step_subtitle: draft.baseStepSubtitle.trim(),
     base_label: draft.baseLabel.trim(),
@@ -234,6 +238,7 @@ export const updateProduct = async (
       ...(patch.name !== undefined && { name: patch.name.trim() }),
       ...(patch.description !== undefined && { description: patch.description.trim() }),
       ...(patch.emoji !== undefined && { emoji: patch.emoji.trim() }),
+      ...(patch.image !== undefined && { image: patch.image.trim() || null }),
       ...(patch.baseStepTitle !== undefined && { base_step_title: patch.baseStepTitle.trim() }),
       ...(patch.baseStepSubtitle !== undefined && {
         base_step_subtitle: patch.baseStepSubtitle.trim(),
@@ -429,21 +434,30 @@ export const deleteTopping = async (id: string): Promise<void> => {
   if (error) fail(error)
 }
 
+/** Tabelas do cardápio que a loja reordena na tela. */
+export type SortableTable =
+  | 'products'
+  | 'product_sizes'
+  | 'product_bases'
+  | 'topping_categories'
+  | 'toppings'
+
 /**
- * Troca a posição de dois itens na lista.
+ * Grava a ordem em que a loja deixou a lista.
  *
- * A loja reordena com as setas na tela, e o que muda é só o `sort_order` das
- * duas linhas envolvidas.
+ * A tela reordena arrastando, então o item pode saltar várias posições de uma
+ * vez: em vez de trocar duas linhas, o `sort_order` de todas é reescrito na
+ * sequência recebida. São listas curtas (dezenas de linhas), e gravar a lista
+ * inteira evita posição repetida ou buraco na numeração.
  */
-export const swapOrder = async (
-  table: 'products' | 'product_sizes' | 'product_bases' | 'topping_categories' | 'toppings',
-  a: { readonly id: string; readonly sortOrder: number },
-  b: { readonly id: string; readonly sortOrder: number },
+export const saveOrder = async (
+  table: SortableTable,
+  orderedIds: readonly string[],
 ): Promise<void> => {
-  const [first, second] = await Promise.all([
-    supabase.from(table).update({ sort_order: b.sortOrder }).eq('id', a.id),
-    supabase.from(table).update({ sort_order: a.sortOrder }).eq('id', b.id),
-  ])
-  if (first.error) fail(first.error)
-  if (second.error) fail(second.error)
+  const results = await Promise.all(
+    orderedIds.map((id, index) => supabase.from(table).update({ sort_order: index }).eq('id', id)),
+  )
+
+  const failure = results.find((result) => result.error)
+  if (failure?.error) fail(failure.error)
 }

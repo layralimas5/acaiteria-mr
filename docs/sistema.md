@@ -93,9 +93,9 @@ sistema começa vazio e a loja cadastra o que vende.
 
 A tela tem dois blocos:
 
-**Produtos** (Açaí, Sorvete, o que for). Cada produto tem:
+**Produtos** (Açaí, Sorvete, Sundae, o que for). Cada produto tem:
 
-- Nome, emoji e descrição
+- Nome, emoji, **foto** e descrição
 - Como chamar a escolha: no açaí é "Base", no sorvete costuma ser "Sabor"
 - **Tamanhos**, com nome, medida, preço, etiqueta ("Mais pedido") e foto
 - **Bases ou sabores**, com nome, descrição e acréscimo de preço
@@ -106,13 +106,27 @@ caldas). A categoria é quem carrega a regra:
 - **Quantos vêm grátis** já inclusos no preço do copo
 - **Máximo por copo**, opcional (é como se limita caldas a 2, por exemplo)
 
-Cada item tem chave de disponibilidade, setas para reordenar, lápis para
+Cada item tem chave de disponibilidade, **alça para arrastar**, lápis para
 editar e lixeira para apagar. **O que for salvo vale no site na hora**, sem
 publicar nada.
+
+**Para mudar a ordem**, segure a alça (as bolinhas à esquerda da linha) e
+arraste o item para onde ele deve ficar: produto, tamanho, base, categoria e
+complemento, todos. A lista se organiza enquanto você arrasta e grava quando
+solta. Quem prefere o teclado põe o foco na alça e usa as setas: cima e baixo
+movem uma posição, Home leva ao começo, End ao fim.
+
+**Foto de qualquer item**: no lápis do produto, do tamanho ou do complemento
+há o botão **Enviar foto**. Escolhe o arquivo do computador ou do celular, ele
+sobe na hora e já aparece no site. Não é preciso pedir nada para o
+desenvolvedor. Formatos JPG, PNG, WebP, AVIF ou GIF, até 5 MB. No produto, a
+foto substitui o emoji no card de escolha; no complemento, o ícone; no
+tamanho, ela vence a foto de estúdio que o sistema escolhe pela medida.
 
 Regras que valem a pena saber:
 
 - Produto sem nenhum tamanho não aparece no site: sem tamanho não há preço
+- Produto novo (um Sundae, por exemplo) é cadastro normal: **Novo produto**, foto, como chamar a escolha ("Sabor"), os tamanhos com preço e os sabores
 - Apagar um produto apaga os tamanhos e as bases dele; apagar uma categoria apaga os complementos dela
 - Desligar é diferente de apagar: desligado some do site e volta com um clique, apagado some do cadastro
 - Pedido antigo nunca muda. A montagem inteira fica congelada no pedido, então mexer no preço hoje não reescreve o que foi vendido ontem

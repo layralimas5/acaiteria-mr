@@ -37,11 +37,15 @@ export function ProductSelector({ products, selected, onSelect }: ProductSelecto
             {isSelected && <SelectedCheck />}
 
             <span
-              className={`grid size-12 shrink-0 place-items-center rounded-2xl text-2xl transition-colors sm:size-16 sm:text-3xl ${
+              className={`grid size-12 shrink-0 place-items-center overflow-hidden rounded-2xl text-2xl transition-colors sm:size-16 sm:text-3xl ${
                 isSelected ? 'bg-acai-100' : 'bg-acai-50'
               }`}
             >
-              <span aria-hidden="true">{product.emoji}</span>
+              {product.image ? (
+                <img src={product.image} alt="" loading="lazy" className="size-full object-cover" />
+              ) : (
+                <span aria-hidden="true">{product.emoji}</span>
+              )}
             </span>
 
             <span className="min-w-0 pr-6">

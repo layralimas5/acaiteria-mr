@@ -1,26 +1,27 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import {
   createTopping,
   deleteCategory,
   deleteTopping,
-  swapOrder,
+  saveOrder,
   updateCategory,
   updateTopping,
 } from '../../catalog/api'
 import { suggestEmoji } from '../../catalog/emoji'
 import type { Topping, ToppingCategory } from '../../catalog/types'
 import { formatPrice } from '../../lib/order'
+import { DragList } from './DragList'
 import {
   AvailableSwitch,
-  DownIcon,
   Field,
   GhostButton,
   IconButton,
+  ImageField,
   NumberField,
   PencilIcon,
   PrimaryButton,
   TrashIcon,
-  UpIcon,
 } from './ui'
 
 /**
@@ -32,26 +33,17 @@ import {
 
 interface CategoryEditorProps {
   readonly category: ToppingCategory
-  readonly siblings: readonly ToppingCategory[]
+  /** Alça de arrastar da linha, criada pela lista que ordena as categorias. */
+  readonly handle: ReactNode
   readonly toppings: readonly Topping[]
   readonly run: (action: () => Promise<void>) => void
   readonly busy: boolean
 }
 
-export function CategoryEditor({
-  category,
-  siblings,
-  toppings,
-  run,
-  busy,
-}: CategoryEditorProps) {
+export function CategoryEditor({ category, handle, toppings, run, busy }: CategoryEditorProps) {
   const [editing, setEditing] = useState(false)
   const [adding, setAdding] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-
-  const index = siblings.findIndex((item) => item.id === category.id)
-  const previous = siblings[index - 1]
-  const next = siblings[index + 1]
 
   const quota = [
     category.rule.free > 0 ? `${category.rule.free} grátis` : 'nenhum grátis',
@@ -61,6 +53,7 @@ export function CategoryEditor({
   return (
     <article className="rounded-card border border-acai-100 bg-white shadow-sm">
       <header className="flex flex-wrap items-center gap-x-3 gap-y-2 p-4">
+        {handle}
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-extrabold text-ink">{category.title}</span>
           <span className="block truncate text-xs text-muted">
@@ -69,20 +62,6 @@ export function CategoryEditor({
         </span>
 
         <div className="flex items-center gap-1">
-          <IconButton
-            label="Subir"
-            disabled={busy || !previous}
-            onClick={() => previous && run(() => swapOrder('topping_categories', category, previous))}
-          >
-            <UpIcon />
-          </IconButton>
-          <IconButton
-            label="Descer"
-            disabled={busy || !next}
-            onClick={() => next && run(() => swapOrder('topping_categories', category, next))}
-          >
-            <DownIcon />
-          </IconButton>
           <IconButton label="Editar categoria" disabled={busy} onClick={() => setEditing((v) => !v)}>
             <PencilIcon />
           </IconButton>
@@ -124,17 +103,29 @@ export function CategoryEditor({
           </p>
         )}
 
-        <ul className="mt-2 space-y-2">
-          {toppings.map((topping, position) => {
-            const before = toppings[position - 1]
-            const after = toppings[position + 1]
-
-            return (
-              <li key={topping.id} className="rounded-2xl border border-acai-100">
+        <DragList
+          items={toppings}
+          itemLabel="complemento"
+          nameOf={(topping) => topping.name}
+          disabled={busy}
+          onReorder={(ids) => run(() => saveOrder('toppings', ids))}
+        >
+          {(topping, handle) => (
+            <div className="rounded-2xl border border-acai-100">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5">
+                  {handle}
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-bold text-ink">
-                      {topping.emoji} {topping.name}
+                    <span className="flex items-center gap-2 truncate text-sm font-bold text-ink">
+                      {topping.image ? (
+                        <img
+                          src={topping.image}
+                          alt=""
+                          className="size-6 shrink-0 rounded-full object-cover"
+                        />
+                      ) : (
+                        <span aria-hidden="true">{topping.emoji}</span>
+                      )}
+                      {topping.name}
                     </span>
                     <span className="block truncate text-xs text-muted">
                       {topping.price > 0
@@ -150,20 +141,6 @@ export function CategoryEditor({
                   />
 
                   <div className="flex items-center gap-1">
-                    <IconButton
-                      label="Subir"
-                      disabled={busy || !before}
-                      onClick={() => before && run(() => swapOrder('toppings', topping, before))}
-                    >
-                      <UpIcon />
-                    </IconButton>
-                    <IconButton
-                      label="Descer"
-                      disabled={busy || !after}
-                      onClick={() => after && run(() => swapOrder('toppings', topping, after))}
-                    >
-                      <DownIcon />
-                    </IconButton>
                     <IconButton
                       label="Editar complemento"
                       disabled={busy}
@@ -196,10 +173,9 @@ export function CategoryEditor({
                     }}
                   />
                 )}
-              </li>
-            )
-          })}
-        </ul>
+            </div>
+          )}
+        </DragList>
 
         {adding && (
           <div className="mt-2 rounded-2xl border border-acai-200">
@@ -404,11 +380,13 @@ function ToppingForm({
           onChange={(value) => set('price', value)}
           hint="Cobrado só depois que a cota grátis da categoria acaba"
         />
-        <Field
+        <ImageField
           label="Foto"
           value={values.image}
           onChange={(value) => set('image', value)}
-          placeholder="/imagem/morango.webp"
+          folder="complementos"
+          placeholder={preview}
+          hint="Sem foto, o card do site mostra o ícone"
         />
       </div>
 
