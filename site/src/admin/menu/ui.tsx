@@ -57,35 +57,77 @@ interface NumberFieldProps {
   readonly onChange: (value: number) => void
   readonly min?: number
   readonly max?: number
-  readonly step?: number
+  /** Casas decimais aceitas. Zero nos campos de contagem. */
+  readonly decimals?: number
   readonly hint?: string
   readonly className?: string
 }
 
+/** "6,50", "6.50", "R$ 6,50" e "6" chegam todos como 6,5. */
+const parseNumber = (text: string): number | null => {
+  const clean = text.replace(/[^0-9,.-]/g, '').replace(',', '.')
+  if (clean === '' || clean === '-' || clean === '.' || clean === '-.') return null
+
+  const parsed = Number(clean)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+/**
+ * Campo de número do cardápio: preço, acréscimo, cota grátis, teto.
+ *
+ * Aqui se digita preço, e no Brasil preço se escreve com vírgula. O campo era
+ * `type="number"`, que em navegador de locale inglês descarta a vírgula: "6,50"
+ * virava vazio, o botão Salvar continuava apagado e o cadastro do tamanho não
+ * ia para o banco — o produto ficava sem preço e sumia do site sem dizer por
+ * quê. Agora o texto é lido por conta própria, com vírgula ou ponto, e a tela
+ * mostra de volta o número já formatado quando o campo perde o foco.
+ */
 export function NumberField({
   label,
   value,
   onChange,
   min = 0,
   max,
-  step = 0.5,
+  decimals = 2,
   hint,
   className = '',
 }: NumberFieldProps) {
+  const show = (amount: number): string =>
+    Number.isFinite(amount) ? String(amount).replace('.', ',') : ''
+
+  /** O que está escrito enquanto se digita: "6," não é número, mas é caminho. */
+  const [text, setText] = useState(() => show(value))
+  const [typing, setTyping] = useState(false)
+
+  // Valor trocado de fora (abriu outra ficha, salvou, cancelou).
+  if (!typing && parseNumber(text) !== value) setText(show(value))
+
+  const clamp = (amount: number): number => {
+    const rounded = Number(amount.toFixed(decimals))
+    const floored = Math.max(min, rounded)
+    return max === undefined ? floored : Math.min(max, floored)
+  }
+
   return (
     <label className={`block ${className}`}>
       <span className="text-xs font-bold text-acai-700">{label}</span>
       <input
-        type="number"
-        value={Number.isFinite(value) ? value : 0}
-        onChange={(event) => {
-          const parsed = Number(event.target.value)
-          onChange(Number.isFinite(parsed) ? parsed : 0)
-        }}
-        min={min}
-        max={max}
-        step={step}
+        type="text"
         inputMode="decimal"
+        value={text}
+        onFocus={() => setTyping(true)}
+        onChange={(event) => {
+          setText(event.target.value)
+          const parsed = parseNumber(event.target.value)
+          onChange(parsed === null ? 0 : clamp(parsed))
+        }}
+        onBlur={() => {
+          setTyping(false)
+          const parsed = parseNumber(text)
+          const final = parsed === null ? 0 : clamp(parsed)
+          onChange(final)
+          setText(show(final))
+        }}
         className="mt-1 w-full rounded-xl border border-acai-200 px-3 py-2 text-sm text-ink outline-none focus:border-acai-700"
       />
       {hint && <span className="mt-1 block text-xs text-muted">{hint}</span>}

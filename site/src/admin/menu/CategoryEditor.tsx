@@ -254,7 +254,7 @@ export function CategoryForm({
           label="Quantos vêm grátis"
           value={values.free}
           onChange={(value) => set('free', Math.max(0, Math.trunc(value)))}
-          step={1}
+          decimals={0}
           max={20}
           hint="Já inclusos no preço do copo"
         />
@@ -274,7 +274,7 @@ export function CategoryForm({
               label="Máximo por copo"
               value={values.max ?? 0}
               onChange={(value) => set('max', Math.max(0, Math.trunc(value)))}
-              step={1}
+              decimals={0}
               max={20}
               className="mt-2"
             />
