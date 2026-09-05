@@ -11,3 +11,9 @@ desktop.ini
 
 # Local Netlify folder
 .netlify
+
+# Segredos. O site tem o próprio .gitignore, mas um arquivo de ambiente criado
+# por engano na raiz não pode escapar por falta de regra aqui.
+.env
+.env.*
+!.env.example

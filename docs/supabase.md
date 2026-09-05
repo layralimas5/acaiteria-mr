@@ -24,6 +24,7 @@ O plano gratuito atende com folga o volume de uma açaiteria.
    - `0003_hardening.sql` a `0005_complemento_pago.sql`: ajustes de segurança, pagamento e preço do complemento
    - `0006_foto_do_produto.sql`: foto do produto e o espaço onde o painel guarda as imagens enviadas
    - `0007_produto_sem_complementos.sql`: a chave que diz se o produto leva complemento
+   - `0008_seguranca.sql`: fotos do cardápio só pela equipe, e teto de frequência em pedido e avaliação
 
 Isso cria as tabelas, os índices, as funções e as regras de segurança (RLS).
 O banco nasce **vazio**: nenhum produto, nenhum preço. Quem cadastra o

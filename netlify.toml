@@ -65,7 +65,18 @@
     #
     # frame-ancestors 'self' é o X-Frame-Options acima escrito na linguagem que
     # os navegadores atuais realmente leem; os dois ficam, para os antigos.
-    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://kvmjefhxyvtcaiiqzboh.supabase.co wss://kvmjefhxyvtcaiiqzboh.supabase.co; form-action 'self'; frame-ancestors 'self'; base-uri 'self'; object-src 'none'"
+    # img-src era `https:`, ou seja, imagem de qualquer servidor do mundo. Isso
+    # esvazia a defesa: um texto que escape para a tela vira <img src="http://
+    # servidor-de-alguem/?dados"> e leva junto o que estiver na página. As
+    # fotos do cardápio moram em dois lugares só, o próprio site e o Storage do
+    # Supabase, e é isso que fica liberado.
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://kvmjefhxyvtcaiiqzboh.supabase.co; connect-src 'self' https://kvmjefhxyvtcaiiqzboh.supabase.co wss://kvmjefhxyvtcaiiqzboh.supabase.co; form-action 'self'; frame-src 'none'; worker-src 'self'; frame-ancestors 'self'; base-uri 'self'; object-src 'none'"
+
+    # A aba aberta pelo site (WhatsApp, comprovante, checkout) não fica com uma
+    # referência viva para esta página. Já usamos noopener em cada window.open;
+    # aqui a regra passa a valer para o site inteiro, inclusive para o que for
+    # escrito amanhã.
+    Cross-Origin-Opener-Policy = "same-origin"
 
 # Os assets levam hash no nome, então podem ser cacheados para sempre.
 [[headers]]
@@ -77,3 +88,11 @@
   for = "/imagem/*"
   [headers.values]
     Cache-Control = "public, max-age=604800"
+
+# As funções de pagamento não são página: resposta delas não se guarda em
+# cache nem entra em buscador.
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Cache-Control = "no-store"
+    X-Robots-Tag = "noindex, nofollow"

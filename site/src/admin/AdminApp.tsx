@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { signOut, useSession } from '../auth/useSession'
+import { useStaffAccess } from '../auth/useStaffAccess'
 import { business } from '../config/business'
 import { errorMessage } from '../lib/supabase'
 import { formatPrice } from '../lib/order'
@@ -43,6 +44,7 @@ type Section =
 
 export default function AdminApp() {
   const { session, loading: checkingSession } = useSession()
+  const { access, recheck } = useStaffAccess(session?.user.id)
 
   if (checkingSession) {
     return (
@@ -54,7 +56,68 @@ export default function AdminApp() {
 
   if (!session) return <LoginView />
 
+  if (access === 'checking') {
+    return (
+      <main className="grid min-h-dvh place-items-center bg-acai-50 text-sm text-muted">
+        Conferindo o acesso...
+      </main>
+    )
+  }
+
+  if (access !== 'allowed') {
+    return <NoAccess reason={access} onRetry={recheck} />
+  }
+
   return <Panel email={session.user.email ?? ''} />
+}
+
+/**
+ * Conta que entrou mas não é da loja, ou resposta que não veio.
+ *
+ * Nos dois casos o painel não abre. A saída oferecida é sair da conta: quem
+ * for da loja entra com a conta certa, e quem não for não tem o que fazer
+ * aqui.
+ */
+function NoAccess({
+  reason,
+  onRetry,
+}: {
+  readonly reason: 'denied' | 'error'
+  readonly onRetry: () => void
+}) {
+  return (
+    <main className="grid min-h-dvh place-items-center bg-acai-50 px-5">
+      <div className="w-full max-w-sm rounded-card border border-acai-100 bg-white p-6 text-center shadow-sm">
+        <h1 className="text-lg font-extrabold text-ink">
+          {reason === 'denied' ? 'Conta sem acesso ao painel' : 'Não deu para conferir o acesso'}
+        </h1>
+        <p className="mt-2 text-sm text-muted">
+          {reason === 'denied'
+            ? 'Esta conta existe, mas não está na lista da loja. Fale com quem administra o sistema para liberar o acesso.'
+            : 'A conexão com o servidor falhou agora. Tente de novo em instantes.'}
+        </p>
+
+        <div className="mt-5 flex flex-col gap-2">
+          {reason === 'error' && (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="rounded-full bg-acai-800 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-acai-900"
+            >
+              Tentar de novo
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => void signOut()}
+            className="rounded-full px-5 py-2.5 text-sm font-semibold text-muted transition-colors hover:text-acai-800"
+          >
+            Sair da conta
+          </button>
+        </div>
+      </div>
+    </main>
+  )
 }
 
 function Panel({ email }: { readonly email: string }) {

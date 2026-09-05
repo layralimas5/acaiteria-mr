@@ -42,3 +42,51 @@ export const json = (body: unknown, status = 200): Response =>
 export const toCents = (value: number): number => Math.round(value * 100)
 
 export const CHECKOUT_API = 'https://api.checkout.infinitepay.io'
+
+/**
+ * Pedido que chega de outro site.
+ *
+ * A função é pública por natureza: quem tem o endereço, chama. O que dá para
+ * exigir é que uma chamada feita por navegador venha da própria loja — página
+ * de terceiro que tente usar o endpoint em nome de quem está logado esbarra
+ * aqui. Requisição sem `Origin` (curl, servidor, o próprio webhook) segue: o
+ * cabeçalho é uma pista, não uma prova, e quem a barra é o limite de uso.
+ */
+export const isForeignOrigin = (request: Request): boolean => {
+  const origin = request.headers.get('origin')
+  if (!origin) return false
+  return origin !== new URL(request.url).origin
+}
+
+/**
+ * Limite de uso por endereço de rede, na memória desta instância.
+ *
+ * Não é um contador global (cada instância tem o seu, e elas somem), então não
+ * serve como quota exata. Serve para o que precisa servir: um script que varre
+ * números de pedido dispara centenas de chamadas em segundos, e é isso que
+ * este contador corta antes de virar link de cobrança e pedido remarcado.
+ */
+const hits = new Map<string, { count: number; until: number }>()
+
+export const rateLimited = (request: Request, limit: number, windowMs: number): boolean => {
+  const ip =
+    request.headers.get('x-nf-client-connection-ip') ??
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    'desconhecido'
+
+  const now = Date.now()
+  const current = hits.get(ip)
+
+  if (!current || current.until < now) {
+    hits.set(ip, { count: 1, until: now + windowMs })
+    // A memória é da instância e some com ela, mas enquanto vive não pode
+    // crescer sem fim: o que já expirou sai junto.
+    if (hits.size > 5000) {
+      for (const [key, value] of hits) if (value.until < now) hits.delete(key)
+    }
+    return false
+  }
+
+  current.count += 1
+  return current.count > limit
+}

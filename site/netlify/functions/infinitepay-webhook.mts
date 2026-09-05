@@ -1,4 +1,4 @@
-import { CHECKOUT_API, admin, infinitePayHandle, json, toCents } from './_shared.mts'
+import { CHECKOUT_API, admin, infinitePayHandle, json, rateLimited, toCents } from './_shared.mts'
 
 /**
  * Confirmação de pagamento vinda da InfinitePay.
@@ -36,6 +36,12 @@ const isUuid = (value: string): boolean =>
 
 export default async (request: Request): Promise<Response> => {
   if (request.method !== 'POST') return json({ error: 'Método não permitido' }, 405)
+
+  // A InfinitePay reenvia enquanto não recebe 200, então o volume normal é
+  // baixo. Este teto só existe para quem descobrir o endereço e resolver
+  // martelar: cada tentativa aqui vira uma consulta ao banco e uma chamada à
+  // API deles.
+  if (rateLimited(request, 60, 60_000)) return json({ error: 'Muitas tentativas' }, 429)
 
   let body: WebhookBody
   try {
