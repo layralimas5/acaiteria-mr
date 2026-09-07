@@ -25,6 +25,8 @@ npm run preview  # serve o dist/
 | Formas de pagamento aceitas e chave Pix | `site/src/config/business.ts` (`payments`) — ver `docs/pix.md` |
 | Ligar/desligar o pagamento online (InfinitePay) | `site/src/config/business.ts` (`payments.onlineCheckout`) — ver `docs/infinitepay.md` |
 | Modo só delivery | `site/src/config/business.ts` (`deliveryOnly`) |
+| Ligar/desligar a retirada no local e o texto do ponto de retirada | `site/src/config/business.ts` (`pickup`) |
+| Horário de atendimento (e, com ele, quando o site aceita pedido) | `site/src/config/business.ts` (`hours`) **e** `c_hours` na migration `0010` |
 | Produtos, preços, categorias, complementos | `site/src/data/products.ts` |
 | Regras de link de pedido (iFood vs WhatsApp) | `site/src/lib/order.ts` |
 | Cores e tipografia | `site/src/index.css` (bloco `@theme`) |
@@ -42,10 +44,7 @@ Pedidos, na hora, em qualquer aparelho.
 
 ## Pagamento
 
-A loja **recebe tudo na hora do pedido**. Não há maquininha na entrega nem
-dinheiro para o motoboy separar troco: o entregador sai só com o açaí.
-
-São duas formas, as duas pagas antes de o pedido sair:
+São três formas, escolhidas no checkout:
 
 - **Pix**, com QR Code e copia e cola no próprio checkout, no clique da opção,
   já com o valor fechado e a taxa de entrega inclusa. A tela de pedido enviado
@@ -55,14 +54,60 @@ São duas formas, as duas pagas antes de o pedido sair:
 - **Cartão de crédito**, em até 12x, no checkout da InfinitePay, com o dinheiro
   caindo direto na conta da loja e o pedido nascendo marcado como pago. Os
   dados do cartão são digitados na tela da InfinitePay, nunca neste site
+- **Dinheiro**, pago na entrega ou na retirada. Ao escolher, o cliente diz para
+  quanto precisa de troco, e o valor sai no WhatsApp da loja, no cupom impresso
+  e no painel — inclusive na tela de Entregas, para o entregador sair com o
+  troco certo na mão
 
-Quem liga cada uma é `payments`, em `business.ts`. O cartão exige as três
+Quem liga cada uma é `payments`, em `business.ts`. Desligar `payments.cash`
+tira o dinheiro da tela e, com ele, o campo de troco. O cartão exige as três
 variáveis do Netlify antes de ser ligado, senão o cliente escolhe e leva erro
 na hora de pagar: `docs/infinitepay.md`.
 
 O link de cobrança nunca é gerado no navegador. Quem gera é uma função servidor
 (`site/netlify/functions/`), a partir do total que está no banco: assim o
 cliente não escolhe quanto vai pagar.
+
+## Entrega ou retirada
+
+No começo do bloco de entrega, o cliente escolhe entre **receber em casa** e
+**retirar no local**. Escolhendo retirada, os campos de endereço somem, a taxa
+some junto e o total mostrado já é o final: quem busca não paga entrega.
+
+A escolha viaja no JSON do cliente (`customer.fulfillment`), então não há coluna
+nova no banco. Pedido de retirada aparece como "Retirada no local" no WhatsApp
+da loja, no cupom impresso e no painel, no lugar do endereço; na tela de
+Entregas, o botão do mapa dá lugar a "Cliente busca".
+
+A taxa zero da retirada é decidida no banco, não no navegador: a migration
+`0009` grava 0 mesmo que a chamada mande outro valor.
+
+Enquanto `address.street` estiver vazio em `business.ts`, a tela diz que o ponto
+de retirada vai pelo WhatsApp (texto em `pickup.note`). Preenchido o endereço,
+ele aparece sozinho no lugar do aviso. Para desligar a retirada de vez:
+`pickup.enabled: false`.
+
+## Horário de atendimento
+
+**O site só aceita pedido dentro do expediente.** Fora dele, a seção do montador
+é substituída pelo aviso de fechado, com a semana inteira de horários e o
+WhatsApp à mão. O cardápio continua no ar: ver preço não depende de a loja estar
+aberta.
+
+O aviso muda conforme o caso — "Ainda não abrimos hoje", "O expediente de hoje
+acabou" ou "Hoje a gente não abre" —, sempre dizendo quando a loja volta.
+
+O relógio anda sozinho: quem está com a página aberta às 22:59 vê a tela virar
+às 23:00, sem recarregar nada.
+
+A trava real está no banco, na migration `0010`: o horário é conferido dentro do
+`create_order`, no fuso da loja (`America/Sao_Paulo`, não o do celular do
+cliente), com cinco minutos de folga no fechamento para não derrubar quem
+apertou enviar em cima da hora.
+
+**Atenção ao mudar o horário:** ele vive em dois lugares, `business.hours` (o
+que o site mostra e bloqueia) e a constante `c_hours` da migration `0010` (o que
+o banco aceita). Mudou um, muda o outro e roda a migration de novo.
 
 ## Sistema da loja
 
@@ -89,6 +134,8 @@ e o botão de WhatsApp continua disponível na seção de entrega.
 - [ ] Pagar um pedido de teste no Pix e conferir nome, valor e referência (`docs/pix.md`)
 - [ ] Ligar o pagamento online: InfiniteTag da cliente, migration `0004`, variáveis no Netlify e `payments.onlineCheckout: true` (`docs/infinitepay.md`)
 - [ ] Criar o projeto no Supabase e rodar `supabase/migrations/0001_init.sql` (`docs/supabase.md`)
+- [ ] Rodar as migrations `0009_retirada_no_local.sql` e `0010_pedido_no_horario.sql` no SQL Editor (`docs/supabase.md`)
+- [ ] Endereço da loja em `business.ts` (`address.street` e `district`), para a retirada mostrar onde buscar em vez de mandar pro WhatsApp
 - [ ] Cadastrar o cardápio no painel: o sistema começa vazio, sem nenhum produto
 - [ ] Publicar os primeiros depoimentos reais (painel → Avaliações → Publicar no site; a seção fica escondida até lá)
 - [ ] Fotos dos demais produtos (só o pote 300ml tem foto; o resto usa a ilustração `AcaiCup.tsx`)
