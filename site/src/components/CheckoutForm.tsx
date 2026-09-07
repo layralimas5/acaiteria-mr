@@ -7,9 +7,11 @@ import {
   detectDeliveryArea,
   findDeliveryArea,
   formatPrice,
+  hasPickup,
   missingForFreeShipping,
+  pickupAddress,
 } from '../lib/order'
-import type { Customer, PaymentMethod } from '../orders/types'
+import type { Customer, Fulfillment, PaymentMethod } from '../orders/types'
 import { paymentHints, paymentLabels } from '../orders/types'
 import { CreditCardInfo } from './CreditCardInfo'
 import { PixCode } from './PixCode'
@@ -23,6 +25,9 @@ interface CheckoutFormProps {
    */
   readonly area: DeliveryArea | null
   readonly onAreaChange: (area: DeliveryArea | null) => void
+  /** Entrega ou retirada. Sobe para o painel porque muda a taxa e o total. */
+  readonly fulfillment: Fulfillment
+  readonly onFulfillmentChange: (fulfillment: Fulfillment) => void
   /** Dados de quem já pediu deste navegador, para não redigitar tudo. */
   readonly initialCustomer?: Customer | null
   readonly onSubmit: (customer: Customer) => void
@@ -52,6 +57,7 @@ const defaultPayment = (): PaymentMethod => availablePayments()[0] ?? 'pix'
 
 const emptyCustomer = (): Customer => ({
   name: '',
+  fulfillment: 'entrega',
   phone: '',
   address: '',
   district: '',
@@ -98,6 +104,26 @@ function OnlineIcon() {
   )
 }
 
+function MotoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5 fill-none stroke-current stroke-[1.8]">
+      <circle cx="5.5" cy="17" r="3" />
+      <circle cx="18.5" cy="17" r="3" />
+      <path d="M8.5 17h7l-3-6h-3m3 0 1.5-3h2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function StoreIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5 fill-none stroke-current stroke-[1.8]">
+      <path d="M3.5 9.5h17V20a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1z" strokeLinejoin="round" />
+      <path d="M4.5 3.5h15l1.5 4.5a3 3 0 0 1-5.5 1.6 3 3 0 0 1-5 0 3 3 0 0 1-5.5-1.6z" strokeLinejoin="round" />
+      <path d="M9.5 21v-5h5v5" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 const paymentIcons: Readonly<Record<PaymentMethod, () => ReactNode>> = {
   online: OnlineIcon,
   pix: PixIcon,
@@ -110,6 +136,8 @@ export function CheckoutForm({
   subtotal,
   area,
   onAreaChange,
+  fulfillment,
+  onFulfillmentChange,
   initialCustomer = null,
   onSubmit,
   onCancel,
@@ -132,9 +160,12 @@ export function CheckoutForm({
   const [touched, setTouched] = useState(false)
 
   const areas = deliveryAreas()
+  const pickup = fulfillment === 'retirada'
+  const pickupPlace = pickupAddress()
   // Sem município reconhecido não existe taxa: ela só entra na conta quando o
-  // cliente diz onde mora, e é isso que segura o envio do pedido.
-  const fee = area ? deliveryFee(subtotal, area) : 0
+  // cliente diz onde mora, e é isso que segura o envio do pedido. Quem busca na
+  // loja não paga entrega nenhuma.
+  const fee = !pickup && area ? deliveryFee(subtotal, area) : 0
   const missingForFree = missingForFreeShipping(subtotal)
   const total = subtotal + fee
   const payments = availablePayments()
@@ -142,12 +173,13 @@ export function CheckoutForm({
   const typedCity = customer.city?.trim() ?? ''
   const cityIsUnserved = typedCity.length >= 3 && area === null
 
+  // Na retirada não existe endereço para conferir: o cliente vem até a loja.
   const missing = {
     name: customer.name.trim().length < 2,
     phone: customer.phone.replace(/\D/g, '').length < 10,
-    address: customer.address.trim().length < 6,
-    district: (customer.district?.trim() ?? '').length < 2,
-    city: area === null,
+    address: !pickup && customer.address.trim().length < 6,
+    district: !pickup && (customer.district?.trim() ?? '').length < 2,
+    city: !pickup && area === null,
   }
   const invalid =
     missing.name || missing.phone || missing.address || missing.district || missing.city
@@ -171,7 +203,18 @@ export function CheckoutForm({
         event.preventDefault()
         setTouched(true)
         if (invalid || sending) return
-        onSubmit({ ...customer, city: area?.city ?? '' })
+        onSubmit(
+          pickup
+            ? {
+                ...customer,
+                fulfillment: 'retirada',
+                address: '',
+                district: '',
+                city: '',
+                reference: '',
+              }
+            : { ...customer, fulfillment: 'entrega', city: area?.city ?? '' },
+        )
       }}
     >
       <Block title="Seus dados">
@@ -200,112 +243,172 @@ export function CheckoutForm({
         </Field>
       </Block>
 
-      <Block title="Entrega">
-        <Field label="Endereço" error={touched && missing.address ? 'Rua e número' : null}>
-          <input
-            type="text"
-            value={customer.address}
-            maxLength={160}
-            onChange={(event) => {
-              const typed = event.target.value
-              update('address', typed)
+      <Block title={pickup ? 'Retirada' : 'Entrega'}>
+        {hasPickup() && (
+          <fieldset>
+            <legend className="sr-only">Como quer receber</legend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(['entrega', 'retirada'] as const).map((option) => {
+                const active = fulfillment === option
+                const Icon = option === 'entrega' ? MotoIcon : StoreIcon
 
-              // Quem cola o endereço inteiro numa linha só ("Rua tal, 100,
-              // Campo Grande, Cariacica") não precisa repetir a cidade: ela
-              // preenche o campo de baixo sozinha, se ele ainda estiver vazio.
-              if (typedCity !== '') return
-              const detected = detectDeliveryArea(typed)
-              if (detected) updateCity(detected.city)
-            }}
-            placeholder="Rua, número"
-            autoComplete="street-address"
-            className="w-full rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
-          />
-        </Field>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Bairro" error={touched && missing.district ? 'Diga o bairro' : null}>
-            <input
-              type="text"
-              value={customer.district ?? ''}
-              maxLength={80}
-              onChange={(event) => update('district', event.target.value)}
-              placeholder="Campo Grande"
-              autoComplete="address-level3"
-              className="w-full rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
-            />
-          </Field>
-
-          <Field
-            label="Município"
-            error={
-              touched && missing.city
-                ? cityIsUnserved
-                  ? 'Ainda não entregamos aí'
-                  : 'Diga o município'
-                : null
-            }
-          >
-            <input
-              type="text"
-              value={customer.city ?? ''}
-              maxLength={80}
-              onChange={(event) => updateCity(event.target.value)}
-              placeholder="Viana"
-              list="municipios-atendidos"
-              autoComplete="address-level2"
-              className="w-full rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
-            />
-            <datalist id="municipios-atendidos">
-              {areas.map((option) => (
-                <option key={option.city} value={option.city} />
-              ))}
-            </datalist>
-          </Field>
-        </div>
-
-        {/*
-          A taxa aparece quando o município aparece, e não antes: até o cliente
-          dizer onde mora, não existe valor honesto para mostrar.
-        */}
-        {area ? (
-          <div className="rounded-2xl border border-acai-100 bg-acai-50/70 px-4 py-3">
-            <div className="flex items-center justify-between gap-3 text-sm">
-              <span className="font-semibold text-ink">Taxa de entrega para {area.city}</span>
-              <span className={`font-extrabold ${fee === 0 ? 'text-green-700' : 'text-acai-800'}`}>
-                {fee === 0 ? 'Grátis' : formatPrice(fee)}
-              </span>
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => onFulfillmentChange(option)}
+                    aria-pressed={active}
+                    className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors ${
+                      active
+                        ? 'border-acai-800 bg-acai-800 text-white'
+                        : 'border-acai-200 bg-white text-ink hover:border-acai-400'
+                    }`}
+                  >
+                    <span
+                      className={`grid size-9 shrink-0 place-items-center rounded-xl ${
+                        active ? 'bg-white/15 text-white' : 'bg-acai-50 text-acai-800'
+                      }`}
+                    >
+                      <Icon />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-bold">
+                        {option === 'entrega' ? 'Receber em casa' : 'Retirar no local'}
+                      </span>
+                      <span className={`block text-xs ${active ? 'text-acai-100/80' : 'text-muted'}`}>
+                        {option === 'entrega'
+                          ? 'A gente leva até você'
+                          : 'Você busca e não paga entrega'}
+                      </span>
+                    </span>
+                  </button>
+                )
+              })}
             </div>
-            <p className="mt-1 text-xs text-muted">
-              Chega a partir de {business.delivery.minMinutes} minutos depois da confirmação.
-            </p>
-            {missingForFree > 0 && (
-              <p className="mt-2 text-xs font-semibold text-acai-800">
-                Faltam {formatPrice(missingForFree)} para a entrega sair de graça.
-              </p>
-            )}
-          </div>
-        ) : cityIsUnserved ? (
-          <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold leading-relaxed text-amber-800">
-            Ainda não entregamos em {typedCity}. Confere se escreveu certo ou chama a gente no
-            WhatsApp para combinar.
-          </p>
-        ) : (
-          <p className="rounded-2xl border border-acai-100 bg-acai-50/70 px-4 py-3 text-xs leading-relaxed text-muted">
-            Escreva o município e a taxa de entrega aparece aqui.
-          </p>
+          </fieldset>
         )}
 
-        <Field label="Ponto de referência (opcional)" error={null}>
-          <input
-            type="text"
-            value={customer.reference}
-            maxLength={160}
-            onChange={(event) => update('reference', event.target.value)}
-            placeholder="Portão azul, ao lado da padaria..."
-            className="w-full rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
-          />
-        </Field>
+        {pickup ? (
+          <div className="rounded-2xl border border-acai-100 bg-acai-50/70 px-4 py-3">
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="font-semibold text-ink">Retirada no local</span>
+              <span className="font-extrabold text-green-700">Sem taxa</span>
+            </div>
+            <p className="mt-1 text-xs leading-relaxed text-muted">
+              {pickupPlace === ''
+                ? business.pickup.note
+                : `Retire em ${pickupPlace}. Fica pronto a partir de ${business.pickup.minMinutes} minutos depois da confirmação.`}
+            </p>
+          </div>
+        ) : (
+          <>
+            <Field label="Endereço" error={touched && missing.address ? 'Rua e número' : null}>
+              <input
+                type="text"
+                value={customer.address}
+                maxLength={160}
+                onChange={(event) => {
+                  const typed = event.target.value
+                  update('address', typed)
+
+                  // Quem cola o endereço inteiro numa linha só ("Rua tal, 100,
+                  // Campo Grande, Cariacica") não precisa repetir a cidade: ela
+                  // preenche o campo de baixo sozinha, se ele ainda estiver vazio.
+                  if (typedCity !== '') return
+                  const detected = detectDeliveryArea(typed)
+                  if (detected) updateCity(detected.city)
+                }}
+                placeholder="Rua, número"
+                autoComplete="street-address"
+                className="w-full rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
+              />
+            </Field>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Bairro" error={touched && missing.district ? 'Diga o bairro' : null}>
+                <input
+                  type="text"
+                  value={customer.district ?? ''}
+                  maxLength={80}
+                  onChange={(event) => update('district', event.target.value)}
+                  placeholder="Campo Grande"
+                  autoComplete="address-level3"
+                  className="w-full rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
+                />
+              </Field>
+
+              <Field
+                label="Município"
+                error={
+                  touched && missing.city
+                    ? cityIsUnserved
+                      ? 'Ainda não entregamos aí'
+                      : 'Diga o município'
+                    : null
+                }
+              >
+                <input
+                  type="text"
+                  value={customer.city ?? ''}
+                  maxLength={80}
+                  onChange={(event) => updateCity(event.target.value)}
+                  placeholder="Viana"
+                  list="municipios-atendidos"
+                  autoComplete="address-level2"
+                  className="w-full rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
+                />
+                <datalist id="municipios-atendidos">
+                  {areas.map((option) => (
+                    <option key={option.city} value={option.city} />
+                  ))}
+                </datalist>
+              </Field>
+            </div>
+
+            {/*
+              A taxa aparece quando o município aparece, e não antes: até o cliente
+              dizer onde mora, não existe valor honesto para mostrar.
+            */}
+            {area ? (
+              <div className="rounded-2xl border border-acai-100 bg-acai-50/70 px-4 py-3">
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="font-semibold text-ink">Taxa de entrega para {area.city}</span>
+                  <span className={`font-extrabold ${fee === 0 ? 'text-green-700' : 'text-acai-800'}`}>
+                    {fee === 0 ? 'Grátis' : formatPrice(fee)}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-muted">
+                  Chega a partir de {business.delivery.minMinutes} minutos depois da confirmação.
+                </p>
+                {missingForFree > 0 && (
+                  <p className="mt-2 text-xs font-semibold text-acai-800">
+                    Faltam {formatPrice(missingForFree)} para a entrega sair de graça.
+                  </p>
+                )}
+              </div>
+            ) : cityIsUnserved ? (
+              <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold leading-relaxed text-amber-800">
+                Ainda não entregamos em {typedCity}. Confere se escreveu certo ou chama a gente no
+                WhatsApp para combinar.
+              </p>
+            ) : (
+              <p className="rounded-2xl border border-acai-100 bg-acai-50/70 px-4 py-3 text-xs leading-relaxed text-muted">
+                Escreva o município e a taxa de entrega aparece aqui.
+              </p>
+            )}
+
+            <Field label="Ponto de referência (opcional)" error={null}>
+              <input
+                type="text"
+                value={customer.reference}
+                maxLength={160}
+                onChange={(event) => update('reference', event.target.value)}
+                placeholder="Portão azul, ao lado da padaria..."
+                className="w-full rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
+              />
+            </Field>
+          </>
+        )}
       </Block>
 
       <Block title="Pagamento">
@@ -347,7 +450,7 @@ export function CheckoutForm({
           </div>
         </fieldset>
 
-        {customer.payment === 'online' && <CreditCardInfo total={total} />}
+        {customer.payment === 'online' && <CreditCardInfo total={total} pickup={pickup} />}
 
         {/*
           O código sai aqui, no clique, e não só depois de enviar: quem escolhe
@@ -392,9 +495,11 @@ export function CheckoutForm({
             <dd className="font-semibold text-ink">{formatPrice(subtotal)}</dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-muted">Entrega{area ? ` · ${area.city}` : ''}</dt>
-            <dd className={`font-semibold ${area && fee === 0 ? 'text-green-700' : 'text-ink'}`}>
-              {area ? (fee === 0 ? 'Grátis' : formatPrice(fee)) : 'a calcular'}
+            <dt className="text-muted">
+              {pickup ? 'Retirada no local' : `Entrega${area ? ` · ${area.city}` : ''}`}
+            </dt>
+            <dd className={`font-semibold ${pickup || (area && fee === 0) ? 'text-green-700' : 'text-ink'}`}>
+              {pickup ? 'Sem taxa' : area ? (fee === 0 ? 'Grátis' : formatPrice(fee)) : 'a calcular'}
             </dd>
           </div>
           <div className="flex items-baseline justify-between gap-4 border-t border-acai-100 pt-2">
@@ -422,10 +527,10 @@ export function CheckoutForm({
           {sending
             ? 'Enviando...'
             : customer.payment === 'online'
-              ? area
+              ? pickup || area
                 ? `Ir para o pagamento · ${formatPrice(total)}`
                 : 'Ir para o pagamento'
-              : area
+              : pickup || area
                 ? `Enviar pedido · ${formatPrice(total)}`
                 : 'Enviar pedido'}
         </button>

@@ -5,6 +5,12 @@ export type OrderStatus = 'novo' | 'preparando' | 'entrega' | 'concluido' | 'can
 export type PaymentMethod = 'online' | 'pix' | 'dinheiro' | 'cartao'
 
 /**
+ * Como o cliente recebe: a loja leva até ele ou ele passa na loja. Pedido de
+ * retirada não tem taxa nem endereço de entrega.
+ */
+export type Fulfillment = 'entrega' | 'retirada'
+
+/**
  * Onde o pagamento está.
  *
  * `na_entrega` é o caso de sempre: o cliente paga quando o motoboy chega, e
@@ -15,6 +21,11 @@ export type PaymentStatus = 'na_entrega' | 'aguardando' | 'pago' | 'falhou'
 
 export interface Customer {
   readonly name: string
+  /**
+   * Entrega ou retirada. Ausente nos pedidos anteriores à retirada existir:
+   * todos eles eram entrega.
+   */
+  readonly fulfillment?: Fulfillment
   readonly phone: string
   /** Rua e número. O bairro e o município têm campo próprio. */
   readonly address: string
@@ -79,6 +90,17 @@ export const paymentHints: Readonly<Record<PaymentMethod, string>> = {
   dinheiro: 'Diga abaixo se precisa de troco',
   cartao: 'Crédito ou débito na maquininha, na entrega',
 }
+
+export const fulfillmentLabels: Readonly<Record<Fulfillment, string>> = {
+  entrega: 'Entrega',
+  retirada: 'Retirada no local',
+}
+
+/** Como o pedido é entregue, tratando pedido antigo (sem o campo) como entrega. */
+export const fulfillmentOf = (customer: Customer): Fulfillment =>
+  customer.fulfillment === 'retirada' ? 'retirada' : 'entrega'
+
+export const isPickup = (customer: Customer): boolean => fulfillmentOf(customer) === 'retirada'
 
 export const paymentStatusLabels: Readonly<Record<PaymentStatus, string>> = {
   na_entrega: 'Paga na entrega',

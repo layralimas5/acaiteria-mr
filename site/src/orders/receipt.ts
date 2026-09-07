@@ -1,7 +1,7 @@
 import { business } from '../config/business'
 import { formatPrice, whatsappDisplay } from '../lib/order'
 import type { Order } from './types'
-import { paymentLabels } from './types'
+import { isPickup, paymentLabels } from './types'
 
 /**
  * Comprovante de pedido para impressão. Não é documento fiscal: é o cupom que
@@ -85,11 +85,13 @@ const totalsHtml = (order: Order): string => {
   return `
     <div class="row"><span>Subtotal</span><span class="nowrap">${formatPrice(subtotal)}</span></div>
     ${
-      fee === undefined
-        ? ''
-        : `<div class="row"><span>Entrega</span><span class="nowrap">${
-            fee > 0 ? formatPrice(fee) : 'Grátis'
-          }</span></div>`
+      isPickup(order.customer)
+        ? '<div class="row"><span>Entrega</span><span class="nowrap">Retirada</span></div>'
+        : fee === undefined
+          ? ''
+          : `<div class="row"><span>Entrega</span><span class="nowrap">${
+              fee > 0 ? formatPrice(fee) : 'Grátis'
+            }</span></div>`
     }
     <div class="row total"><span>TOTAL</span><span class="nowrap">${formatPrice(order.total)}</span></div>`
 }
@@ -170,7 +172,11 @@ export const receiptHtml = (order: Order): string => {
     <dt>Cliente</dt>
     <dd>${escapeHtml(customer.name)} · ${escapeHtml(customer.phone)}</dd>
     <dt>Entrega</dt>
-    <dd>${escapeHtml(address)}${customer.reference ? ` (${escapeHtml(customer.reference)})` : ''}</dd>
+    <dd>${
+      isPickup(customer)
+        ? 'RETIRADA NO LOCAL'
+        : `${escapeHtml(address)}${customer.reference ? ` (${escapeHtml(customer.reference)})` : ''}`
+    }</dd>
     <dt>Pagamento</dt>
     <dd>${paymentLabels[customer.payment]}${
       customer.changeFor ? ` · troco para ${escapeHtml(customer.changeFor)}` : ''

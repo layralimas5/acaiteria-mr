@@ -1,7 +1,7 @@
 import { business } from '../config/business'
 import { formatPrice } from '../lib/order'
 import type { Order, OrderStatus } from './types'
-import { paymentLabels } from './types'
+import { isPickup, paymentLabels } from './types'
 
 /**
  * Avisos de status enviados ao cliente pelo WhatsApp.
@@ -37,6 +37,7 @@ const describeItem = (item: Order['items'][number]): string => {
 export const orderMessage = (order: Order): string => {
   const { customer } = order
   const fee = order.deliveryFee ?? 0
+  const pickup = isPickup(customer)
 
   return [
     `*${business.name}: pedido #${order.code}*`,
@@ -44,14 +45,16 @@ export const orderMessage = (order: Order): string => {
     order.items.map(describeItem).join('\n'),
     '',
     `Itens: ${formatPrice(order.subtotal ?? order.total)}`,
-    `Entrega: ${fee === 0 ? 'grátis' : formatPrice(fee)}`,
+    pickup ? 'Entrega: retirada no local' : `Entrega: ${fee === 0 ? 'grátis' : formatPrice(fee)}`,
     `*Total: ${formatPrice(order.total)}*`,
     `Pagamento: ${paymentLabels[customer.payment]}${customer.changeFor ? ` (troco para ${customer.changeFor})` : ''}`,
     '',
     `Nome: ${customer.name}`,
     `Telefone: ${customer.phone}`,
-    `Endereço: ${[customer.address, customer.district, customer.city].filter(Boolean).join(', ')}`,
-    customer.reference ? `Referência: ${customer.reference}` : '',
+    pickup
+      ? 'Retirada no local'
+      : `Endereço: ${[customer.address, customer.district, customer.city].filter(Boolean).join(', ')}`,
+    !pickup && customer.reference ? `Referência: ${customer.reference}` : '',
     customer.notes ? `Observações: ${customer.notes}` : '',
   ]
     .filter((line) => line !== '')
@@ -68,9 +71,13 @@ export const statusMessage = (order: Order, status: OrderStatus): string => {
     case 'preparando':
       return `Oi ${name}! Seu pedido ${code} já está sendo preparado. Em breve sai para entrega. 💜`
     case 'entrega':
-      return `Oi ${name}! Seu pedido ${code} saiu para entrega e chega a partir de ${business.delivery.minMinutes} minutos. Fica de olho! 🛵`
+      return isPickup(order.customer)
+        ? `Oi ${name}! Seu pedido ${code} está pronto e te esperando aqui na loja. 💜`
+        : `Oi ${name}! Seu pedido ${code} saiu para entrega e chega a partir de ${business.delivery.minMinutes} minutos. Fica de olho! 🛵`
     case 'concluido':
-      return `Pedido ${code} entregue, ${name}! Confirma pra gente que chegou tudo certo? É só tocar aqui: ${confirmUrl(order.code)} 💜`
+      return isPickup(order.customer)
+        ? `Pedido ${code} retirado, ${name}! Confirma pra gente que deu tudo certo? É só tocar aqui: ${confirmUrl(order.code)} 💜`
+        : `Pedido ${code} entregue, ${name}! Confirma pra gente que chegou tudo certo? É só tocar aqui: ${confirmUrl(order.code)} 💜`
     case 'cancelado':
       return `Oi ${name}, precisamos cancelar seu pedido ${code} (${formatPrice(order.total)}). Qualquer dúvida é só responder por aqui que a gente resolve.`
   }

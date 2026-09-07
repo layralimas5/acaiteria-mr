@@ -109,6 +109,90 @@ função respondeu.
 
 ---
 
+## O link nasce? (testado em 05/09/2026)
+
+Gerar link **não cobra ninguém**: é só uma tela de cobrança criada, que morre
+sozinha se ninguém pagar. Então dá para conferir a integração inteira até o
+checkout abrir, sem gastar nada, batendo direto na API:
+
+```bash
+curl -s -X POST https://api.checkout.infinitepay.io/links   -H "content-type: application/json"   -d '{"handle":"maria_regina_soares",
+       "order_nsu":"00000000-0000-4000-8000-000000000001",
+       "redirect_url":"https://acaiteriamr.netlify.app/",
+       "webhook_url":"https://acaiteriamr.netlify.app/api/infinitepay-webhook",
+       "items":[{"quantity":1,"price":100,"description":"Teste"}],
+       "customer":{"name":"Teste","phone_number":"27999999999"}}'
+```
+
+O que essa rodada mostrou:
+
+- **200 e link criado.** A página do link abre (200 também). O handle está
+  certo e a conta que recebe é a da loja.
+- **O campo volta como `url`, não `checkout_url`.** É por isso que a função
+  aceita os dois nomes. Esperar só `checkout_url` deixaria o pagamento sem
+  link nenhum hoje.
+- **`customer.name` e `customer.phone_number` são obrigatórios.** Vazio dá 422
+  com `"must be filled"`. O checkout do site já exige nome com duas letras e
+  telefone com dez dígitos, então na prática não chega vazio — mas se chegar, o
+  log da função diz qual campo foi recusado.
+- **Telefone formatado passa.** `(27) 99999-9999` é aceito como veio.
+
+O que isso **não** prova: que o webhook chega e que o `payment_check` confirma.
+Esses dois só um pagamento real exercita.
+
+---
+
+## Modo de teste (pagamento de mentira)
+
+A InfinitePay não tem ambiente de testes: link de cobrança lá é cobrança de
+verdade, no cartão de verdade de alguém. Para andar o fluxo quantas vezes for
+preciso sem dinheiro nenhum trocar de mão, existe o modo de teste.
+
+Ligado, o botão "Pagar agora" não leva para o checkout da InfinitePay. Leva
+para uma tela do próprio site, com o valor do pedido e dois botões: **Aprovar
+pagamento** e **Recusar**. Aprovar carimba o pedido pela mesma função que o
+webhook real usa, então daí para frente tudo acontece igual: a tela de retorno
+confirma, o painel mostra o selo verde, o cupom sai.
+
+### Como ligar
+
+No Netlify, em **Site configuration → Environment variables**, criar:
+
+```
+PAGAMENTO_SIMULADO = 1
+```
+
+Marcar o escopo **Deploy previews** e **Branch deploys** — nunca Production.
+Depois é só abrir o site do preview e fazer um pedido normal escolhendo "Pix ou
+cartão pelo site".
+
+Para rodar na sua máquina, o mesmo vale com `netlify dev` e a variável no
+ambiente. Aí precisa também de `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` e
+`INFINITEPAY_HANDLE` locais, que são as mesmas do Netlify.
+
+### As duas travas
+
+O modo só abre quando **as duas** condições valem:
+
+- `PAGAMENTO_SIMULADO` é `1`;
+- `CONTEXT` **não** é `production` — o Netlify escreve isso sozinho no deploy
+  do domínio da loja.
+
+Ou seja: mesmo que a variável vá parar em produção por engano, a simulação não
+abre lá. Fora do modo de teste, a função `/api/pagamento-simulado` responde 404
+como se não existisse.
+
+### O que esse caminho NÃO testa
+
+A conversa com a InfinitePay: link gerado, webhook recebido, `payment_check`
+conferido, dinheiro caindo no app. Isso só um pagamento real mostra. O roteiro
+para isso é o da seção anterior — um Pix de valor baixo, estornado depois.
+
+O pedido de teste fica reconhecível no banco: o NSU gravado é `TESTE-<valor em
+centavos>`, em vez do número da transação da InfinitePay.
+
+---
+
 ## Como funciona por dentro (e por que assim)
 
 O caminho tem uma regra que não se negocia: **o preço nunca vem do navegador.**

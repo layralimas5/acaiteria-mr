@@ -1,6 +1,6 @@
 import { formatPrice } from '../lib/order'
 import type { Order, OrderStatus } from '../orders/types'
-import { nextStatus, paymentLabels, statusLabels } from '../orders/types'
+import { isPickup, nextStatus, paymentLabels, statusLabels } from '../orders/types'
 import { DeleteButton } from './DeleteButton'
 import { PaymentBadge } from './PaymentBadge'
 import { WaitBadge } from './WaitBadge'
@@ -47,7 +47,7 @@ export function OrderRow({ order, now, onAdvance, onRemove, onOpen }: OrderRowPr
           {formatTime(order.createdAt)} · {itemCount} {itemCount === 1 ? 'item' : 'itens'} ·{' '}
           {paymentLabels[order.customer.payment]}
           {order.customer.changeFor && ` (troco p/ ${order.customer.changeFor})`} ·{' '}
-          {order.customer.address}
+          {isPickup(order.customer) ? 'retirada no local' : order.customer.address}
         </span>
       </button>
 

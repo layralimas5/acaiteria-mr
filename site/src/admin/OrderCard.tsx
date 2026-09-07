@@ -2,7 +2,7 @@ import { formatPrice } from '../lib/order'
 import { notifyUrl } from '../orders/messages'
 import { printReceipt } from '../orders/receipt'
 import type { Order, OrderStatus } from '../orders/types'
-import { nextStatus, paymentLabels, statusFlow, statusLabels } from '../orders/types'
+import { isPickup, nextStatus, paymentLabels, statusFlow, statusLabels } from '../orders/types'
 import { DeleteButton } from './DeleteButton'
 import { PaymentBadge } from './PaymentBadge'
 import { WaitBadge } from './WaitBadge'
@@ -104,9 +104,15 @@ export function OrderCard({
       </ul>
 
       <dl className="mt-4 space-y-2 border-t border-acai-100 pt-4 text-sm">
-        <Detail label="Endereço">
-          {[customer.address, customer.district, customer.city].filter(Boolean).join(', ')}
-          {customer.reference && ` (${customer.reference})`}
+        <Detail label={isPickup(customer) ? 'Entrega' : 'Endereço'}>
+          {isPickup(customer) ? (
+            <span className="font-bold text-acai-800">Retirada no local</span>
+          ) : (
+            <>
+              {[customer.address, customer.district, customer.city].filter(Boolean).join(', ')}
+              {customer.reference && ` (${customer.reference})`}
+            </>
+          )}
         </Detail>
         <Detail label="Telefone">{customer.phone}</Detail>
         <Detail label="Pagamento">
@@ -144,9 +150,11 @@ export function OrderCard({
             {order.deliveryFee !== undefined && (
               <span className="block text-xs text-muted">
                 {formatPrice(order.subtotal ?? order.total - order.deliveryFee)} em itens
-                {order.deliveryFee > 0
-                  ? ` + ${formatPrice(order.deliveryFee)} de entrega`
-                  : ' · entrega grátis'}
+                {isPickup(customer)
+                  ? ' · retirada no local'
+                  : order.deliveryFee > 0
+                    ? ` + ${formatPrice(order.deliveryFee)} de entrega`
+                    : ' · entrega grátis'}
               </span>
             )}
           </span>

@@ -90,3 +90,20 @@ export const rateLimited = (request: Request, limit: number, windowMs: number): 
   current.count += 1
   return current.count > limit
 }
+
+/**
+ * Modo de teste do pagamento.
+ *
+ * Ligado, o link de cobrança não sai da InfinitePay: sai de uma tela do
+ * próprio site que carimba o pedido como pago sem dinheiro nenhum trocar de
+ * mão. Serve para andar o fluxo inteiro (pedido, checkout, retorno, painel)
+ * quantas vezes for preciso.
+ *
+ * São duas travas e as duas precisam estar abertas. `PAGAMENTO_SIMULADO` é a
+ * que se liga de propósito; `CONTEXT` é a rede embaixo — o Netlify escreve
+ * "production" no deploy do domínio da loja, e ali a simulação não abre nem
+ * que a variável tenha ido parar lá por engano. Em preview, branch deploy e
+ * `netlify dev` o valor é outro, e é onde o teste roda.
+ */
+export const simulacaoDePagamento = (): boolean =>
+  process.env.PAGAMENTO_SIMULADO === '1' && process.env.CONTEXT !== 'production'

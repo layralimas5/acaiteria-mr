@@ -25,6 +25,8 @@ O plano gratuito atende com folga o volume de uma açaiteria.
    - `0006_foto_do_produto.sql`: foto do produto e o espaço onde o painel guarda as imagens enviadas
    - `0007_produto_sem_complementos.sql`: a chave que diz se o produto leva complemento
    - `0008_seguranca.sql`: fotos do cardápio só pela equipe, e teto de frequência em pedido e avaliação
+   - `0009_retirada_no_local.sql`: aceita o pedido de retirada e grava taxa zero nele, venha o que vier do navegador
+   - `0010_pedido_no_horario.sql`: recusa pedido fora do horário de atendimento, no fuso da loja
 
 Isso cria as tabelas, os índices, as funções e as regras de segurança (RLS).
 O banco nasce **vazio**: nenhum produto, nenhum preço. Quem cadastra o

@@ -46,8 +46,8 @@ entrega e vermelho quando passa dele (`business.delivery.averageMinutes`), e
 atualiza sozinho a cada 30 segundos.
 
 O cartão traz número, horário, cliente, a trilha das quatro etapas, itens com
-complementos, endereço com referência, telefone, forma de pagamento (e troco),
-observações e total.
+complementos, endereço com referência (ou "Retirada no local", quando o cliente
+vem buscar), telefone, forma de pagamento (e troco), observações e total.
 
 A página vive em `src/admin/OrdersView.tsx`.
 
@@ -56,6 +56,9 @@ A página vive em `src/admin/OrdersView.tsx`.
 O que está pronto para sair e o que já está na rua, com endereço, referência,
 troco a levar, link para o mapa e para o WhatsApp do cliente. Mostra também
 quanto o entregador tem a receber na mão (tudo que não é Pix).
+
+Pedido de retirada aparece na mesma lista, marcado como "Retirada no local", e
+no lugar do botão do mapa mostra "Cliente busca": não há endereço para abrir.
 
 ### Estoque e Cardápio: coisas diferentes
 
@@ -247,8 +250,10 @@ impressora. Fica como evolução, se a operação pedir.
 
 ## Como o pedido chega
 
-1. O cliente monta no site e clica em **Fechar pedido**
-2. Preenche nome, WhatsApp, endereço, pagamento e observações
+1. O cliente monta no site e clica em **Fechar pedido** — só dentro do horário
+   de atendimento; fora dele, o montador dá lugar ao aviso de loja fechada
+2. Preenche nome, WhatsApp, como quer receber (entrega ou retirada), endereço
+   quando for entrega, pagamento e observações
 3. Ao enviar: o pedido é gravado no sistema com um número (ex.: `#1401`) **e**
    o WhatsApp da loja abre com a mensagem completa do pedido
 
