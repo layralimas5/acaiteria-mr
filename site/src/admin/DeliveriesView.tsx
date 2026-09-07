@@ -3,7 +3,7 @@ import { business } from '../config/business'
 import { formatPrice } from '../lib/order'
 import { notifyUrl } from '../orders/messages'
 import type { Order, OrderStatus } from '../orders/types'
-import { paymentLabels } from '../orders/types'
+import { isPickup, paymentLabels } from '../orders/types'
 import { formatTime, startOfDay, sum } from './metrics'
 
 /**
@@ -147,7 +147,7 @@ function DeliveryCard({
       </header>
 
       <p className="mt-3 border-t border-acai-100 pt-3 text-sm font-bold text-ink">
-        {customer.address}
+        {isPickup(customer) ? 'Retirada no local' : customer.address}
       </p>
       {customer.reference && <p className="text-xs text-muted">Referência: {customer.reference}</p>}
 
@@ -160,14 +160,20 @@ function DeliveryCard({
       {customer.notes && <p className="mt-1 text-xs text-muted">Obs.: {customer.notes}</p>}
 
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <a
-          href={mapsUrl(order)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded-full border border-acai-200 px-3 py-2 text-center text-xs font-bold text-acai-800 transition-colors hover:bg-acai-50"
-        >
-          Ver no mapa
-        </a>
+        {isPickup(customer) ? (
+          <span className="rounded-full border border-dashed border-acai-200 px-3 py-2 text-center text-xs font-bold text-muted">
+            Cliente busca
+          </span>
+        ) : (
+          <a
+            href={mapsUrl(order)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full border border-acai-200 px-3 py-2 text-center text-xs font-bold text-acai-800 transition-colors hover:bg-acai-50"
+          >
+            Ver no mapa
+          </a>
+        )}
         <a
           href={whatsappUrl(order)}
           target="_blank"

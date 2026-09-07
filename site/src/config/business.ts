@@ -77,6 +77,17 @@ export interface BusinessConfig {
     /** Piso do prazo de entrega: o pedido chega a partir daqui, nunca antes. */
     readonly minMinutes: number
   }
+  readonly pickup: {
+    /** true quando o cliente pode buscar o pedido na loja. false esconde a opção. */
+    readonly enabled: boolean
+    /** Piso do tempo de preparo: o pedido fica pronto para buscar a partir daqui. */
+    readonly minMinutes: number
+    /**
+     * O que o cliente lê ao escolher retirada, quando `address.street` ainda
+     * está vazio e não há endereço para mostrar na tela.
+     */
+    readonly note: string
+  }
   readonly payments: {
     /**
      * Chave Pix da loja, no formato exato em que o banco a reconhece. O código
@@ -179,19 +190,24 @@ export const business: BusinessConfig = {
     freeShippingFrom: null,
     minMinutes: 40,
   },
+  pickup: {
+    enabled: true,
+    minMinutes: 20,
+    note: 'A gente manda o endereço exato da retirada no WhatsApp junto com a confirmação do pedido.',
+  },
   payments: {
     pixKey: 'reginasoares0187@gmail.com',
     pixHolder: 'Açaiteria MR',
     pixCity: 'Viana',
-    // A loja recebe tudo na hora do pedido: não há maquininha na entrega nem
-    // dinheiro para o motoboy separar troco. Sobram Pix, com o código já na
-    // tela, e cartão passado no sistema.
+    // A loja não leva maquininha na entrega: cartão só pelo sistema, na hora do
+    // pedido. Dinheiro é aceito, com o cliente dizendo no checkout para quanto
+    // precisa de troco.
     //
     // O cartão depende de INFINITEPAY_HANDLE, SUPABASE_URL e
     // SUPABASE_SERVICE_ROLE_KEY no Netlify: sem elas o cliente escolhe cartão e
     // leva erro na hora de pagar.
     cardOnDelivery: false,
-    cash: false,
+    cash: true,
     onlineCheckout: true,
   },
 }

@@ -16,7 +16,8 @@ import { saveLastOrder } from '../../orders/lastOrder'
 import { orderMessage } from '../../orders/messages'
 import { paymentLink } from '../../orders/payment'
 import { createOrder } from '../../orders/store'
-import type { Customer, Order } from '../../orders/types'
+import type { Customer, Fulfillment, Order } from '../../orders/types'
+import { isPickup } from '../../orders/types'
 import { CheckoutForm } from '../CheckoutForm'
 import { PixCode } from '../PixCode'
 
@@ -48,19 +49,28 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
   const [area, setArea] = useState<DeliveryArea | null>(() =>
     findDeliveryArea(knownCustomer?.city ?? ''),
   )
+  // Quem retirou da última vez volta com a retirada marcada.
+  const [fulfillment, setFulfillment] = useState<Fulfillment>(() =>
+    knownCustomer && isPickup(knownCustomer) ? 'retirada' : 'entrega',
+  )
 
+  const pickup = fulfillment === 'retirada'
   // Sem cidade, a sacola mostra a menor taxa possível e avisa que é um piso:
-  // é mais honesto do que fechar um valor que ainda pode subir.
-  const feeIsEstimate = area === null
-  const fee = deliveryFee(total, area ?? cheapestDeliveryArea())
+  // é mais honesto do que fechar um valor que ainda pode subir. Na retirada não
+  // há taxa nenhuma, então o total já é o final.
+  const feeIsEstimate = !pickup && area === null
+  const fee = pickup ? 0 : deliveryFee(total, area ?? cheapestDeliveryArea())
   const missingForFree = missingForFreeShipping(total)
   const grandTotal = total + fee
 
   const handleSubmit = (customer: Customer) => {
     if (sending) return
     // A cidade vem no cliente, então a taxa é recalculada aqui: é ela que vai
-    // para o banco, e não a que estava na tela antes de ele escolher.
-    const chargedFee = deliveryFee(total, findDeliveryArea(customer.city ?? '') ?? area)
+    // para o banco, e não a que estava na tela antes de ele escolher. Pedido de
+    // retirada vai com taxa zero, sem depender de município nenhum.
+    const chargedFee = isPickup(customer)
+      ? 0
+      : deliveryFee(total, findDeliveryArea(customer.city ?? '') ?? area)
 
     setSending(true)
     setError(null)
@@ -143,6 +153,8 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
           subtotal={total}
           area={area}
           onAreaChange={setArea}
+          fulfillment={fulfillment}
+          onFulfillmentChange={setFulfillment}
           initialCustomer={knownCustomer}
           onSubmit={handleSubmit}
           onCancel={() => setStage('cart')}
@@ -205,13 +217,15 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
           <dd className="font-semibold text-ink">{formatPrice(total)}</dd>
         </div>
         <div className="flex justify-between gap-4">
-          <dt className="text-muted">Entrega</dt>
+          <dt className="text-muted">{pickup ? 'Retirada no local' : 'Entrega'}</dt>
           <dd className={`font-semibold ${fee === 0 ? 'text-green-700' : 'text-ink'}`}>
-            {fee === 0
-              ? 'Grátis'
-              : feeIsEstimate
-                ? `a partir de ${formatPrice(fee)}`
-                : formatPrice(fee)}
+            {pickup
+              ? 'Sem taxa'
+              : fee === 0
+                ? 'Grátis'
+                : feeIsEstimate
+                  ? `a partir de ${formatPrice(fee)}`
+                  : formatPrice(fee)}
           </dd>
         </div>
         <div className="flex items-baseline justify-between gap-4 border-t border-acai-100 pt-2">
@@ -222,7 +236,7 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
         </div>
       </dl>
 
-      {missingForFree > 0 && (
+      {!pickup && missingForFree > 0 && (
         <p className="mt-3 rounded-xl bg-acai-50 px-3 py-2.5 text-xs font-semibold text-acai-800">
           Faltam {formatPrice(missingForFree)} para a entrega sair de graça.
         </p>
@@ -406,7 +420,9 @@ function OrderDone({ order, onBuildMore }: { readonly order: Order; readonly onB
 
       <p className="mt-4 text-lg font-extrabold text-ink">Pedido #{order.code} enviado</p>
       <p className="mt-2 max-w-sm text-sm text-muted">
-        Ele já entrou no sistema da loja. A confirmação e o tempo de entrega chegam pelo WhatsApp.
+        {isPickup(order.customer)
+          ? 'Ele já entrou no sistema da loja. A confirmação e o endereço da retirada chegam pelo WhatsApp.'
+          : 'Ele já entrou no sistema da loja. A confirmação e o tempo de entrega chegam pelo WhatsApp.'}
       </p>
 
       {/*

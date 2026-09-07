@@ -3,6 +3,8 @@ import { formatPrice } from '../lib/order'
 interface CreditCardInfoProps {
   /** Total do pedido, taxa de entrega incluída. */
   readonly total: number
+  /** true quando o cliente vai buscar o pedido: não há entrega para prometer. */
+  readonly pickup?: boolean
 }
 
 /**
@@ -20,7 +22,7 @@ interface CreditCardInfoProps {
  * débito, porque prometer na tela uma opção que pode não aparecer no checkout
  * faz o cliente desistir no meio do pagamento.
  */
-export function CreditCardInfo({ total }: CreditCardInfoProps) {
+export function CreditCardInfo({ total, pickup = false }: CreditCardInfoProps) {
   return (
     <div className="rounded-2xl border border-acai-100 bg-acai-50/70 p-4">
       <p className="text-sm font-bold text-ink">Pague {formatPrice(total)} no cartão</p>
@@ -44,7 +46,8 @@ export function CreditCardInfo({ total }: CreditCardInfoProps) {
           <Step n={3} />
           <span>
             Assim que o pagamento é aprovado, o pedido aparece pago na loja e entra na fila de
-            preparo. Chega em casa sem nada para acertar.
+            preparo.{' '}
+            {pickup ? 'É só passar para buscar, sem nada para acertar.' : 'Chega em casa sem nada para acertar.'}
           </span>
         </li>
       </ol>

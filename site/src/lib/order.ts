@@ -98,6 +98,24 @@ export const deliveryAreasLabel = (): string => {
   return `${cities.slice(0, -1).join(', ')} e ${cities[cities.length - 1]}`
 }
 
+// ---------------------------------------------------------------------------
+// Retirada no local
+// ---------------------------------------------------------------------------
+
+/** true quando a loja aceita o cliente buscar o pedido. */
+export const hasPickup = (): boolean => business.pickup.enabled
+
+/**
+ * Endereço da retirada em uma linha. Vazio enquanto a loja não tiver a rua
+ * configurada: nesse caso a tela mostra `business.pickup.note` no lugar, em vez
+ * de mandar o cliente para um endereço que não existe.
+ */
+export const pickupAddress = (): string => {
+  const { street, district, city, state } = business.address
+  if (street.trim() === '') return ''
+  return [street, district, `${city}/${state}`].filter((part) => part.trim() !== '').join(', ')
+}
+
 /** Localização em texto, omitindo o bairro enquanto ele não estiver definido. */
 export const locationLabel = (): string => {
   const { district, city, state } = business.address
