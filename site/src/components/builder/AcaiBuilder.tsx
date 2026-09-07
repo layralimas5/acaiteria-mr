@@ -13,7 +13,8 @@ import {
   priceBuild,
   toggleTopping,
 } from '../../lib/builder'
-import { formatPrice } from '../../lib/order'
+import { formatPrice, isStoreOpen } from '../../lib/order'
+import { useStoreClock } from '../../hooks/useStoreClock'
 import { MobileOrderBar } from './MobileOrderBar'
 import { BaseSelector } from './BaseSelector'
 import { OrderSummary } from './OrderSummary'
@@ -23,6 +24,7 @@ import { StepPanel } from './StepPanel'
 import { StepTabs } from './StepTabs'
 import type { StepInfo } from './StepTabs'
 import { OrderPanel } from './OrderPanel'
+import { StoreClosed } from './StoreClosed'
 import { ToppingCategory } from './ToppingCategory'
 
 interface AcaiBuilderProps {
@@ -60,6 +62,10 @@ export function AcaiBuilder({
   /** O painel alterna entre montar um item e cuidar do pedido inteiro. */
   const [view, setView] = useState<'build' | 'order'>('build')
   const [inView, setInView] = useState(false)
+  // Fora do expediente ninguém pede. O relógio anda sozinho, então a loja fecha
+  // e abre na tela sem o cliente recarregar a página.
+  const now = useStoreClock()
+  const open = isStoreOpen(now)
   const sectionRef = useRef<HTMLElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -269,6 +275,22 @@ export function AcaiBuilder({
     // A etapa aberta saiu do ar ao trocar de produto: segue para a próxima que
     // existe, em vez de mostrar painel vazio.
     setStep(stepAfter(step))
+  }
+
+  if (!open) {
+    return (
+      <section
+        ref={sectionRef}
+        id="monte-seu-acai"
+        className="scroll-mt-20 bg-gradient-to-b from-acai-50 to-white py-11 sm:py-24"
+      >
+        <div className="mx-auto max-w-xl px-5">
+          <div className="rounded-card border border-acai-100 bg-white p-6 shadow-sm sm:p-8">
+            <StoreClosed now={now} />
+          </div>
+        </div>
+      </section>
+    )
   }
 
   if (loadingCatalog || productKinds.length === 0) {

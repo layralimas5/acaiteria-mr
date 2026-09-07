@@ -199,6 +199,52 @@ const nextOpenDay = (now: Date): DaySchedule | null => {
  * Status de funcionamento com base no horário configurado. Quando está fechado,
  * o rótulo diz quando abre de novo, em vez de só avisar que fechou.
  */
+/**
+ * O que o cliente lê quando tenta pedir com a loja fechada.
+ *
+ * São três situações diferentes, e tratar as três como "estamos fechados" faz
+ * o cliente ir embora sem saber quando voltar: ainda vai abrir hoje, já fechou
+ * por hoje, ou hoje a loja nem abre.
+ */
+export interface ClosedNotice {
+  readonly title: string
+  readonly detail: string
+}
+
+const nextOpeningLabel = (now: Date): string => {
+  const next = nextOpenDay(now)
+  if (!next?.hour) return 'Chame a gente no WhatsApp para combinar.'
+  const weekday = next.name.replace('-feira', '').toLowerCase()
+  return `A gente volta ${weekday} às ${next.hour.opensAt}.`
+}
+
+export const closedNotice = (now: Date): ClosedNotice => {
+  const today = hourOf(dayIndexToKey[now.getDay()])
+  const current = now.getHours() * 60 + now.getMinutes()
+
+  if (today && current < toMinutes(today.opensAt)) {
+    return {
+      title: 'Ainda não abrimos hoje',
+      detail: `Os pedidos abrem hoje às ${today.opensAt}. Enquanto isso, dá para ver o cardápio à vontade.`,
+    }
+  }
+
+  if (today) {
+    return {
+      title: 'O expediente de hoje acabou',
+      detail: `Fechamos às ${today.closesAt} e não estamos recebendo pedidos agora. ${nextOpeningLabel(now)}`,
+    }
+  }
+
+  return {
+    title: 'Hoje a gente não abre',
+    detail: `Não estamos recebendo pedidos hoje. ${nextOpeningLabel(now)}`,
+  }
+}
+
+/** true quando a loja está no horário de atender e pode receber pedido. */
+export const isStoreOpen = (now: Date): boolean => openStatus(now).isOpen
+
 export const openStatus = (now: Date): OpenStatus => {
   const dayKey = dayIndexToKey[now.getDay()]
   const current = now.getHours() * 60 + now.getMinutes()
