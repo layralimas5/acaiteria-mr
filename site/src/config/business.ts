@@ -206,11 +206,21 @@ export const business: BusinessConfig = {
         city: 'Viana',
         state: 'ES',
         fee: 3,
-        // Bairros mais distantes do centro de Viana: a entrega neles custa 5.
+        // Bairros de Viana. Os mais distantes custam 5; os de perto seguem nos 3
+        // do município e ficam listados para o cliente que responde o bairro no
+        // lugar do município ser reconhecido do mesmo jeito.
         districtFees: [
-          { districts: ['Canaã', 'Canaa'], fee: 5 },
+          { districts: ['Canaã'], fee: 5 },
           { districts: ['Bairro Universal', 'Universal'], fee: 5 },
           { districts: ['Marcílio de Noronha', 'Marcílio'], fee: 5 },
+          { districts: ['Primavera'], fee: 5 },
+          { districts: ['Nova Bethânia'], fee: 3 },
+          { districts: ['Vila Bethânia'], fee: 3 },
+          { districts: ['Vila Rica'], fee: 3 },
+          { districts: ['Arlindo Villaschi'], fee: 3 },
+          { districts: ['Vale do Sol'], fee: 3 },
+          { districts: ['Areinha'], fee: 3 },
+          { districts: ['Caxias do Sul'], fee: 3 },
         ],
       },
       {
