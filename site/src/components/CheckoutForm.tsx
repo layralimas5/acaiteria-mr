@@ -4,13 +4,17 @@ import { business, type DeliveryArea } from '../config/business'
 import {
   deliveryAreas,
   deliveryFee,
+  deliveryPlaceLabel,
   detectDeliveryArea,
   findDeliveryArea,
   formatPrice,
+  hasDistrictFees,
   hasPickup,
   missingForFreeShipping,
   pickupAddress,
+  placeText,
 } from '../lib/order'
+import type { DeliveryPlace } from '../lib/order'
 import type { Customer, Fulfillment, PaymentMethod } from '../orders/types'
 import { paymentHints, paymentLabels } from '../orders/types'
 import { CreditCardInfo } from './CreditCardInfo'
@@ -25,6 +29,12 @@ interface CheckoutFormProps {
    */
   readonly area: DeliveryArea | null
   readonly onAreaChange: (area: DeliveryArea | null) => void
+  /**
+   * Bairro e município como o cliente escreveu. Sobem porque em Viana o bairro
+   * muda a taxa: os mais distantes custam mais que o resto da cidade, e o
+   * painel precisa da mesma conta.
+   */
+  readonly onPlaceChange: (place: DeliveryPlace) => void
   /** Entrega ou retirada. Sobe para o painel porque muda a taxa e o total. */
   readonly fulfillment: Fulfillment
   readonly onFulfillmentChange: (fulfillment: Fulfillment) => void
@@ -136,6 +146,7 @@ export function CheckoutForm({
   subtotal,
   area,
   onAreaChange,
+  onPlaceChange,
   fulfillment,
   onFulfillmentChange,
   initialCustomer = null,
@@ -165,7 +176,15 @@ export function CheckoutForm({
   // Sem município reconhecido não existe taxa: ela só entra na conta quando o
   // cliente diz onde mora, e é isso que segura o envio do pedido. Quem busca na
   // loja não paga entrega nenhuma.
-  const fee = !pickup && area ? deliveryFee(subtotal, area) : 0
+  const typedDistrict = customer.district?.trim() ?? ''
+  // Onde o cliente mora, do jeito que ele escreveu. O bairro pode vir tanto no
+  // campo de bairro quanto no de município ("Campo Grande"), e os dois valem
+  // para achar a taxa.
+  const typedPlace = placeText({ district: typedDistrict, city: customer.city ?? '' })
+  const fee = !pickup && area ? deliveryFee(subtotal, area, typedPlace) : 0
+  // Município com bairro mais caro e bairro ainda em branco: a taxa mostrada é
+  // um piso, não o valor final.
+  const feeIsEstimate = area !== null && typedDistrict === '' && hasDistrictFees(area)
   const missingForFree = missingForFreeShipping(subtotal)
   const total = subtotal + fee
   const payments = availablePayments()
@@ -194,6 +213,13 @@ export function CheckoutForm({
   const updateCity = (typed: string) => {
     update('city', typed)
     onAreaChange(findDeliveryArea(typed))
+    onPlaceChange({ district: customer.district ?? '', city: typed })
+  }
+
+  /** O bairro entra na conta da taxa, então o painel também precisa dele. */
+  const updateDistrict = (typed: string) => {
+    update('district', typed)
+    onPlaceChange({ district: typed, city: customer.city ?? '' })
   }
 
   return (
@@ -330,7 +356,7 @@ export function CheckoutForm({
                   type="text"
                   value={customer.district ?? ''}
                   maxLength={80}
-                  onChange={(event) => update('district', event.target.value)}
+                  onChange={(event) => updateDistrict(event.target.value)}
                   placeholder="Campo Grande"
                   autoComplete="address-level3"
                   className="w-full rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
@@ -372,13 +398,21 @@ export function CheckoutForm({
             {area ? (
               <div className="rounded-2xl border border-acai-100 bg-acai-50/70 px-4 py-3">
                 <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className="font-semibold text-ink">Taxa de entrega para {area.city}</span>
+                  <span className="font-semibold text-ink">
+                    Taxa de entrega para {deliveryPlaceLabel(area, typedPlace)}
+                  </span>
                   <span className={`font-extrabold ${fee === 0 ? 'text-green-700' : 'text-acai-800'}`}>
-                    {fee === 0 ? 'Grátis' : formatPrice(fee)}
+                    {fee === 0
+                      ? 'Grátis'
+                      : feeIsEstimate
+                        ? `a partir de ${formatPrice(fee)}`
+                        : formatPrice(fee)}
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-muted">
-                  Chega a partir de {business.delivery.minMinutes} minutos depois da confirmação.
+                  {feeIsEstimate
+                    ? 'Escreva o bairro: os mais distantes têm taxa própria.'
+                    : `Chega a partir de ${business.delivery.minMinutes} minutos depois da confirmação.`}
                 </p>
                 {missingForFree > 0 && (
                   <p className="mt-2 text-xs font-semibold text-acai-800">
