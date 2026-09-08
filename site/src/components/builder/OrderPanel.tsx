@@ -3,12 +3,15 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useCart } from '../../cart/CartContext'
 import type { CartItem } from '../../cart/CartContext'
 import type { DeliveryArea } from '../../config/business'
+import type { DeliveryPlace } from '../../lib/order'
 import {
   cheapestDeliveryArea,
   deliveryFee,
   findDeliveryArea,
   formatPrice,
+  hasDistrictFees,
   missingForFreeShipping,
+  placeText,
   whatsappUrl,
 } from '../../lib/order'
 import { errorMessage } from '../../lib/supabase'
@@ -49,6 +52,12 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
   const [area, setArea] = useState<DeliveryArea | null>(() =>
     findDeliveryArea(knownCustomer?.city ?? ''),
   )
+  // Bairro e município como o cliente escreveu. Entram na conta junto: em Viana
+  // os bairros mais distantes pagam taxa própria.
+  const [place, setPlace] = useState<DeliveryPlace>(() => ({
+    district: knownCustomer?.district ?? '',
+    city: knownCustomer?.city ?? '',
+  }))
   // Quem retirou da última vez volta com a retirada marcada.
   const [fulfillment, setFulfillment] = useState<Fulfillment>(() =>
     knownCustomer && isPickup(knownCustomer) ? 'retirada' : 'entrega',
@@ -58,8 +67,11 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
   // Sem cidade, a sacola mostra a menor taxa possível e avisa que é um piso:
   // é mais honesto do que fechar um valor que ainda pode subir. Na retirada não
   // há taxa nenhuma, então o total já é o final.
-  const feeIsEstimate = !pickup && area === null
-  const fee = pickup ? 0 : deliveryFee(total, area ?? cheapestDeliveryArea())
+  // Sem município, ou com município cujo bairro ainda pode subir a taxa, o
+  // valor da sacola é um piso.
+  const feeIsEstimate =
+    !pickup && (area === null || (place.district.trim() === '' && hasDistrictFees(area)))
+  const fee = pickup ? 0 : deliveryFee(total, area ?? cheapestDeliveryArea(), placeText(place))
   const missingForFree = missingForFreeShipping(total)
   const grandTotal = total + fee
 
@@ -70,7 +82,11 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
     // retirada vai com taxa zero, sem depender de município nenhum.
     const chargedFee = isPickup(customer)
       ? 0
-      : deliveryFee(total, findDeliveryArea(customer.city ?? '') ?? area)
+      : deliveryFee(
+          total,
+          findDeliveryArea(customer.city ?? '') ?? area,
+          placeText({ district: customer.district ?? '', city: customer.city ?? '' }),
+        )
 
     setSending(true)
     setError(null)
@@ -153,6 +169,7 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
           subtotal={total}
           area={area}
           onAreaChange={setArea}
+          onPlaceChange={setPlace}
           fulfillment={fulfillment}
           onFulfillmentChange={setFulfillment}
           initialCustomer={knownCustomer}

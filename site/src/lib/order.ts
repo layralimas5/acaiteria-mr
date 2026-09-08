@@ -1,4 +1,10 @@
-import { business, type DeliveryArea, type OpeningHour, type WeekDay } from '../config/business'
+import {
+  business,
+  type DeliveryArea,
+  type DistrictFee,
+  type OpeningHour,
+  type WeekDay,
+} from '../config/business'
 import { foldCase } from './text'
 
 /**
@@ -36,11 +42,71 @@ export const deliveryAreas = (): readonly DeliveryArea[] => business.delivery.ar
 export const defaultDeliveryArea = (): DeliveryArea | null =>
   business.delivery.areas[0] ?? null
 
-const sameCity = (a: string, b: string): boolean => foldCase(a) === foldCase(b)
+/**
+ * Onde o cliente mora, do jeito que ele escreveu. O bairro pode aparecer tanto
+ * no campo de bairro quanto no de município ("Campo Grande"), então os dois
+ * entram na busca da taxa.
+ */
+export interface DeliveryPlace {
+  readonly district: string
+  readonly city: string
+}
+
+/** Bairro e município numa linha só, que é como a taxa é procurada. */
+export const placeText = (place: DeliveryPlace): string =>
+  `${place.district} ${place.city}`.trim()
+
+/** Bairros com taxa própria de um município. Vazio quando o município é todo igual. */
+const districtFees = (area: DeliveryArea): readonly DistrictFee[] => area.districtFees ?? []
+
+/** true quando a taxa do município ainda pode mudar conforme o bairro. */
+export const hasDistrictFees = (area: DeliveryArea | null): boolean =>
+  area !== null && districtFees(area).length > 0
+
+/**
+ * Nomes que apontam para o município: ele próprio e os bairros cadastrados.
+ * É o que faz "Campo Grande" e "Marcílio de Noronha" serem aceitos no campo de
+ * município, que é como muita gente responde onde mora.
+ */
+const areaNames = (area: DeliveryArea): readonly string[] => [
+  area.city,
+  ...districtFees(area).flatMap((entry) => entry.districts),
+]
+
+/** Nome inteiro dentro do texto, sem casar pedaço de outra palavra. */
+const mentions = (text: string, name: string): boolean =>
+  new RegExp(`(^|[^a-z0-9])${foldCase(name)}([^a-z0-9]|$)`).test(text)
 
 /** Município atendido pelo nome, venha ele do formulário ou do pedido salvo. */
-export const findDeliveryArea = (city: string): DeliveryArea | null =>
-  deliveryAreas().find((area) => sameCity(area.city, city)) ?? null
+export const findDeliveryArea = (city: string): DeliveryArea | null => {
+  const typed = foldCase(city)
+  if (typed === '') return null
+  return (
+    deliveryAreas().find((area) => areaNames(area).some((name) => foldCase(name) === typed)) ?? null
+  )
+}
+
+/**
+ * Bairro com taxa própria dentro do município, procurado em tudo que o cliente
+ * escreveu sobre onde mora. `null` quando vale a taxa base do município.
+ */
+export const findDistrictFee = (
+  area: DeliveryArea | null,
+  address: string,
+): DistrictFee | null => {
+  if (area === null) return null
+  const text = foldCase(address)
+  if (text === '') return null
+  return (
+    districtFees(area).find((entry) =>
+      entry.districts.some((district) => mentions(text, district)),
+    ) ?? null
+  )
+}
+
+/** Como o cliente lê o destino da entrega: o bairro quando ele tem taxa própria. */
+export const deliveryPlaceLabel = (area: DeliveryArea, address: string): string =>
+  findDistrictFee(area, address)?.districts[0] ?? area.city
 
 /**
  * Município reconhecido no endereço que o cliente digitou. É o que faz a taxa
@@ -57,7 +123,10 @@ export const detectDeliveryArea = (address: string): DeliveryArea | null => {
   const found = deliveryAreas()
     .map((area) => ({
       area,
-      at: text.search(new RegExp(`(^|[^a-z])${foldCase(area.city)}([^a-z]|$)`)),
+      at: areaNames(area).reduce((last, name) => {
+        const at = text.search(new RegExp(`(^|[^a-z0-9])${foldCase(name)}([^a-z0-9]|$)`))
+        return at > last ? at : last
+      }, -1),
     }))
     .filter((match) => match.at >= 0)
     .sort((a, b) => b.at - a.at)
@@ -77,10 +146,17 @@ export const cheapestDeliveryArea = (): DeliveryArea | null =>
  * subtotal alcança `freeShippingFrom`. A regra vive aqui, nunca dentro de
  * componente. Sem município escolhido, vale a taxa do município padrão.
  */
-export const deliveryFee = (subtotal: number, area: DeliveryArea | null = null): number => {
+export const deliveryFee = (
+  subtotal: number,
+  area: DeliveryArea | null = null,
+  /** Bairro e município como o cliente escreveu: é o que revela a taxa do bairro. */
+  address = '',
+): number => {
   const { freeShippingFrom } = business.delivery
   if (freeShippingFrom !== null && subtotal >= freeShippingFrom) return 0
-  return (area ?? defaultDeliveryArea())?.fee ?? 0
+  const charged = area ?? defaultDeliveryArea()
+  if (charged === null) return 0
+  return findDistrictFee(charged, address)?.fee ?? charged.fee
 }
 
 /** Quanto falta para a entrega sair de graça. 0 quando já está grátis ou a regra não existe. */

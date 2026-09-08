@@ -13,11 +13,29 @@ export interface OpeningHour {
   readonly closesAt: string
 }
 
+/**
+ * Bairro com taxa diferente da taxa base do município, normalmente porque é
+ * mais longe. Os nomes são comparados sem acento e sem caixa, e o primeiro da
+ * lista é o que o cliente lê na tela: os demais são só as variações que ele
+ * costuma digitar.
+ */
+export interface DistrictFee {
+  readonly districts: readonly string[]
+  readonly fee: number
+}
+
 /** Município atendido e o que a entrega custa nele. */
 export interface DeliveryArea {
   readonly city: string
   readonly state: string
+  /** Taxa que vale nos bairros sem valor próprio em `districtFees`. */
   readonly fee: number
+  /**
+   * Bairros com taxa própria. Também funcionam como apelido do município no
+   * checkout: quem escreve "Campo Grande" ou "Marcílio de Noronha" no campo de
+   * município cai no município certo em vez de ouvir que não entregamos ali.
+   */
+  readonly districtFees?: readonly DistrictFee[]
 }
 
 export interface Artwork {
@@ -184,8 +202,33 @@ export const business: BusinessConfig = {
   delivery: {
     ifoodUrl: '',
     areas: [
-      { city: 'Viana', state: 'ES', fee: 3 },
-      { city: 'Cariacica', state: 'ES', fee: 6 },
+      {
+        city: 'Viana',
+        state: 'ES',
+        fee: 3,
+        // Bairros de Viana. Os mais distantes custam 5; os de perto seguem nos 3
+        // do município e ficam listados para o cliente que responde o bairro no
+        // lugar do município ser reconhecido do mesmo jeito.
+        districtFees: [
+          { districts: ['Canaã'], fee: 5 },
+          { districts: ['Bairro Universal', 'Universal'], fee: 5 },
+          { districts: ['Marcílio de Noronha', 'Marcílio'], fee: 5 },
+          { districts: ['Primavera'], fee: 5 },
+          { districts: ['Nova Bethânia'], fee: 3 },
+          { districts: ['Vila Bethânia'], fee: 3 },
+          { districts: ['Vila Rica'], fee: 3 },
+          { districts: ['Arlindo Villaschi'], fee: 3 },
+          { districts: ['Vale do Sol'], fee: 3 },
+          { districts: ['Areinha'], fee: 3 },
+          { districts: ['Caxias do Sul'], fee: 3 },
+        ],
+      },
+      {
+        city: 'Cariacica',
+        state: 'ES',
+        fee: 6,
+        districtFees: [{ districts: ['Campo Grande'], fee: 6 }],
+      },
     ],
     freeShippingFrom: null,
     minMinutes: 40,
