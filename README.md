@@ -26,7 +26,8 @@ npm run preview  # serve o dist/
 | Ligar/desligar o pagamento online (InfinitePay) | `site/src/config/business.ts` (`payments.onlineCheckout`) — ver `docs/infinitepay.md` |
 | Modo só delivery | `site/src/config/business.ts` (`deliveryOnly`) |
 | Ligar/desligar a retirada no local e o texto do ponto de retirada | `site/src/config/business.ts` (`pickup`) |
-| Horário de atendimento (e, com ele, quando o site aceita pedido) | `site/src/config/business.ts` (`hours`) **e** `c_hours` na migration `0010` |
+| Horário de atendimento (e, com ele, quando o site aceita pedido) | `site/src/config/business.ts` (`hours`) **e** `c_hours` na migration `0011` |
+| Até que hora a loja pode seguir aberta na mão | `site/src/config/business.ts` (`manualOpenLimit`) |
 | Produtos, preços, categorias, complementos | `site/src/data/products.ts` |
 | Regras de link de pedido (iFood vs WhatsApp) | `site/src/lib/order.ts` |
 | Cores e tipografia | `site/src/index.css` (bloco `@theme`) |
@@ -100,13 +101,27 @@ acabou" ou "Hoje a gente não abre" —, sempre dizendo quando a loja volta.
 O relógio anda sozinho: quem está com a página aberta às 22:59 vê a tela virar
 às 23:00, sem recarregar nada.
 
-A trava real está no banco, na migration `0010`: o horário é conferido dentro do
-`create_order`, no fuso da loja (`America/Sao_Paulo`, não o do celular do
-cliente), com cinco minutos de folga no fechamento para não derrubar quem
-apertou enviar em cima da hora.
+A trava real está no banco, na função `store_is_open()` (migration `0011`): o
+horário é conferido dentro do `create_order`, no fuso da loja
+(`America/Sao_Paulo`, não o do celular do cliente), com cinco minutos de folga
+no fechamento para não derrubar quem apertou enviar em cima da hora.
+
+**A loja passa por cima do horário quando precisa.** Na aba Cardápio do
+sistema há o card **Pedidos no site**, com um botão só:
+
+- Aberta e quer parar (acabou o açaí, deu problema): **Fechar os pedidos
+  agora**. O site fecha na hora em todos os celulares e volta sozinho na
+  próxima abertura do horário.
+- Já fechou pelo horário e a noite ainda rende: **Continuar recebendo
+  pedidos**. O site reabre na hora e fica assim até ela clicar em fechar ou, no
+  máximo, até `manualOpenLimit` (06:00), para uma noite esquecida não virar um
+  site aceitando pedido de manhã.
+
+A decisão mora na tabela `store_status` e chega ao site por Realtime; o
+`create_order` lê a mesma linha, então site e banco nunca discordam.
 
 **Atenção ao mudar o horário:** ele vive em dois lugares, `business.hours` (o
-que o site mostra e bloqueia) e a constante `c_hours` da migration `0010` (o que
+que o site mostra e bloqueia) e a constante `c_hours` da migration `0011` (o que
 o banco aceita). Mudou um, muda o outro e roda a migration de novo.
 
 ## Sistema da loja
@@ -134,7 +149,7 @@ e o botão de WhatsApp continua disponível na seção de entrega.
 - [ ] Pagar um pedido de teste no Pix e conferir nome, valor e referência (`docs/pix.md`)
 - [ ] Ligar o pagamento online: InfiniteTag da cliente, migration `0004`, variáveis no Netlify e `payments.onlineCheckout: true` (`docs/infinitepay.md`)
 - [ ] Criar o projeto no Supabase e rodar `supabase/migrations/0001_init.sql` (`docs/supabase.md`)
-- [ ] Rodar as migrations `0009_retirada_no_local.sql` e `0010_pedido_no_horario.sql` no SQL Editor (`docs/supabase.md`)
+- [ ] Rodar as migrations `0009_retirada_no_local.sql`, `0010_pedido_no_horario.sql` e `0011_loja_aberta_na_mao.sql` no SQL Editor (`docs/supabase.md`)
 - [ ] Endereço da loja em `business.ts` (`address.street` e `district`), para a retirada mostrar onde buscar em vez de mandar pro WhatsApp
 - [ ] Cadastrar o cardápio no painel: o sistema começa vazio, sem nenhum produto
 - [ ] Publicar os primeiros depoimentos reais (painel → Avaliações → Publicar no site; a seção fica escondida até lá)

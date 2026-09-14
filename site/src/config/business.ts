@@ -68,6 +68,13 @@ export interface BusinessConfig {
   }
   readonly hours: readonly OpeningHour[]
   /**
+   * Até que hora a loja pode ficar aberta na mão, depois do horário. Quando a
+   * equipe escolhe "continuar recebendo pedidos" no painel, o site segue aberto
+   * até ela fechar ou até esta hora, o que vier primeiro: uma noite esquecida
+   * não vira um site aceitando pedido de manhã.
+   */
+  readonly manualOpenLimit: string
+  /**
    * Artes de fundo do banner, em rodízio. `src` é a versão grande (a partir de
    * 768px) e `srcSmall` a versão leve do celular. Lista vazia deixa o banner só
    * com o roxo da marca; com uma arte só, não há rodízio.
@@ -169,6 +176,7 @@ export const business: BusinessConfig = {
       closesAt: '23:00',
     },
   ],
+  manualOpenLimit: '06:00',
   heroImages: [
     {
       src: '/imagem/banner.webp',

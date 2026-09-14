@@ -6,6 +6,7 @@ import { errorMessage } from '../../lib/supabase'
 import { CategoryEditor, CategoryForm } from './CategoryEditor'
 import { DragList } from './DragList'
 import { ProductEditor, ProductForm } from './ProductEditor'
+import { StoreStatusCard } from './StoreStatusCard'
 import { ErrorNote, GhostButton, PrimaryButton } from './ui'
 
 /**
@@ -60,6 +61,8 @@ export function MenuView() {
       </div>
 
       <ErrorNote message={actionError ?? error} />
+
+      <StoreStatusCard />
 
       {loading ? (
         <p className="mt-6 text-sm text-muted">Carregando o cardápio...</p>
