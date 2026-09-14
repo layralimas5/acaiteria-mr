@@ -1,9 +1,12 @@
 import { business } from '../../config/business'
 import { closedNotice, weeklySchedule, whatsappUrl } from '../../lib/order'
+import type { StoreOverride } from '../../lib/order'
 
 interface StoreClosedProps {
   /** Hora usada para decidir o aviso. Vem do relógio da loja, não de `new Date()`. */
   readonly now: Date
+  /** O que a equipe decidiu no painel: fechar mais cedo muda o aviso. */
+  readonly override: StoreOverride
 }
 
 /**
@@ -18,8 +21,8 @@ interface StoreClosedProps {
  * O cardápio continua no ar acima desta seção: ver preço e tamanho não depende
  * de a loja estar aberta.
  */
-export function StoreClosed({ now }: StoreClosedProps) {
-  const notice = closedNotice(now)
+export function StoreClosed({ now, override }: StoreClosedProps) {
+  const notice = closedNotice(now, override)
   const week = weeklySchedule(now)
 
   return (

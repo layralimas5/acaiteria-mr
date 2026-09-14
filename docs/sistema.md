@@ -94,7 +94,21 @@ O controle fica em `src/inventory/store.ts`.
 É aqui que nasce tudo que o cliente monta no site. **Nada vem de fábrica**: o
 sistema começa vazio e a loja cadastra o que vende.
 
-A tela tem dois blocos:
+No topo da tela fica o card **Pedidos no site**, que diz se o site está
+recebendo pedido agora e tem um botão só:
+
+- **Fechar os pedidos agora**, quando a loja está aberta e quer parar antes
+  das 23:00 (acabou o açaí, deu problema). O site fecha na hora, em todos os
+  celulares, e reabre sozinho no próximo horário. Não precisa lembrar de
+  reabrir.
+- **Continuar recebendo pedidos**, quando já passou das 23:00 e a noite ainda
+  rende. O site reabre na hora e fica assim até você clicar em fechar. Se
+  esquecer, ele fecha sozinho às 06:00.
+
+Fora dessas duas situações não há o que fazer aqui: o horário (18:30 às
+23:00) cuida do resto.
+
+Abaixo do card, a tela tem dois blocos:
 
 **Produtos** (Açaí, Sorvete, Sundae, o que for). Cada produto tem:
 

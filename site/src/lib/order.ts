@@ -255,8 +255,13 @@ export const closedDaysLabel = (): string => {
   return `${closed.slice(0, -1).join(', ')} e ${closed[closed.length - 1]}`
 }
 
-/** Próximo dia de atendimento a partir de amanhã, para quando hoje já fechou. */
-const nextOpenDay = (now: Date): DaySchedule | null => {
+/** Próximo dia de atendimento a partir de amanhã, e quantos dias faltam para ele. */
+interface NextOpenDay {
+  readonly day: DaySchedule
+  readonly daysAhead: number
+}
+
+const nextOpenDay = (now: Date): NextOpenDay | null => {
   const todayIndex = weekOrder.indexOf(dayIndexToKey[now.getDay()])
   if (todayIndex < 0) return null
 
@@ -265,16 +270,79 @@ const nextOpenDay = (now: Date): DaySchedule | null => {
     if (key === undefined) continue
     const hour = hourOf(key)
     if (hour) {
-      return { key, name: dayNames[key], isToday: false, hour }
+      return { day: { key, name: dayNames[key], isToday: false, hour }, daysAhead: ahead }
     }
   }
   return null
 }
 
+/** A data de hoje (ou `daysAhead` dias à frente) na hora "HH:MM" pedida. */
+const dateAt = (now: Date, time: string, daysAhead = 0): Date => {
+  const [hours, minutes] = time.split(':').map(Number)
+  const date = new Date(now)
+  date.setDate(date.getDate() + daysAhead)
+  date.setHours(hours ?? 0, minutes ?? 0, 0, 0)
+  return date
+}
+
 /**
- * Status de funcionamento com base no horário configurado. Quando está fechado,
- * o rótulo diz quando abre de novo, em vez de só avisar que fechou.
+ * Quando a loja abre de novo pelo horário: ainda hoje, se não abriu, ou no
+ * próximo dia de atendimento. null quando não há horário cadastrado.
  */
+export const nextOpeningAt = (now: Date): Date | null => {
+  const today = hourOf(dayIndexToKey[now.getDay()])
+  if (today && now < dateAt(now, today.opensAt)) return dateAt(now, today.opensAt)
+
+  const next = nextOpenDay(now)
+  if (!next?.day.hour) return null
+  return dateAt(now, next.day.hour.opensAt, next.daysAhead)
+}
+
+/**
+ * Até quando a loja pode ficar aberta na mão a partir de agora: a próxima
+ * virada do limite de `business.manualOpenLimit`.
+ */
+export const manualOpenEndsAt = (now: Date): Date => {
+  const today = dateAt(now, business.manualOpenLimit)
+  return now < today ? today : dateAt(now, business.manualOpenLimit, 1)
+}
+
+// ---------------------------------------------------------------------------
+// Aberto ou fechado
+// ---------------------------------------------------------------------------
+
+/**
+ * O que a equipe decidiu no painel, por cima do horário.
+ *
+ * - `auto`: vale o horário de `business.hours`, sem intervenção
+ * - `open`: recebendo pedido fora do horário (a noite rendeu, a loja seguiu)
+ * - `closed`: fechou antes da hora (acabou o açaí, deu problema)
+ *
+ * `until` é quando a decisão caduca sozinha e o horário volta a mandar. Nula,
+ * vale até alguém mudar no painel.
+ */
+export interface StoreOverride {
+  readonly mode: 'auto' | 'open' | 'closed'
+  readonly until: Date | null
+}
+
+export const noOverride: StoreOverride = { mode: 'auto', until: null }
+
+/** O modo que ainda vale agora: decisão vencida conta como `auto`. */
+export const activeOverride = (override: StoreOverride, now: Date): StoreOverride['mode'] => {
+  if (override.mode === 'auto') return 'auto'
+  if (override.until !== null && override.until <= now) return 'auto'
+  return override.mode
+}
+
+/** true quando o horário, sozinho, diz que a loja está aberta. */
+export const scheduledOpen = (now: Date): boolean => {
+  const today = hourOf(dayIndexToKey[now.getDay()])
+  if (!today) return false
+  const current = now.getHours() * 60 + now.getMinutes()
+  return current >= toMinutes(today.opensAt) && current < toMinutes(today.closesAt)
+}
+
 /**
  * O que o cliente lê quando tenta pedir com a loja fechada.
  *
@@ -289,14 +357,22 @@ export interface ClosedNotice {
 
 const nextOpeningLabel = (now: Date): string => {
   const next = nextOpenDay(now)
-  if (!next?.hour) return 'Chame a gente no WhatsApp para combinar.'
-  const weekday = next.name.replace('-feira', '').toLowerCase()
-  return `A gente volta ${weekday} às ${next.hour.opensAt}.`
+  if (!next?.day.hour) return 'Chame a gente no WhatsApp para combinar.'
+  const weekday = next.day.name.replace('-feira', '').toLowerCase()
+  return `A gente volta ${weekday} às ${next.day.hour.opensAt}.`
 }
 
-export const closedNotice = (now: Date): ClosedNotice => {
+export const closedNotice = (now: Date, override: StoreOverride = noOverride): ClosedNotice => {
   const today = hourOf(dayIndexToKey[now.getDay()])
   const current = now.getHours() * 60 + now.getMinutes()
+
+  // Fechou antes da hora: dizer "fechamos às 23:00" às 21:30 soaria mentira.
+  if (activeOverride(override, now) === 'closed') {
+    return {
+      title: 'Encerramos os pedidos por hoje',
+      detail: `Hoje paramos mais cedo e não estamos recebendo pedidos agora. ${nextOpeningLabel(now)}`,
+    }
+  }
 
   if (today && current < toMinutes(today.opensAt)) {
     return {
@@ -318,13 +394,31 @@ export const closedNotice = (now: Date): ClosedNotice => {
   }
 }
 
-/** true quando a loja está no horário de atender e pode receber pedido. */
-export const isStoreOpen = (now: Date): boolean => openStatus(now).isOpen
+/** true quando a loja pode receber pedido agora: pelo horário ou por decisão do painel. */
+export const isStoreOpen = (now: Date, override: StoreOverride = noOverride): boolean =>
+  openStatus(now, override).isOpen
 
-export const openStatus = (now: Date): OpenStatus => {
+/**
+ * Status de funcionamento: primeiro o que a equipe decidiu no painel, depois
+ * o horário. Quando está fechado, o rótulo diz quando abre de novo, em vez de
+ * só avisar que fechou.
+ */
+export const openStatus = (now: Date, override: StoreOverride = noOverride): OpenStatus => {
   const dayKey = dayIndexToKey[now.getDay()]
   const current = now.getHours() * 60 + now.getMinutes()
   const today = hourOf(dayKey)
+  const mode = activeOverride(override, now)
+
+  if (mode === 'open') {
+    return { isOpen: true, label: 'Aberto agora' }
+  }
+
+  if (mode === 'closed') {
+    const next = nextOpenDay(now)
+    if (!next?.day.hour) return { isOpen: false, label: 'Fechado por hoje' }
+    const weekday = next.day.name.replace('-feira', '').toLowerCase()
+    return { isOpen: false, label: `Fechado por hoje · abre ${weekday} às ${next.day.hour.opensAt}` }
+  }
 
   if (today) {
     const opens = toMinutes(today.opensAt)
@@ -339,8 +433,8 @@ export const openStatus = (now: Date): OpenStatus => {
   }
 
   const next = nextOpenDay(now)
-  if (!next?.hour) return { isOpen: false, label: 'Fechado' }
+  if (!next?.day.hour) return { isOpen: false, label: 'Fechado' }
 
-  const weekday = next.name.replace('-feira', '')
-  return { isOpen: false, label: `Fechado · abre ${weekday.toLowerCase()} às ${next.hour.opensAt}` }
+  const weekday = next.day.name.replace('-feira', '')
+  return { isOpen: false, label: `Fechado · abre ${weekday.toLowerCase()} às ${next.day.hour.opensAt}` }
 }

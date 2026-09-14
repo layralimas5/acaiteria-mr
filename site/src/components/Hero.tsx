@@ -1,10 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { business } from '../config/business'
 import { useRotation } from '../hooks/useRotation'
-import { openStatus } from '../lib/order'
+import { useStoreOpen } from '../opening/useStoreOpen'
 
 export function Hero() {
-  const status = openStatus(new Date())
+  const { status } = useStoreOpen()
   const images = business.heroImages
   const { index: current, goTo, paused } = useRotation(images.length, business.heroRotationMs)
 

@@ -4,15 +4,14 @@ import {
   closedDaysLabel,
   deliveryAreasLabel,
   locationLabel,
-  openStatus,
   weeklySchedule,
   whatsappUrl,
 } from '../lib/order'
+import { useStoreOpen } from '../opening/useStoreOpen'
 
 export function Location() {
   const { address, deliveryOnly } = business
-  const now = new Date()
-  const status = openStatus(now)
+  const { now, status } = useStoreOpen()
   const week = weeklySchedule(now)
   const closedDays = closedDaysLabel()
   const openDays = week.filter((day) => day.hour !== null)

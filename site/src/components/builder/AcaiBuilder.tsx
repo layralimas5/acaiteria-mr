@@ -4,6 +4,7 @@ import { useCart } from '../../cart/CartContext'
 import type { AcaiBase, CupSize, ProductKind, Topping } from '../../catalog/types'
 import { productChoices, sizeLabel } from '../../catalog/types'
 import { useSellableCatalog } from '../../catalog/sellable'
+import { useStoreOpen } from '../../opening/useStoreOpen'
 import type { Customer } from '../../orders/types'
 import type { BuildSelection } from '../../lib/builder'
 import {
@@ -13,8 +14,7 @@ import {
   priceBuild,
   toggleTopping,
 } from '../../lib/builder'
-import { formatPrice, isStoreOpen } from '../../lib/order'
-import { useStoreClock } from '../../hooks/useStoreClock'
+import { formatPrice } from '../../lib/order'
 import { MobileOrderBar } from './MobileOrderBar'
 import { BaseSelector } from './BaseSelector'
 import { OrderSummary } from './OrderSummary'
@@ -62,10 +62,10 @@ export function AcaiBuilder({
   /** O painel alterna entre montar um item e cuidar do pedido inteiro. */
   const [view, setView] = useState<'build' | 'order'>('build')
   const [inView, setInView] = useState(false)
-  // Fora do expediente ninguém pede. O relógio anda sozinho, então a loja fecha
-  // e abre na tela sem o cliente recarregar a página.
-  const now = useStoreClock()
-  const open = isStoreOpen(now)
+  // Fora do expediente ninguém pede. O relógio anda sozinho e o painel avisa em
+  // tempo real, então a loja fecha e abre na tela sem o cliente recarregar.
+  const { now, override, status } = useStoreOpen()
+  const open = status.isOpen
   const sectionRef = useRef<HTMLElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
 
@@ -286,7 +286,7 @@ export function AcaiBuilder({
       >
         <div className="mx-auto max-w-xl px-5">
           <div className="rounded-card border border-acai-100 bg-white p-6 shadow-sm sm:p-8">
-            <StoreClosed now={now} />
+            <StoreClosed now={now} override={override} />
           </div>
         </div>
       </section>
