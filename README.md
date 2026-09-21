@@ -45,15 +45,11 @@ Pedidos, na hora, em qualquer aparelho.
 
 ## Pagamento
 
-São três formas, escolhidas no checkout:
+São duas formas, escolhidas no checkout:
 
-- **Pix**, com QR Code e copia e cola no próprio checkout, no clique da opção,
-  já com o valor fechado e a taxa de entrega inclusa. A tela de pedido enviado
-  repete o código, agora com o número do pedido na referência, e é esse que a
-  loja reconhece no extrato. O cliente nunca digita chave nem valor. Formato
-  certo da chave em `docs/pix.md`
-- **Cartão de crédito**, em até 12x, no checkout da InfinitePay, com o dinheiro
-  caindo direto na conta da loja e o pedido nascendo marcado como pago. Os
+- **Pix ou cartão pelo site**, no checkout da InfinitePay: Pix com QR Code ou
+  cartão de crédito em até 12x. O dinheiro cai direto na conta da loja e o
+  pedido vira **Pago** no painel sozinho, sem ninguém conferir extrato. Os
   dados do cartão são digitados na tela da InfinitePay, nunca neste site
 - **Dinheiro**, pago na entrega ou na retirada. Ao escolher, o cliente diz para
   quanto precisa de troco, e o valor sai no WhatsApp da loja, no cupom impresso
@@ -61,9 +57,13 @@ São três formas, escolhidas no checkout:
   troco certo na mão
 
 Quem liga cada uma é `payments`, em `business.ts`. Desligar `payments.cash`
-tira o dinheiro da tela e, com ele, o campo de troco. O cartão exige as três
-variáveis do Netlify antes de ser ligado, senão o cliente escolhe e leva erro
-na hora de pagar: `docs/infinitepay.md`.
+tira o dinheiro da tela e, com ele, o campo de troco. O checkout online exige
+as três variáveis do Netlify antes de ser ligado, senão o cliente escolhe e
+leva erro na hora de pagar: `docs/infinitepay.md`.
+
+Existe ainda o **Pix manual** (copia e cola para a chave da loja, sem
+confirmação automática), hoje desligado porque o Pix já passa pela InfinitePay.
+Para reativar, basta preencher `payments.pixKey`: `docs/pix.md`.
 
 O link de cobrança nunca é gerado no navegador. Quem gera é uma função servidor
 (`site/netlify/functions/`), a partir do total que está no banco: assim o
@@ -149,7 +149,7 @@ e o botão de WhatsApp continua disponível na seção de entrega.
 - [ ] Pagar um pedido de teste no Pix e conferir nome, valor e referência (`docs/pix.md`)
 - [ ] Ligar o pagamento online: InfiniteTag da cliente, migration `0004`, variáveis no Netlify e `payments.onlineCheckout: true` (`docs/infinitepay.md`)
 - [ ] Criar o projeto no Supabase e rodar `supabase/migrations/0001_init.sql` (`docs/supabase.md`)
-- [ ] Rodar as migrations `0009_retirada_no_local.sql`, `0010_pedido_no_horario.sql`, `0011_loja_aberta_na_mao.sql` e `0012_pix_a_conferir.sql` no SQL Editor (`docs/supabase.md`)
+- [ ] Rodar as migrations `0009_retirada_no_local.sql`, `0010_pedido_no_horario.sql`, `0011_loja_aberta_na_mao.sql` e `0012_pix_pela_infinitepay.sql` no SQL Editor (`docs/supabase.md`)
 - [ ] Endereço da loja em `business.ts` (`address.street` e `district`), para a retirada mostrar onde buscar em vez de mandar pro WhatsApp
 - [ ] Cadastrar o cardápio no painel: o sistema começa vazio, sem nenhum produto
 - [ ] Publicar os primeiros depoimentos reais (painel → Avaliações → Publicar no site; a seção fica escondida até lá)

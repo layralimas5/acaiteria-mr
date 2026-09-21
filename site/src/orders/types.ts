@@ -13,10 +13,9 @@ export type Fulfillment = 'entrega' | 'retirada'
 /**
  * Onde o pagamento está.
  *
- * `na_entrega` é o caso do dinheiro e da maquininha: o cliente paga quando o
- * motoboy chega, e não existe cobrança para acompanhar. Pedido no Pix ou no
- * checkout da InfinitePay nasce `aguardando`: o da InfinitePay vira `pago`
- * pelo webhook, o do Pix vira `pago` quando a loja confere o extrato.
+ * `na_entrega` é o caso de sempre: o cliente paga quando o motoboy chega, e
+ * não existe cobrança para acompanhar. Os outros três só aparecem em pedido
+ * que passou pelo checkout da InfinitePay.
  */
 export type PaymentStatus = 'na_entrega' | 'aguardando' | 'pago' | 'falhou'
 
@@ -78,7 +77,7 @@ export const statusLabels: Readonly<Record<OrderStatus, string>> = {
 }
 
 export const paymentLabels: Readonly<Record<PaymentMethod, string>> = {
-  online: 'Cartão de crédito',
+  online: 'Pix ou cartão pelo site',
   pix: 'Pix',
   dinheiro: 'Dinheiro',
   cartao: 'Cartão na entrega',
@@ -86,8 +85,8 @@ export const paymentLabels: Readonly<Record<PaymentMethod, string>> = {
 
 /** Linha de apoio de cada forma de pagamento, mostrada no checkout. */
 export const paymentHints: Readonly<Record<PaymentMethod, string>> = {
-  online: 'Paga agora, em até 12x, direto no sistema',
-  pix: 'O copia e cola aparece assim que o pedido entrar',
+  online: 'Paga agora e o pedido já entra confirmado. Cartão em até 12x',
+  pix: 'Copia e cola direto para a conta da loja',
   dinheiro: 'Diga abaixo se precisa de troco',
   cartao: 'Crédito ou débito na maquininha, na entrega',
 }
@@ -109,16 +108,6 @@ export const paymentStatusLabels: Readonly<Record<PaymentStatus, string>> = {
   pago: 'Pago',
   falhou: 'Pagamento não concluído',
 }
-
-/** Referência que vai na descrição do Pix e aparece no extrato da loja. */
-export const pixReference = (code: string): string => `MR${code}`
-
-/**
- * Pedido no Pix que a loja ainda não conferiu no extrato. É o único estado
- * que depende de alguém da loja olhar o banco e carimbar.
- */
-export const awaitingPixCheck = (order: Order): boolean =>
-  order.customer.payment === 'pix' && order.paymentStatus === 'aguardando'
 
 /** Ordem em que os status aparecem no painel. */
 export const statusFlow: readonly OrderStatus[] = ['novo', 'preparando', 'entrega', 'concluido']

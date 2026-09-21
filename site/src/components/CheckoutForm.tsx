@@ -18,6 +18,7 @@ import type { DeliveryPlace } from '../lib/order'
 import type { Customer, Fulfillment, PaymentMethod } from '../orders/types'
 import { paymentHints, paymentLabels } from '../orders/types'
 import { CreditCardInfo } from './CreditCardInfo'
+import { PixCode } from './PixCode'
 
 interface CheckoutFormProps {
   /** Soma dos itens, sem entrega. A taxa é calculada a partir dela. */
@@ -51,18 +52,22 @@ interface CheckoutFormProps {
  * Formas aceitas hoje, conforme a configuração da loja. A ordem é a da tela:
  * pagar na hora vem primeiro porque é o que fecha o pedido sem depender de
  * ninguém digitar chave nem separar troco.
+ *
+ * O Pix manual (copia e cola para a chave da loja) só entra quando há chave:
+ * com o checkout online ligado, o Pix passa pela InfinitePay e a loja recebe
+ * o pedido já marcado como pago, sem conferir extrato.
  */
 const availablePayments = (): readonly PaymentMethod[] =>
   (['online', 'pix', 'cartao', 'dinheiro'] as const).filter(
     (method) =>
-      method === 'pix' ||
+      (method === 'pix' && business.payments.pixKey !== '') ||
       (method === 'online' && business.payments.onlineCheckout) ||
       (method === 'cartao' && business.payments.cardOnDelivery) ||
       (method === 'dinheiro' && business.payments.cash),
   )
 
 /** Primeira forma da lista: é a que já vem marcada. */
-const defaultPayment = (): PaymentMethod => availablePayments()[0] ?? 'pix'
+const defaultPayment = (): PaymentMethod => availablePayments()[0] ?? 'dinheiro'
 
 const emptyCustomer = (): Customer => ({
   name: '',
@@ -486,22 +491,12 @@ export function CheckoutForm({
         {customer.payment === 'online' && <CreditCardInfo total={total} pickup={pickup} />}
 
         {/*
-          O código Pix só aparece depois de o pedido entrar. Quando ele saía
-          aqui, antes do botão, o cliente copiava, pagava no banco e fechava a
-          aba achando que tinha terminado: dinheiro na conta e nenhum pedido
-          para preparar. Agora a ordem é a do iFood: confirma, depois paga.
+          O código sai aqui, no clique, e não só depois de enviar: quem escolhe
+          Pix quer pagar naquele instante, com o celular na mão. O valor é o
+          desta tela, taxa de entrega incluída, e o card avisa que pagar sozinho
+          não envia o pedido.
         */}
-        {customer.payment === 'pix' && (
-          <div className="rounded-2xl border border-acai-100 bg-acai-50/70 px-4 py-3">
-            <p className="text-sm font-bold text-ink">
-              O Pix aparece na próxima tela{pickup || area ? `, com ${formatPrice(total)} já preenchido` : ''}
-            </p>
-            <p className="mt-1 text-xs leading-relaxed text-muted">
-              Envie o pedido, copie o código, pague no seu banco e pronto. Não precisa voltar aqui
-              depois de pagar.
-            </p>
-          </div>
-        )}
+        {customer.payment === 'pix' && <PixCode amount={total} beforeOrder />}
 
         {customer.payment === 'dinheiro' && (
           <Field label="Troco para quanto? (opcional)" error={null}>
@@ -573,10 +568,6 @@ export function CheckoutForm({
               ? pickup || area
                 ? `Ir para o pagamento · ${formatPrice(total)}`
                 : 'Ir para o pagamento'
-              : customer.payment === 'pix'
-                ? pickup || area
-                  ? `Enviar e pagar no Pix · ${formatPrice(total)}`
-                  : 'Enviar e pagar no Pix'
               : pickup || area
                 ? `Enviar pedido · ${formatPrice(total)}`
                 : 'Enviar pedido'}

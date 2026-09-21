@@ -20,7 +20,7 @@ import { orderMessage } from '../../orders/messages'
 import { paymentLink } from '../../orders/payment'
 import { createOrder } from '../../orders/store'
 import type { Customer, Fulfillment, Order } from '../../orders/types'
-import { isPickup, pixReference } from '../../orders/types'
+import { isPickup } from '../../orders/types'
 import { CheckoutForm } from '../CheckoutForm'
 import { PixCode } from '../PixCode'
 
@@ -91,17 +91,15 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
     setSending(true)
     setError(null)
 
-    // Quem ainda vai pagar fica nesta tela: no checkout online ela leva para a
-    // InfinitePay, no Pix ela mostra o código. Abrir o WhatsApp junto tirava o
-    // cliente daqui antes de ver o Pix (no celular, ia parar no app) e ele
-    // pagava sem saber que precisava voltar. A conversa fica no botão da
-    // tela de conclusão.
-    const staysToPay = customer.payment === 'online' || customer.payment === 'pix'
+    // Pagando pelo site, o cliente sai desta aba para o checkout da
+    // InfinitePay: abrir o WhatsApp junto só atrapalharia. A conversa vem
+    // depois, na volta do pagamento.
+    const payingOnline = customer.payment === 'online'
 
     // A aba do WhatsApp precisa abrir agora, no clique: aberta depois da
     // resposta do banco, o navegador entende como popup e bloqueia. Ela abre
     // vazia e recebe o endereço quando o pedido tiver número.
-    const tab = staysToPay ? null : window.open('', '_blank', 'noopener,noreferrer')
+    const tab = payingOnline ? null : window.open('', '_blank', 'noopener,noreferrer')
 
     void createOrder(items, total, chargedFee, customer)
       .then((created) => {
@@ -112,8 +110,8 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
 
         // O pedido já está gravado. Quem paga pelo site é levado para o
         // checkout pela própria tela de conclusão, que sabe tentar de novo se
-        // o link não vier; quem paga no Pix vê o código nela.
-        if (staysToPay) return
+        // o link não vier.
+        if (payingOnline) return
 
         const url = whatsappUrl(orderMessage(created))
         if (tab) {
@@ -348,10 +346,8 @@ function CartLine({ item, onIncrement, onDecrement, onRemove }: CartLineProps) {
 }
 
 function OrderDone({ order, onBuildMore }: { readonly order: Order; readonly onBuildMore: () => void }) {
+  const awaitingPayment = order.paymentStatus === 'aguardando'
   const payingWithPix = order.customer.payment === 'pix'
-  // Só o checkout online sai daqui para pagar. O Pix também nasce em aberto,
-  // mas é pago nesta tela, com o código.
-  const awaitingPayment = order.customer.payment === 'online' && order.paymentStatus === 'aguardando'
   const [opening, setOpening] = useState(awaitingPayment)
   const [linkError, setLinkError] = useState<string | null>(null)
 
@@ -439,25 +435,21 @@ function OrderDone({ order, onBuildMore }: { readonly order: Order; readonly onB
         </svg>
       </span>
 
-      <p className="mt-4 text-lg font-extrabold text-ink">
-        {payingWithPix ? `Pedido #${order.code} enviado, agora é só pagar` : `Pedido #${order.code} enviado`}
-      </p>
+      <p className="mt-4 text-lg font-extrabold text-ink">Pedido #{order.code} enviado</p>
       <p className="mt-2 max-w-sm text-sm text-muted">
-        {payingWithPix
-          ? 'Ele já entrou no sistema da loja. O preparo começa assim que o Pix cair.'
-          : isPickup(order.customer)
-            ? 'Ele já entrou no sistema da loja. A confirmação e o endereço da retirada chegam pelo WhatsApp.'
-            : 'Ele já entrou no sistema da loja. A confirmação e o tempo de entrega chegam pelo WhatsApp.'}
+        {isPickup(order.customer)
+          ? 'Ele já entrou no sistema da loja. A confirmação e o endereço da retirada chegam pelo WhatsApp.'
+          : 'Ele já entrou no sistema da loja. A confirmação e o tempo de entrega chegam pelo WhatsApp.'}
       </p>
 
       {/*
-        Escolheu Pix: o pedido já existe, então o código sai com o valor
-        fechado e o número do pedido na referência. O cliente paga e pode
-        fechar a aba; a loja reconhece pelo extrato.
+        Escolheu Pix: o código já sai daqui com o valor fechado e o número do
+        pedido, então o cliente não digita chave nem erra centavo, e a loja
+        reconhece o pagamento pelo extrato.
       */}
       {payingWithPix && (
         <div className="mt-5 w-full">
-          <PixCode amount={order.total} reference={pixReference(order.code)} />
+          <PixCode amount={order.total} reference={`MR${order.code}`} />
         </div>
       )}
 
