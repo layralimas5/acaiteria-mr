@@ -123,10 +123,7 @@ export const createOrder = async (
     deliveryFee: priced(created.delivery_fee, deliveryFee),
     total: priced(created.total, subtotal + deliveryFee),
     confirmedAt: null,
-    // Espelha o que o banco grava (migration 0012): Pix e checkout online
-    // nascem com pagamento em aberto.
-    paymentStatus:
-      customer.payment === 'online' || customer.payment === 'pix' ? 'aguardando' : 'na_entrega',
+    paymentStatus: customer.payment === 'online' ? 'aguardando' : 'na_entrega',
     paymentReceiptUrl: null,
     paidAt: null,
   }
@@ -134,21 +131,6 @@ export const createOrder = async (
 
 export const updateOrderStatus = async (id: string, status: OrderStatus): Promise<void> => {
   const { error } = await supabase.from('orders').update({ status }).eq('id', id)
-  if (error) throw error
-}
-
-/**
- * A loja viu o Pix no extrato e carimba o pedido como pago.
- *
- * É a única confirmação de pagamento feita pela mão de alguém: o banco não
- * avisa o site quando o Pix cai, então quem confere é quem tem o extrato.
- * A InfinitePay, ao contrário, carimba sozinha pelo webhook.
- */
-export const markPixPaid = async (id: string): Promise<void> => {
-  const { error } = await supabase
-    .from('orders')
-    .update({ payment_status: 'pago', payment_provider: 'pix', paid_at: new Date().toISOString() })
-    .eq('id', id)
   if (error) throw error
 }
 

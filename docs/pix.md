@@ -17,30 +17,6 @@ No extrato da loja o pagamento chega identificado como `MR1001`, o mesmo
 número que está no painel. É assim que se confere quem pagou sem abrir
 comprovante.
 
-## A ordem é: envia o pedido, depois paga
-
-O código Pix só aparece **depois** de o cliente apertar "Enviar e pagar no
-Pix". Antes ele aparecia no checkout, e o cliente copiava, pagava no banco e
-fechava a aba achando que tinha terminado: dinheiro na conta e nenhum pedido
-para preparar.
-
-Agora o pedido entra primeiro (o cliente nunca precisa voltar ao site) e o
-Pix vem na tela seguinte, já com o valor e o número do pedido. É o mesmo fluxo
-do iFood.
-
-## Conferir no painel
-
-O banco não avisa o site quando o Pix cai, então quem confirma é a loja:
-
-1. O pedido entra com o selo amarelo **Conferir Pix** (migration `0012`)
-2. O card mostra o que procurar no extrato: o valor e a referência `MR1001`
-3. Caiu? Clique em **Pix caiu**. O selo vira **Pago** e o preparo começa
-4. Não caiu em alguns minutos? Chame o cliente no WhatsApp pelo próprio card,
-   ou cancele o pedido
-
-Pedido no cartão pelo site não passa por isso: a InfinitePay confirma sozinha
-(`docs/infinitepay.md`).
-
 ## Ligar
 
 Um campo só, em `site/src/config/business.ts`:

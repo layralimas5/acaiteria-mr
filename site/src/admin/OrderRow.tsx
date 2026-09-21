@@ -41,7 +41,7 @@ export function OrderRow({ order, now, onAdvance, onRemove, onOpen }: OrderRowPr
           <span className="text-sm font-extrabold text-ink">#{order.code}</span>
           <span className="text-sm font-bold text-ink">{order.customer.name}</span>
           {open && <WaitBadge iso={order.createdAt} now={now} />}
-          <PaymentBadge status={order.paymentStatus} method={order.customer.payment} compact />
+          <PaymentBadge status={order.paymentStatus} compact />
         </span>
         <span className="mt-0.5 block truncate text-xs text-muted">
           {formatTime(order.createdAt)} · {itemCount} {itemCount === 1 ? 'item' : 'itens'} ·{' '}

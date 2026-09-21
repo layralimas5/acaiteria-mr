@@ -2,15 +2,7 @@ import { formatPrice } from '../lib/order'
 import { notifyUrl } from '../orders/messages'
 import { printReceipt } from '../orders/receipt'
 import type { Order, OrderStatus } from '../orders/types'
-import {
-  awaitingPixCheck,
-  isPickup,
-  nextStatus,
-  paymentLabels,
-  pixReference,
-  statusFlow,
-  statusLabels,
-} from '../orders/types'
+import { isPickup, nextStatus, paymentLabels, statusFlow, statusLabels } from '../orders/types'
 import { DeleteButton } from './DeleteButton'
 import { PaymentBadge } from './PaymentBadge'
 import { WaitBadge } from './WaitBadge'
@@ -24,8 +16,6 @@ interface OrderCardProps {
   readonly onAdvance: (order: Order, status: OrderStatus) => void
   readonly onCancel: (order: Order) => void
   readonly onRemove: (id: string) => void
-  /** A loja viu o Pix no extrato e confirma o pagamento. */
-  readonly onConfirmPix: (order: Order) => void
 }
 
 const statusStyles: Readonly<Record<OrderStatus, string>> = {
@@ -55,12 +45,10 @@ export function OrderCard({
   onAdvance,
   onCancel,
   onRemove,
-  onConfirmPix,
 }: OrderCardProps) {
   const next = nextStatus(order.status)
   const { customer } = order
   const closed = order.status === 'concluido' || order.status === 'cancelado'
-  const pixToCheck = !closed && awaitingPixCheck(order)
   const itemCount = order.items.reduce((total, item) => total + item.quantity, 0)
 
   return (
@@ -74,7 +62,7 @@ export function OrderCard({
           <p className="flex flex-wrap items-center gap-2">
             <span className="text-xl font-extrabold text-ink">#{order.code}</span>
             {!closed && <WaitBadge iso={order.createdAt} now={now} />}
-            <PaymentBadge status={order.paymentStatus} method={order.customer.payment} compact />
+            <PaymentBadge status={order.paymentStatus} compact />
           </p>
           <p className="mt-0.5 text-sm text-muted">
             {time(order.createdAt)} · {customer.name} · {itemCount}{' '}
@@ -89,28 +77,6 @@ export function OrderCard({
       </header>
 
       <StatusSteps status={order.status} />
-
-      {/*
-        O banco não avisa o site quando o Pix cai, então a conferência é da
-        loja: o card diz exatamente o que procurar no extrato (valor e
-        referência) e um clique carimba o pedido como pago.
-      */}
-      {pixToCheck && (
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-          <p className="text-sm text-amber-900">
-            <span className="font-bold">Confira no extrato:</span> Pix de{' '}
-            <span className="font-bold">{formatPrice(order.total)}</span> com a referência{' '}
-            <span className="font-mono font-bold">{pixReference(order.code)}</span>
-          </p>
-          <button
-            type="button"
-            onClick={() => onConfirmPix(order)}
-            className="rounded-full bg-green-700 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-green-800"
-          >
-            Pix caiu
-          </button>
-        </div>
-      )}
 
       {order.confirmedAt && (
         <p className="mt-3 rounded-2xl bg-green-50 px-4 py-2 text-center text-xs font-bold text-green-700">
