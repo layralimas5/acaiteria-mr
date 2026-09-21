@@ -1,5 +1,6 @@
 import type { CartItem } from '../cart/CartContext'
 import { supabase } from '../lib/supabase'
+import { paysOnline } from './payment'
 import type { Customer, Order, OrderStatus, PaymentStatus } from './types'
 
 /**
@@ -123,7 +124,7 @@ export const createOrder = async (
     deliveryFee: priced(created.delivery_fee, deliveryFee),
     total: priced(created.total, subtotal + deliveryFee),
     confirmedAt: null,
-    paymentStatus: customer.payment === 'online' ? 'aguardando' : 'na_entrega',
+    paymentStatus: paysOnline(customer.payment) ? 'aguardando' : 'na_entrega',
     paymentReceiptUrl: null,
     paidAt: null,
   }

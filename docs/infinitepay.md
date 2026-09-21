@@ -1,8 +1,10 @@
 # Pagamento online pela InfinitePay
 
-O cliente monta o açaí, preenche o endereço, escolhe **Pix ou cartão pelo
-site** (é a única forma de pagar antes de receber: o Pix manual está desligado,
-ver `docs/pix.md`) e vai para a tela segura da InfinitePay. Pagou, o dinheiro cai na conta
+O cliente monta o açaí, preenche o endereço, escolhe **Pix** ou **Cartão de
+crédito** e vai para a tela segura da InfinitePay. As duas opções levam para a
+mesma tela, porque a API de link não deixa fixar o meio; o cliente confirma lá
+o que escolheu no site. (O Pix manual, copia e cola para a chave da loja, está
+desligado: `docs/pix.md`.) Pagou, o dinheiro cai na conta
 da loja e o pedido aparece no painel já marcado como **Pago**, sem ninguém
 conferir extrato.
 

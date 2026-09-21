@@ -45,12 +45,15 @@ Pedidos, na hora, em qualquer aparelho.
 
 ## Pagamento
 
-São duas formas, escolhidas no checkout:
+São três formas, escolhidas no checkout:
 
-- **Pix ou cartão pelo site**, no checkout da InfinitePay: Pix com QR Code ou
-  cartão de crédito em até 12x. O dinheiro cai direto na conta da loja e o
-  pedido vira **Pago** no painel sozinho, sem ninguém conferir extrato. Os
-  dados do cartão são digitados na tela da InfinitePay, nunca neste site
+- **Pix**, pago na hora na tela da InfinitePay (QR Code e copia e cola com o
+  valor fechado). O dinheiro cai direto na conta da loja e o pedido vira
+  **Pago** no painel sozinho, sem ninguém conferir extrato
+- **Cartão de crédito**, em até 12x, na mesma tela da InfinitePay. Os dados do
+  cartão são digitados lá, nunca neste site. Pix e cartão aparecem separados no
+  checkout, mas levam para a mesma tela: a API de link da InfinitePay não deixa
+  fixar o meio, então o cliente confirma lá o que escolheu aqui
 - **Dinheiro**, pago na entrega ou na retirada. Ao escolher, o cliente diz para
   quanto precisa de troco, e o valor sai no WhatsApp da loja, no cupom impresso
   e no painel — inclusive na tela de Entregas, para o entregador sair com o
