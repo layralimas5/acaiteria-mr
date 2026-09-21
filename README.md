@@ -149,7 +149,7 @@ e o botão de WhatsApp continua disponível na seção de entrega.
 - [ ] Pagar um pedido de teste no Pix e conferir nome, valor e referência (`docs/pix.md`)
 - [ ] Ligar o pagamento online: InfiniteTag da cliente, migration `0004`, variáveis no Netlify e `payments.onlineCheckout: true` (`docs/infinitepay.md`)
 - [ ] Criar o projeto no Supabase e rodar `supabase/migrations/0001_init.sql` (`docs/supabase.md`)
-- [ ] Rodar as migrations `0009_retirada_no_local.sql`, `0010_pedido_no_horario.sql` e `0011_loja_aberta_na_mao.sql` no SQL Editor (`docs/supabase.md`)
+- [ ] Rodar as migrations `0009_retirada_no_local.sql`, `0010_pedido_no_horario.sql`, `0011_loja_aberta_na_mao.sql` e `0012_pix_a_conferir.sql` no SQL Editor (`docs/supabase.md`)
 - [ ] Endereço da loja em `business.ts` (`address.street` e `district`), para a retirada mostrar onde buscar em vez de mandar pro WhatsApp
 - [ ] Cadastrar o cardápio no painel: o sistema começa vazio, sem nenhum produto
 - [ ] Publicar os primeiros depoimentos reais (painel → Avaliações → Publicar no site; a seção fica escondida até lá)

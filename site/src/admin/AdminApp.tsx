@@ -5,7 +5,7 @@ import { business } from '../config/business'
 import { errorMessage } from '../lib/supabase'
 import { formatPrice } from '../lib/order'
 import { notifyUrl } from '../orders/messages'
-import { listOrders, removeOrder, subscribeToOrders, updateOrderStatus } from '../orders/store'
+import { listOrders, markPixPaid, removeOrder, subscribeToOrders, updateOrderStatus } from '../orders/store'
 import type { Order, OrderStatus } from '../orders/types'
 import { Logo } from '../components/Logo'
 import type { InventoryItem } from '../inventory/store'
@@ -174,6 +174,15 @@ function Panel({ email }: { readonly email: string }) {
         .catch((cause: unknown) => setError(errorMessage(cause)))
     },
     [autoNotify, refresh],
+  )
+
+  const confirmPix = useCallback(
+    (order: Order) => {
+      void markPixPaid(order.id)
+        .then(refresh)
+        .catch((cause: unknown) => setError(errorMessage(cause)))
+    },
+    [refresh],
   )
 
   const discard = useCallback(
@@ -369,7 +378,12 @@ function Panel({ email }: { readonly email: string }) {
           )}
 
           {section === 'pedidos' && (
-            <OrdersView orders={orders} onAdvance={advance} onRemove={discard} />
+            <OrdersView
+              orders={orders}
+              onAdvance={advance}
+              onRemove={discard}
+              onConfirmPix={confirmPix}
+            />
           )}
 
           {section === 'entregas' && <DeliveriesView orders={orders} onAdvance={advance} />}

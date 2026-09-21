@@ -17,6 +17,7 @@ interface OrdersViewProps {
   readonly orders: readonly Order[]
   readonly onAdvance: (order: Order, status: OrderStatus) => void
   readonly onRemove: (id: string) => void
+  readonly onConfirmPix: (order: Order) => void
 }
 
 type Filter = OrderStatus | 'todos' | 'ativos'
@@ -67,7 +68,7 @@ const useNow = (intervalMs: number): number => {
   return now
 }
 
-export function OrdersView({ orders, onAdvance, onRemove }: OrdersViewProps) {
+export function OrdersView({ orders, onAdvance, onRemove, onConfirmPix }: OrdersViewProps) {
   const [filter, setFilter] = useState<Filter>('ativos')
   const [period, setPeriod] = useState<Period>({ id: 'tudo' })
   const [search, setSearch] = useState('')
@@ -251,6 +252,7 @@ export function OrdersView({ orders, onAdvance, onRemove }: OrdersViewProps) {
                       onAdvance={onAdvance}
                       onCancel={(target) => onAdvance(target, 'cancelado')}
                       onRemove={onRemove}
+                      onConfirmPix={onConfirmPix}
                     />
                   ))}
                 </div>
