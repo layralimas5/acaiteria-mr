@@ -148,11 +148,10 @@ e o botão de WhatsApp continua disponível na seção de entrega.
 - [x] Telefone real: (27) 99285-3101
 - [ ] Resto dos dados em `business.ts` (endereço, horário, Instagram)
 - [ ] Confirmar taxa de entrega com o cliente (hoje Viana R$ 3 e Cariacica R$ 6)
-- [x] Chave Pix preenchida (e-mail da conta InfinitePay)
-- [ ] Pagar um pedido de teste no Pix e conferir nome, valor e referência (`docs/pix.md`)
-- [ ] Ligar o pagamento online: InfiniteTag da cliente, migration `0004`, variáveis no Netlify e `payments.onlineCheckout: true` (`docs/infinitepay.md`)
-- [ ] Criar o projeto no Supabase e rodar `supabase/migrations/0001_init.sql` (`docs/supabase.md`)
-- [ ] Rodar as migrations `0009_retirada_no_local.sql`, `0010_pedido_no_horario.sql`, `0011_loja_aberta_na_mao.sql` e `0012_pix_pela_infinitepay.sql` no SQL Editor (`docs/supabase.md`)
+- [x] Pix manual desligado (`pixKey` vazia): o Pix vai pela InfinitePay (`docs/pix.md`)
+- [x] Pagamento online ligado e testado em produção em 21/09/2026: InfiniteTag da cliente, migration `0004`, variáveis no Netlify e `payments.onlineCheckout: true` (`docs/infinitepay.md`)
+- [x] Criar o projeto no Supabase e rodar `supabase/migrations/0001_init.sql` (`docs/supabase.md`)
+- [x] Migrations até a `0012_pix_pela_infinitepay.sql` rodadas no SQL Editor (`docs/supabase.md`)
 - [ ] Endereço da loja em `business.ts` (`address.street` e `district`), para a retirada mostrar onde buscar em vez de mandar pro WhatsApp
 - [ ] Cadastrar o cardápio no painel: o sistema começa vazio, sem nenhum produto
 - [ ] Publicar os primeiros depoimentos reais (painel → Avaliações → Publicar no site; a seção fica escondida até lá)
