@@ -70,10 +70,17 @@ const availablePayments = (): readonly PaymentMethod[] =>
 /** Primeira forma da lista: é a que já vem marcada. */
 const defaultPayment = (): PaymentMethod => availablePayments()[0] ?? 'dinheiro'
 
+/**
+ * Conferência de formato, sem rigor de RFC: o que a InfinitePay precisa é de
+ * algo com usuário, arroba e domínio com ponto. O resto é problema dela.
+ */
+const isEmail = (value: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)
+
 const emptyCustomer = (): Customer => ({
   name: '',
   fulfillment: 'entrega',
   phone: '',
+  email: '',
   address: '',
   district: '',
   city: '',
@@ -188,6 +195,13 @@ export function CheckoutForm({
   const typedCity = customer.city?.trim() ?? ''
   const cityIsUnserved = typedCity.length >= 3 && area === null
 
+  // Pagando pelo site, a InfinitePay só abre direto no Pix ou no cartão se o
+  // link já levar o e-mail do cliente: sem ele, a tela dela pede contato e
+  // endereço de novo antes de mostrar o QR Code. É para lá que vai o
+  // comprovante, então o campo só aparece (e só é obrigatório) nesse caso.
+  const payingOnline = paysOnline(customer.payment)
+  const typedEmail = customer.email?.trim() ?? ''
+
   // Na retirada não existe endereço para conferir: o cliente vem até a loja.
   const missing = {
     name: customer.name.trim().length < 2,
@@ -195,9 +209,15 @@ export function CheckoutForm({
     address: !pickup && customer.address.trim().length < 6,
     district: !pickup && (customer.district?.trim() ?? '').length < 2,
     city: !pickup && area === null,
+    email: payingOnline && !isEmail(typedEmail),
   }
   const invalid =
-    missing.name || missing.phone || missing.address || missing.district || missing.city
+    missing.name ||
+    missing.phone ||
+    missing.address ||
+    missing.district ||
+    missing.city ||
+    missing.email
 
   const update = <K extends keyof Customer>(key: K, value: Customer[K]) =>
     setCustomer((current) => ({ ...current, [key]: value }))
@@ -225,17 +245,19 @@ export function CheckoutForm({
         event.preventDefault()
         setTouched(true)
         if (invalid || sending) return
+        const email = payingOnline ? typedEmail.toLowerCase() : ''
         onSubmit(
           pickup
             ? {
                 ...customer,
+                email,
                 fulfillment: 'retirada',
                 address: '',
                 district: '',
                 city: '',
                 reference: '',
               }
-            : { ...customer, fulfillment: 'entrega', city: area?.city ?? '' },
+            : { ...customer, email, fulfillment: 'entrega', city: area?.city ?? '' },
         )
       }}
     >
@@ -480,8 +502,27 @@ export function CheckoutForm({
           </div>
         </fieldset>
 
-        {paysOnline(customer.payment) && (
-          <CreditCardInfo total={total} pickup={pickup} method={customer.payment} />
+        {payingOnline && (
+          <>
+            <Field
+              label="E-mail (o comprovante do pagamento vai pra ele)"
+              error={touched && missing.email ? 'Um e-mail válido, tipo nome@gmail.com' : null}
+            >
+              <input
+                type="email"
+                inputMode="email"
+                value={customer.email ?? ''}
+                maxLength={120}
+                onChange={(event) => update('email', event.target.value)}
+                placeholder="nome@gmail.com"
+                autoComplete="email"
+                autoCapitalize="none"
+                spellCheck={false}
+                className="w-full rounded-xl border border-acai-200 px-3.5 py-3 text-base text-ink outline-none focus:border-acai-700 sm:px-3 sm:py-2.5 sm:text-sm"
+              />
+            </Field>
+            <CreditCardInfo total={total} pickup={pickup} method={customer.payment} />
+          </>
         )}
 
         {/*
@@ -558,7 +599,7 @@ export function CheckoutForm({
         >
           {sending
             ? 'Enviando...'
-            : paysOnline(customer.payment)
+            : payingOnline
               ? pickup || area
                 ? `Ir para o pagamento · ${formatPrice(total)}`
                 : 'Ir para o pagamento'

@@ -64,6 +64,15 @@ tira o dinheiro da tela e, com ele, o campo de troco. O checkout online exige
 as três variáveis do Netlify antes de ser ligado, senão o cliente escolhe e
 leva erro na hora de pagar: `docs/infinitepay.md`.
 
+A tela da InfinitePay tem três etapas (contato, entrega e pagamento) e só abre
+direto no Pix ou no cartão quando o link já leva o **e-mail** e o **endereço
+completo com CEP** do cliente. Por isso o checkout pede e-mail quando o
+pagamento é pelo site, e a função servidor manda o endereço do pedido com o
+CEP de referência do município (`delivery.areas[].cep` em `business.ts`). Sem
+isso o cliente preenchia tudo de novo na InfinitePay e desistia antes do QR
+Code. Esse CEP não muda para onde o pedido vai: o endereço de entrega é o do
+painel.
+
 Existe ainda o **Pix manual** (copia e cola para a chave da loja, sem
 confirmação automática), hoje desligado porque o Pix já passa pela InfinitePay.
 Para reativar, basta preencher `payments.pixKey`: `docs/pix.md`.
@@ -152,6 +161,7 @@ e o botão de WhatsApp continua disponível na seção de entrega.
 - [x] Pagamento online ligado e testado em produção em 21/09/2026: InfiniteTag da cliente, migration `0004`, variáveis no Netlify e `payments.onlineCheckout: true` (`docs/infinitepay.md`)
 - [x] Criar o projeto no Supabase e rodar `supabase/migrations/0001_init.sql` (`docs/supabase.md`)
 - [x] Migrations até a `0012_pix_pela_infinitepay.sql` rodadas no SQL Editor (`docs/supabase.md`)
+- [ ] Rodar a `0013_email_no_pedido.sql` no SQL Editor (e-mail do cliente no pedido pago pelo site)
 - [ ] Endereço da loja em `business.ts` (`address.street` e `district`), para a retirada mostrar onde buscar em vez de mandar pro WhatsApp
 - [ ] Cadastrar o cardápio no painel: o sistema começa vazio, sem nenhum produto
 - [ ] Publicar os primeiros depoimentos reais (painel → Avaliações → Publicar no site; a seção fica escondida até lá)

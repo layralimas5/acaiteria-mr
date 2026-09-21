@@ -27,6 +27,12 @@ export interface Customer {
    */
   readonly fulfillment?: Fulfillment
   readonly phone: string
+  /**
+   * E-mail de quem paga pelo site. O checkout da InfinitePay abre a etapa de
+   * contato quando o link chega sem ele, e é para lá que vai o comprovante.
+   * Pedido pago na entrega não pede e não guarda.
+   */
+  readonly email?: string
   /** Rua e número. O bairro e o município têm campo próprio. */
   readonly address: string
   /** Bairro da entrega. Ausente nos pedidos anteriores ao campo existir. */
