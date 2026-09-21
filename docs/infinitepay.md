@@ -1,7 +1,8 @@
 # Pagamento online pela InfinitePay
 
 O cliente monta o açaí, preenche o endereço, escolhe **Pix ou cartão pelo
-site** e vai para a tela segura da InfinitePay. Pagou, o dinheiro cai na conta
+site** (é a única forma de pagar antes de receber: o Pix manual está desligado,
+ver `docs/pix.md`) e vai para a tela segura da InfinitePay. Pagou, o dinheiro cai na conta
 da loja e o pedido aparece no painel já marcado como **Pago**, sem ninguém
 conferir extrato.
 
@@ -232,8 +233,8 @@ sempre do banco. Nenhuma das duas telas acredita na URL de retorno.
   carimbo é idempotente: o mesmo pagamento não vira dois.
 - **Cair no meio do caminho não perde o pedido.** Ele já está gravado; a tela
   oferece "Pagar agora" de novo e, se nada funcionar, o WhatsApp.
-- **Quem prefere pagar na entrega continua podendo.** Pix na entrega, cartão na
-  maquininha e dinheiro seguem na lista, controlados como sempre em
+- **Quem prefere pagar na entrega continua podendo.** Dinheiro (e cartão na
+  maquininha, se a loja um dia levar) segue na lista, controlado como sempre em
   `business.ts`.
 
 ## Para desligar

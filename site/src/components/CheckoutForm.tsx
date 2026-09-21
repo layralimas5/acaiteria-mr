@@ -52,18 +52,22 @@ interface CheckoutFormProps {
  * Formas aceitas hoje, conforme a configuração da loja. A ordem é a da tela:
  * pagar na hora vem primeiro porque é o que fecha o pedido sem depender de
  * ninguém digitar chave nem separar troco.
+ *
+ * O Pix manual (copia e cola para a chave da loja) só entra quando há chave:
+ * com o checkout online ligado, o Pix passa pela InfinitePay e a loja recebe
+ * o pedido já marcado como pago, sem conferir extrato.
  */
 const availablePayments = (): readonly PaymentMethod[] =>
   (['online', 'pix', 'cartao', 'dinheiro'] as const).filter(
     (method) =>
-      method === 'pix' ||
+      (method === 'pix' && business.payments.pixKey !== '') ||
       (method === 'online' && business.payments.onlineCheckout) ||
       (method === 'cartao' && business.payments.cardOnDelivery) ||
       (method === 'dinheiro' && business.payments.cash),
   )
 
 /** Primeira forma da lista: é a que já vem marcada. */
-const defaultPayment = (): PaymentMethod => availablePayments()[0] ?? 'pix'
+const defaultPayment = (): PaymentMethod => availablePayments()[0] ?? 'dinheiro'
 
 const emptyCustomer = (): Customer => ({
   name: '',

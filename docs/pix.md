@@ -1,6 +1,11 @@
-# Pix copia e cola
+# Pix copia e cola (manual)
 
-Como ligar o Pix da loja e o que o cliente vê na tela.
+Como ligar o Pix manual da loja e o que o cliente vê na tela.
+
+> **Hoje está desligado.** O Pix da Açaiteria MR passa pelo checkout da
+> InfinitePay (`docs/infinitepay.md`), que confirma o pagamento sozinho. Este
+> caminho continua no código como alternativa: ele não confirma nada, a loja
+> precisa bater o extrato. Só ligar se a InfinitePay sair de cena.
 
 ## O que muda para o cliente
 

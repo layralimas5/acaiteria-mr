@@ -25,7 +25,7 @@ interface CreditCardInfoProps {
 export function CreditCardInfo({ total, pickup = false }: CreditCardInfoProps) {
   return (
     <div className="rounded-2xl border border-acai-100 bg-acai-50/70 p-4">
-      <p className="text-sm font-bold text-ink">Pague {formatPrice(total)} no cartão</p>
+      <p className="text-sm font-bold text-ink">Pague {formatPrice(total)} no Pix ou no cartão</p>
 
       <ol className="mt-3 space-y-2 text-xs leading-relaxed text-muted">
         <li className="flex gap-2.5">
@@ -38,8 +38,8 @@ export function CreditCardInfo({ total, pickup = false }: CreditCardInfoProps) {
           <Step n={2} />
           <span>
             Você vai direto para a tela de pagamento da{' '}
-            <strong className="font-semibold text-ink">InfinitePay</strong>, onde digita os dados do
-            cartão. Crédito em até 12x.
+            <strong className="font-semibold text-ink">InfinitePay</strong> e escolhe: Pix com QR
+            Code ou cartão de crédito em até 12x.
           </span>
         </li>
         <li className="flex gap-2.5">
@@ -53,7 +53,7 @@ export function CreditCardInfo({ total, pickup = false }: CreditCardInfoProps) {
       </ol>
 
       <p className="mt-3 rounded-xl bg-white px-3 py-2 text-xs leading-relaxed text-muted">
-        Os dados do cartão são digitados na tela da InfinitePay, não aqui. Este site nunca vê nem
+        O Pix e os dados do cartão ficam na tela da InfinitePay, não aqui. Este site nunca vê nem
         guarda o número do seu cartão.
       </p>
     </div>

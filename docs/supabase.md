@@ -28,6 +28,7 @@ O plano gratuito atende com folga o volume de uma açaiteria.
    - `0009_retirada_no_local.sql`: aceita o pedido de retirada e grava taxa zero nele, venha o que vier do navegador
    - `0010_pedido_no_horario.sql`: recusa pedido fora do horário de atendimento, no fuso da loja
    - `0011_loja_aberta_na_mao.sql`: o botão do painel para fechar mais cedo ou seguir aberta depois da hora, com o site e a trava do banco obedecendo
+   - `0012_pix_pela_infinitepay.sql`: remove o trigger do Pix manual, se existir; o Pix passa pela InfinitePay junto com o cartão
 
 Isso cria as tabelas, os índices, as funções e as regras de segurança (RLS).
 O banco nasce **vazio**: nenhum produto, nenhum preço. Quem cadastra o

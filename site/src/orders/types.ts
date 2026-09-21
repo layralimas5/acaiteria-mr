@@ -77,7 +77,7 @@ export const statusLabels: Readonly<Record<OrderStatus, string>> = {
 }
 
 export const paymentLabels: Readonly<Record<PaymentMethod, string>> = {
-  online: 'Cartão de crédito',
+  online: 'Pix ou cartão pelo site',
   pix: 'Pix',
   dinheiro: 'Dinheiro',
   cartao: 'Cartão na entrega',
@@ -85,8 +85,8 @@ export const paymentLabels: Readonly<Record<PaymentMethod, string>> = {
 
 /** Linha de apoio de cada forma de pagamento, mostrada no checkout. */
 export const paymentHints: Readonly<Record<PaymentMethod, string>> = {
-  online: 'Paga agora, em até 12x, direto no sistema',
-  pix: 'O QR Code e o copia e cola aparecem aqui na hora',
+  online: 'Paga agora e o pedido já entra confirmado. Cartão em até 12x',
+  pix: 'Copia e cola direto para a conta da loja',
   dinheiro: 'Diga abaixo se precisa de troco',
   cartao: 'Crédito ou débito na maquininha, na entrega',
 }
