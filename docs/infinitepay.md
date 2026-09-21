@@ -13,6 +13,23 @@ normal da venda. Aceita Pix e cartão em até 12x.
 
 ---
 
+## Por que o site pede e-mail e manda endereço
+
+A tela da InfinitePay tem três etapas: contato, entrega e pagamento. Ela só
+pula as duas primeiras e abre direto no Pix ou no cartão quando o link já
+chega com `customer.email` e um `address` completo (`cep`, `street`,
+`number`, `neighborhood`, `city`, `state`). Testado em 21/09/2026: sem e-mail
+ela abre na etapa de contato; sem CEP, na de endereço, mesmo com rua e bairro.
+
+Por isso o checkout pede o e-mail quando o pagamento é pelo site (é para ele
+que vai o comprovante), e `pagamento-link.mts` monta o endereço a partir do
+pedido, completando com o CEP de referência do município
+(`delivery.areas[].cep` em `business.ts`). O site não pede CEP ao cliente.
+Esse CEP só serve para a InfinitePay: o endereço de entrega continua sendo o
+que está no pedido e no painel. Na retirada vai "Retirada na loja".
+
+---
+
 ## O que já está pronto no sistema
 
 | Peça | Onde |

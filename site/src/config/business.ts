@@ -31,6 +31,13 @@ export interface DeliveryArea {
   /** Taxa que vale nos bairros sem valor próprio em `districtFees`. */
   readonly fee: number
   /**
+   * CEP de referência do município, só dígitos. O checkout da InfinitePay
+   * exige um CEP no endereço para pular a etapa de entrega, e o site não pede
+   * CEP ao cliente: rua, número e bairro vão como ele digitou, e este CEP
+   * completa o que falta. Não muda para onde o pedido vai.
+   */
+  readonly cep: string
+  /**
    * Bairros com taxa própria. Também funcionam como apelido do município no
    * checkout: quem escreve "Campo Grande" ou "Marcílio de Noronha" no campo de
    * município cai no município certo em vez de ouvir que não entregamos ali.
@@ -214,6 +221,7 @@ export const business: BusinessConfig = {
         city: 'Viana',
         state: 'ES',
         fee: 3,
+        cep: '29130125',
         // Bairros de Viana. Os mais distantes custam 5; os de perto seguem nos 3
         // do município e ficam listados para o cliente que responde o bairro no
         // lugar do município ser reconhecido do mesmo jeito.
@@ -235,6 +243,7 @@ export const business: BusinessConfig = {
         city: 'Cariacica',
         state: 'ES',
         fee: 6,
+        cep: '29146300',
         districtFees: [{ districts: ['Campo Grande'], fee: 6 }],
       },
     ],

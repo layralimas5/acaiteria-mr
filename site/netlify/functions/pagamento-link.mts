@@ -8,6 +8,8 @@ import {
   simulacaoDePagamento,
   toCents,
 } from './_shared.mts'
+import { business } from '../../src/config/business'
+import type { DeliveryArea } from '../../src/config/business'
 
 /**
  * Gera o link de pagamento da InfinitePay para um pedido que já existe.
@@ -38,7 +40,29 @@ interface OrderRow {
   readonly delivery_fee: number
   readonly payment_status: string
   readonly items: readonly CartLine[]
-  readonly customer: { readonly name?: string; readonly phone?: string } | null
+  readonly customer: OrderCustomer | null
+}
+
+interface OrderCustomer {
+  readonly name?: string
+  readonly phone?: string
+  readonly email?: string
+  readonly fulfillment?: string
+  /** Rua e número, como o cliente digitou. */
+  readonly address?: string
+  readonly district?: string
+  readonly city?: string
+}
+
+/** Endereço no formato que a API de link da InfinitePay aceita. */
+interface CheckoutAddress {
+  readonly cep: string
+  readonly street: string
+  readonly number: string
+  readonly complement?: string
+  readonly neighborhood: string
+  readonly city: string
+  readonly state: string
 }
 
 interface CartLine {
@@ -81,6 +105,72 @@ const checkoutItems = (order: OrderRow): readonly CheckoutItem[] => {
 
   const sum = lines.reduce((total, line) => total + line.price * line.quantity, 0)
   return lines.length > 0 && sum === toCents(order.total) ? lines : single
+}
+
+const normalize = (value: string): string =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+
+/**
+ * Município do pedido na configuração da loja. O checkout grava `city` já
+ * reconhecido, então a comparação é só por precaução contra acento e caixa.
+ */
+const areaOf = (city: string): DeliveryArea => {
+  const wanted = normalize(city)
+  return business.delivery.areas.find((area) => normalize(area.city) === wanted) ?? business.delivery.areas[0]
+}
+
+/**
+ * Separa "Rua das Flores, 123" em rua e número. O site pede os dois num campo
+ * só, e a InfinitePay quer cada um no seu. Sem número no fim, vai "s/n": o
+ * endereço de verdade, para a entrega, é o que está no pedido e no painel.
+ */
+const splitStreet = (address: string): { readonly street: string; readonly number: string } => {
+  const match = /^(.*?)[,\s]+(?:n[º°o.]*\s*)?(\d+\s?[a-zA-Z]?)\s*$/.exec(address.trim())
+  if (!match) return { street: address.trim(), number: 's/n' }
+  return { street: match[1].replace(/[,\s]+$/, ''), number: match[2].replace(/\s+/g, '') }
+}
+
+/**
+ * Endereço que vai junto com a cobrança.
+ *
+ * A tela da InfinitePay tem três etapas, contato, entrega e pagamento, e só
+ * abre direto no Pix ou no cartão quando o link já traz e-mail e um endereço
+ * completo, CEP incluído. Sem isso o cliente, que acabou de preencher tudo
+ * aqui, preenche tudo de novo lá, e muitos desistem no meio. O site não pede
+ * CEP, então entra o CEP de referência do município: ele não decide para
+ * onde o pedido vai, isso continua sendo o endereço gravado no banco.
+ *
+ * Retirada não tem endereço de entrega. Vai o da loja, com o nome da etapa
+ * no lugar da rua, para o cliente ler na tela que não é entrega.
+ */
+export const checkoutAddress = (customer: OrderCustomer | null): CheckoutAddress => {
+  const pickup = customer?.fulfillment === 'retirada'
+  const area = areaOf(pickup ? business.address.city : (customer?.city ?? ''))
+
+  if (pickup) {
+    return {
+      cep: area.cep,
+      street: business.address.street || 'Retirada na loja',
+      number: 's/n',
+      neighborhood: business.address.district || area.city,
+      city: area.city,
+      state: area.state,
+    }
+  }
+
+  const { street, number } = splitStreet(customer?.address ?? '')
+  return {
+    cep: area.cep,
+    street: street || 'Endereço no pedido',
+    number,
+    neighborhood: customer?.district?.trim() || area.city,
+    city: area.city,
+    state: area.state,
+  }
 }
 
 export default async (request: Request): Promise<Response> => {
@@ -146,7 +236,9 @@ export default async (request: Request): Promise<Response> => {
         customer: {
           name: order.customer?.name ?? '',
           phone_number: order.customer?.phone ?? '',
+          email: order.customer?.email ?? '',
         },
+        address: checkoutAddress(order.customer),
       }),
     })
 
