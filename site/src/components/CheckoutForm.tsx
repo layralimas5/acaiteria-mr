@@ -16,6 +16,7 @@ import {
 } from '../lib/order'
 import type { DeliveryPlace } from '../lib/order'
 import type { Customer, Fulfillment, PaymentMethod } from '../orders/types'
+import { paysOnline } from '../orders/payment'
 import { paymentHints, paymentLabels } from '../orders/types'
 import { CreditCardInfo } from './CreditCardInfo'
 import { PixCode } from './PixCode'
@@ -53,14 +54,14 @@ interface CheckoutFormProps {
  * pagar na hora vem primeiro porque é o que fecha o pedido sem depender de
  * ninguém digitar chave nem separar troco.
  *
- * O Pix manual (copia e cola para a chave da loja) só entra quando há chave:
- * com o checkout online ligado, o Pix passa pela InfinitePay e a loja recebe
- * o pedido já marcado como pago, sem conferir extrato.
+ * O Pix aparece com chave manual (copia e cola para a conta da loja) ou com o
+ * checkout online ligado; nesse caso ele vai pela InfinitePay, como o cartão,
+ * e a loja recebe o pedido já marcado como pago, sem conferir extrato.
  */
 const availablePayments = (): readonly PaymentMethod[] =>
   (['online', 'pix', 'cartao', 'dinheiro'] as const).filter(
     (method) =>
-      (method === 'pix' && business.payments.pixKey !== '') ||
+      (method === 'pix' && (business.payments.pixKey !== '' || business.payments.onlineCheckout)) ||
       (method === 'online' && business.payments.onlineCheckout) ||
       (method === 'cartao' && business.payments.cardOnDelivery) ||
       (method === 'dinheiro' && business.payments.cash),
@@ -108,15 +109,6 @@ function CashIcon() {
   )
 }
 
-function OnlineIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5 fill-none stroke-current stroke-[1.8]">
-      <rect x="5" y="2.5" width="14" height="19" rx="3" />
-      <path d="M10 18.5h4" strokeLinecap="round" />
-      <path d="M9.5 9.5l1.8 1.8L15 7.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
 
 function MotoIcon() {
   return (
@@ -139,7 +131,7 @@ function StoreIcon() {
 }
 
 const paymentIcons: Readonly<Record<PaymentMethod, () => ReactNode>> = {
-  online: OnlineIcon,
+  online: CardIcon,
   pix: PixIcon,
   cartao: CardIcon,
   dinheiro: CashIcon,
@@ -488,15 +480,17 @@ export function CheckoutForm({
           </div>
         </fieldset>
 
-        {customer.payment === 'online' && <CreditCardInfo total={total} pickup={pickup} />}
+        {paysOnline(customer.payment) && (
+          <CreditCardInfo total={total} pickup={pickup} method={customer.payment} />
+        )}
 
         {/*
-          O código sai aqui, no clique, e não só depois de enviar: quem escolhe
-          Pix quer pagar naquele instante, com o celular na mão. O valor é o
-          desta tela, taxa de entrega incluída, e o card avisa que pagar sozinho
-          não envia o pedido.
+          Pix manual: o código sai aqui, no clique, e não só depois de enviar,
+          porque quem escolhe Pix quer pagar naquele instante, com o celular na
+          mão. O valor é o desta tela, taxa de entrega incluída, e o card avisa
+          que pagar sozinho não envia o pedido.
         */}
-        {customer.payment === 'pix' && <PixCode amount={total} beforeOrder />}
+        {customer.payment === 'pix' && !paysOnline('pix') && <PixCode amount={total} beforeOrder />}
 
         {customer.payment === 'dinheiro' && (
           <Field label="Troco para quanto? (opcional)" error={null}>
@@ -564,7 +558,7 @@ export function CheckoutForm({
         >
           {sending
             ? 'Enviando...'
-            : customer.payment === 'online'
+            : paysOnline(customer.payment)
               ? pickup || area
                 ? `Ir para o pagamento · ${formatPrice(total)}`
                 : 'Ir para o pagamento'

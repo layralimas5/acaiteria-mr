@@ -1,5 +1,6 @@
+import { business } from '../config/business'
 import { supabase } from '../lib/supabase'
-import type { PaymentStatus } from './types'
+import type { PaymentMethod, PaymentStatus } from './types'
 
 /**
  * Pagamento online, pelo checkout da InfinitePay.
@@ -9,6 +10,16 @@ import type { PaymentStatus } from './types'
  * do total gravado no banco. É de propósito — link gerado aqui seria link com
  * o valor que o navegador quisesse.
  */
+
+/**
+ * Formas pagas na hora, pela InfinitePay. O checkout mostra Pix e cartão como
+ * duas opções separadas, mas as duas levam para a mesma tela: a API de link
+ * não deixa fixar o meio, então o cliente confirma lá o que escolheu aqui. O
+ * Pix só cai nesse caminho quando não há chave manual (`payments.pixKey`).
+ */
+export const paysOnline = (method: PaymentMethod): boolean =>
+  business.payments.onlineCheckout &&
+  (method === 'online' || (method === 'pix' && business.payments.pixKey === ''))
 
 /** Endereço da função. Mesma origem do site, então vale em produção e em preview. */
 const LINK_ENDPOINT = '/api/pagamento-link'

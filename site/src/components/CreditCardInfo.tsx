@@ -1,10 +1,13 @@
 import { formatPrice } from '../lib/order'
+import type { PaymentMethod } from '../orders/types'
 
 interface CreditCardInfoProps {
   /** Total do pedido, taxa de entrega incluída. */
   readonly total: number
   /** true quando o cliente vai buscar o pedido: não há entrega para prometer. */
   readonly pickup?: boolean
+  /** Pix ou cartão: muda só o texto, a tela da InfinitePay é a mesma. */
+  readonly method: PaymentMethod
 }
 
 /**
@@ -22,10 +25,11 @@ interface CreditCardInfoProps {
  * débito, porque prometer na tela uma opção que pode não aparecer no checkout
  * faz o cliente desistir no meio do pagamento.
  */
-export function CreditCardInfo({ total, pickup = false }: CreditCardInfoProps) {
+export function CreditCardInfo({ total, pickup = false, method }: CreditCardInfoProps) {
+  const pix = method === 'pix'
   return (
     <div className="rounded-2xl border border-acai-100 bg-acai-50/70 p-4">
-      <p className="text-sm font-bold text-ink">Pague {formatPrice(total)} no Pix ou no cartão</p>
+      <p className="text-sm font-bold text-ink">Pague {formatPrice(total)} {pix ? 'no Pix' : 'no cartão'}</p>
 
       <ol className="mt-3 space-y-2 text-xs leading-relaxed text-muted">
         <li className="flex gap-2.5">
@@ -38,8 +42,10 @@ export function CreditCardInfo({ total, pickup = false }: CreditCardInfoProps) {
           <Step n={2} />
           <span>
             Você vai direto para a tela de pagamento da{' '}
-            <strong className="font-semibold text-ink">InfinitePay</strong> e escolhe: Pix com QR
-            Code ou cartão de crédito em até 12x.
+            <strong className="font-semibold text-ink">InfinitePay</strong>
+            {pix
+              ? ' e escolhe Pix: aparece o QR Code e o copia e cola com o valor fechado.'
+              : ' e escolhe cartão: digita os dados lá, crédito em até 12x.'}
           </span>
         </li>
         <li className="flex gap-2.5">
@@ -53,8 +59,9 @@ export function CreditCardInfo({ total, pickup = false }: CreditCardInfoProps) {
       </ol>
 
       <p className="mt-3 rounded-xl bg-white px-3 py-2 text-xs leading-relaxed text-muted">
-        O Pix e os dados do cartão ficam na tela da InfinitePay, não aqui. Este site nunca vê nem
-        guarda o número do seu cartão.
+        {pix
+          ? 'O QR Code é gerado na tela da InfinitePay, direto para a conta da loja.'
+          : 'Os dados do cartão são digitados na tela da InfinitePay, não aqui. Este site nunca vê nem guarda o número do seu cartão.'}
       </p>
     </div>
   )

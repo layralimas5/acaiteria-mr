@@ -17,7 +17,7 @@ import {
 import { errorMessage } from '../../lib/supabase'
 import { saveLastOrder } from '../../orders/lastOrder'
 import { orderMessage } from '../../orders/messages'
-import { paymentLink } from '../../orders/payment'
+import { paymentLink, paysOnline } from '../../orders/payment'
 import { createOrder } from '../../orders/store'
 import type { Customer, Fulfillment, Order } from '../../orders/types'
 import { isPickup } from '../../orders/types'
@@ -94,7 +94,7 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
     // Pagando pelo site, o cliente sai desta aba para o checkout da
     // InfinitePay: abrir o WhatsApp junto só atrapalharia. A conversa vem
     // depois, na volta do pagamento.
-    const payingOnline = customer.payment === 'online'
+    const payingOnline = paysOnline(customer.payment)
 
     // A aba do WhatsApp precisa abrir agora, no clique: aberta depois da
     // resposta do banco, o navegador entende como popup e bloqueia. Ela abre
@@ -347,7 +347,8 @@ function CartLine({ item, onIncrement, onDecrement, onRemove }: CartLineProps) {
 
 function OrderDone({ order, onBuildMore }: { readonly order: Order; readonly onBuildMore: () => void }) {
   const awaitingPayment = order.paymentStatus === 'aguardando'
-  const payingWithPix = order.customer.payment === 'pix'
+  // Pix manual: pago nesta tela, com o código. Pelo site, ele já saiu daqui.
+  const payingWithPix = order.customer.payment === 'pix' && !paysOnline('pix')
   const [opening, setOpening] = useState(awaitingPayment)
   const [linkError, setLinkError] = useState<string | null>(null)
 
