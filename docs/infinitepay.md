@@ -1,12 +1,15 @@
 # Pagamento online pela InfinitePay
 
-O cliente monta o açaí, preenche o endereço, escolhe **Pix** ou **Cartão de
-crédito** e vai para a tela segura da InfinitePay. As duas opções levam para a
-mesma tela, porque a API de link não deixa fixar o meio; o cliente confirma lá
-o que escolheu no site. (O Pix manual, copia e cola para a chave da loja, está
-desligado: `docs/pix.md`.) Pagou, o dinheiro cai na conta
-da loja e o pedido aparece no painel já marcado como **Pago**, sem ninguém
-conferir extrato.
+O cliente monta o açaí, preenche o endereço, escolhe **Cartão de crédito** e
+vai para a tela segura da InfinitePay. Pagou, o dinheiro cai na conta da loja e
+o pedido aparece no painel já marcado como **Pago**, sem ninguém conferir
+extrato.
+
+O **Pix não vem mais por aqui**: a pedido da loja ele voltou a ser copia e cola
+direto para a chave dela (`docs/pix.md`), sem taxa e sem intermediário. A
+InfinitePay ficou só com o cartão. A tela dela continua oferecendo Pix a quem
+chega pelo cartão, porque a API de link não deixa fixar o meio de pagamento:
+quem pagar assim cai no mesmo lugar e o pedido é confirmado do mesmo jeito.
 
 Custa zero: o Checkout Integrado da InfinitePay é gratuito, você paga só a taxa
 normal da venda. Aceita Pix e cartão em até 12x.
@@ -34,7 +37,7 @@ que está no pedido e no painel. Na retirada vai "Retirada na loja".
 
 | Peça | Onde |
 | --- | --- |
-| Opção "Pix ou cartão pelo site" no checkout | `site/src/components/CheckoutForm.tsx` |
+| Opção "Cartão de crédito" no checkout | `site/src/components/CheckoutForm.tsx` |
 | Liga/desliga a opção | `site/src/config/business.ts` (`payments.onlineCheckout`) |
 | Geração do link de cobrança (servidor) | `site/netlify/functions/pagamento-link.mts` |
 | Confirmação do pagamento (servidor) | `site/netlify/functions/infinitepay-webhook.mts` |
@@ -114,7 +117,7 @@ erro na hora de pagar. Variáveis primeiro, `true` depois.
 
 ## Como testar antes de soltar para o público
 
-1. Fazer um pedido de verdade no site, escolhendo "Pix ou cartão pelo site".
+1. Fazer um pedido de verdade no site, escolhendo "Cartão de crédito".
 2. Pagar um valor baixo no Pix (monte o menor copo, sem complemento pago).
 3. Conferir três coisas:
    - o site volta dizendo **Pagamento confirmado**;
@@ -183,8 +186,8 @@ PAGAMENTO_SIMULADO = 1
 ```
 
 Marcar o escopo **Deploy previews** e **Branch deploys** — nunca Production.
-Depois é só abrir o site do preview e fazer um pedido normal escolhendo "Pix ou
-cartão pelo site".
+Depois é só abrir o site do preview e fazer um pedido normal escolhendo
+"Cartão de crédito".
 
 Para rodar na sua máquina, o mesmo vale com `netlify dev` e a variável no
 ambiente. Aí precisa também de `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` e

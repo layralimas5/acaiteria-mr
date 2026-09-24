@@ -89,13 +89,23 @@ export const paymentLabels: Readonly<Record<PaymentMethod, string>> = {
   cartao: 'Cartão na entrega',
 }
 
-/** Linha de apoio de cada forma de pagamento, mostrada no checkout. */
+/**
+ * Linha de apoio de cada forma de pagamento, mostrada no checkout.
+ *
+ * O Pix tem dois textos porque tem dois caminhos: copia e cola para a conta da
+ * loja, quando há chave cadastrada, ou o checkout da InfinitePay, quando não
+ * há. Quem escolhe entre os dois é `paymentHint`, em `orders/payment.ts`, que
+ * é quem conhece a configuração da loja.
+ */
 export const paymentHints: Readonly<Record<PaymentMethod, string>> = {
   online: 'Paga agora, em até 12x, e o pedido já entra confirmado',
-  pix: 'Paga agora pelo QR Code e o pedido já entra confirmado',
+  pix: 'Copie o código, pague no banco e volte pra enviar o pedido',
   dinheiro: 'Diga abaixo se precisa de troco',
   cartao: 'Crédito ou débito na maquininha, na entrega',
 }
+
+/** Apoio do Pix quando ele passa pela InfinitePay, sem chave manual. */
+export const onlinePixHint = 'Paga agora pelo QR Code e o pedido já entra confirmado'
 
 export const fulfillmentLabels: Readonly<Record<Fulfillment, string>> = {
   entrega: 'Entrega',

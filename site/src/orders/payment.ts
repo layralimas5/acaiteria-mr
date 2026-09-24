@@ -1,6 +1,7 @@
 import { business } from '../config/business'
 import { supabase } from '../lib/supabase'
 import type { PaymentMethod, PaymentStatus } from './types'
+import { onlinePixHint, paymentHints } from './types'
 
 /**
  * Pagamento online, pelo checkout da InfinitePay.
@@ -20,6 +21,17 @@ import type { PaymentMethod, PaymentStatus } from './types'
 export const paysOnline = (method: PaymentMethod): boolean =>
   business.payments.onlineCheckout &&
   (method === 'online' || (method === 'pix' && business.payments.pixKey === ''))
+
+/**
+ * Linha de apoio da forma de pagamento, já conforme a configuração da loja.
+ *
+ * Só o Pix muda de texto: com chave cadastrada ele é copia e cola e o cliente
+ * precisa voltar para enviar o pedido; sem chave ele vai pela InfinitePay e o
+ * pedido nasce confirmado. Prometer o caminho errado aqui é o cliente pagar e
+ * fechar a aba achando que terminou.
+ */
+export const paymentHint = (method: PaymentMethod): string =>
+  method === 'pix' && paysOnline('pix') ? onlinePixHint : paymentHints[method]
 
 /** Endereço da função. Mesma origem do site, então vale em produção e em preview. */
 const LINK_ENDPOINT = '/api/pagamento-link'
