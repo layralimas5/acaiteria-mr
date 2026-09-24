@@ -2,25 +2,43 @@
 
 Como ligar o Pix manual da loja e o que o cliente vê na tela.
 
-> **Hoje está desligado.** O Pix da Açaiteria MR passa pelo checkout da
-> InfinitePay (`docs/infinitepay.md`), que confirma o pagamento sozinho. Este
-> caminho continua no código como alternativa: ele não confirma nada, a loja
-> precisa bater o extrato. Só ligar se a InfinitePay sair de cena.
+> **Ligado, a pedido da loja.** O Pix da Açaiteria MR é copia e cola direto
+> para a conta dela: cai sem taxa e sem intermediário. O preço disso é que
+> **ninguém confirma o pagamento automaticamente** — alguém da loja bate o
+> extrato. O cartão continua pela InfinitePay (`docs/infinitepay.md`), que
+> confirma sozinho. Esvaziar `payments.pixKey` devolve o Pix para a InfinitePay.
 
-## O que muda para o cliente
+## O que o cliente faz
 
-Antes ele escolhia Pix, lia a chave, digitava no banco e digitava o valor na
-mão. Cada passo desses é um jeito de errar: chave trocada, centavo a menos,
-comprovante que não bate com o pedido.
+1. Escolhe **Pix** no checkout
+2. O **código copia e cola** abre ali mesmo, já com o valor fechado (itens mais
+   a taxa de entrega)
+3. Toca em "Copiar código Pix", abre o banco, cola e paga
+4. **Volta para o site e envia o pedido** — é esse clique que faz o pedido
+   chegar na loja
 
-Agora, ao enviar o pedido, aparece o **código Pix copia e cola** já com o valor
-fechado (itens mais a taxa de entrega) e com o número do pedido na referência.
-Um toque em "Copiar código Pix", cola no banco, confirma. No computador
-aparece também o **QR Code**, para quem paga pelo celular.
+O passo 4 é o que o card repete em letra garrafal: pagar sozinho não envia
+nada. Sem esse aviso o cliente paga, fecha a aba achando que terminou, e a loja
+fica com dinheiro na conta e nenhum pedido para preparar.
 
-No extrato da loja o pagamento chega identificado como `MR1001`, o mesmo
-número que está no painel. É assim que se confere quem pagou sem abrir
+No computador aparece também o **QR Code**, para quem paga pelo celular. No
+celular ele fica escondido de propósito: ninguém aponta a câmera para a própria
+tela, lá o que resolve é o botão de copiar.
+
+Ele não digita chave nem valor em lugar nenhum, que é onde se erra: chave
+trocada, centavo a menos, comprovante que não bate com o pedido.
+
+Na tela de pedido enviado o código aparece de novo, aí com o número do pedido
+na referência. No extrato da loja o pagamento chega identificado como `MR1001`,
+o mesmo número que está no painel. É assim que se confere quem pagou sem abrir
 comprovante.
+
+## O pedido no painel
+
+Pedido no Pix nasce **"paga na entrega"**, sem selo de cobrança: o site não tem
+como saber se o dinheiro caiu. Quem confere é a loja, no extrato ou no
+comprovante que o cliente manda no WhatsApp. Só o cartão, que passa pela
+InfinitePay, nasce carimbado pelo webhook.
 
 ## Ligar
 
@@ -28,11 +46,14 @@ Um campo só, em `site/src/config/business.ts`:
 
 ```ts
 payments: {
-  pixKey: '+5527992853101',
+  pixKey: 'reginasoares0187@gmail.com',
   pixHolder: 'Açaiteria MR',
   pixCity: 'Viana',
 }
 ```
+
+A chave da Açaiteria MR é o **e-mail da titular da conta**, que é como ela está
+cadastrada no banco.
 
 | Campo | O que é |
 | --- | --- |

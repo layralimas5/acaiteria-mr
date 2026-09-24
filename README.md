@@ -73,9 +73,13 @@ isso o cliente preenchia tudo de novo na InfinitePay e desistia antes do QR
 Code. Esse CEP não muda para onde o pedido vai: o endereço de entrega é o do
 painel.
 
-Existe ainda o **Pix manual** (copia e cola para a chave da loja, sem
-confirmação automática), hoje desligado porque o Pix já passa pela InfinitePay.
-Para reativar, basta preencher `payments.pixKey`: `docs/pix.md`.
+O **Pix não passa por aí**: a pedido da loja ele voltou a ser copia e cola
+direto para a chave dela (`payments.pixKey`), do jeito que era no começo. O
+cliente escolhe Pix no checkout, copia o código já com o valor fechado, paga no
+banco e volta para enviar o pedido. Cai sem taxa e sem intermediário, em troca
+de alguém da loja conferir o extrato: ninguém confirma esse pagamento sozinho.
+Detalhes em `docs/pix.md`. Esvaziar `payments.pixKey` joga o Pix de volta para
+a InfinitePay.
 
 O link de cobrança nunca é gerado no navegador. Quem gera é uma função servidor
 (`site/netlify/functions/`), a partir do total que está no banco: assim o
@@ -157,7 +161,8 @@ e o botão de WhatsApp continua disponível na seção de entrega.
 - [x] Telefone real: (27) 99285-3101
 - [ ] Resto dos dados em `business.ts` (endereço, horário, Instagram)
 - [ ] Confirmar taxa de entrega com o cliente (hoje Viana R$ 3 e Cariacica R$ 6)
-- [x] Pix manual desligado (`pixKey` vazia): o Pix vai pela InfinitePay (`docs/pix.md`)
+- [x] Pix manual ligado (`pixKey` com o e-mail da titular), a pedido da loja: o cliente copia, paga no banco e volta para enviar o pedido (`docs/pix.md`). A InfinitePay ficou só no cartão
+- [ ] Combinar com a loja quem confere o extrato do Pix: esse pagamento não é confirmado sozinho, o pedido chega como "paga na entrega"
 - [x] Pagamento online ligado e testado em produção em 21/09/2026: InfiniteTag da cliente, migration `0004`, variáveis no Netlify e `payments.onlineCheckout: true` (`docs/infinitepay.md`)
 - [x] Criar o projeto no Supabase e rodar `supabase/migrations/0001_init.sql` (`docs/supabase.md`)
 - [x] Migrations até a `0012_pix_pela_infinitepay.sql` rodadas no SQL Editor (`docs/supabase.md`)
@@ -383,7 +388,9 @@ quando o subtotal alcança `freeShippingFrom`. A regra vive em
 dividido em Seus dados, Entrega, Pagamento e Observações. As formas aceitas
 saem de `business.payments`: Pix sempre, cartão na entrega enquanto
 `cardOnDelivery` for true, dinheiro (com campo de troco) enquanto `cash` for
-true. Com `pixKey` preenchida, a chave aparece ao escolher Pix. O pedido salvo
+true. Com `pixKey` preenchida, como está hoje, escolher Pix abre o card do
+copia e cola ali mesmo, com o valor já fechado (itens mais taxa), e o botão do
+rodapé vira "Enviar pedido". O pedido salvo
 guarda `subtotal`, `deliveryFee` e `total`, e o painel mostra a divisão no
 cartão do pedido.
 

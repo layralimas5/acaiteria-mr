@@ -16,8 +16,8 @@ import {
 } from '../lib/order'
 import type { DeliveryPlace } from '../lib/order'
 import type { Customer, Fulfillment, PaymentMethod } from '../orders/types'
-import { paysOnline } from '../orders/payment'
-import { paymentHints, paymentLabels } from '../orders/types'
+import { paymentHint, paysOnline } from '../orders/payment'
+import { paymentLabels } from '../orders/types'
 import { CreditCardInfo } from './CreditCardInfo'
 import { PixCode } from './PixCode'
 
@@ -493,7 +493,7 @@ export function CheckoutForm({
                   <span className="min-w-0">
                     <span className="block text-sm font-bold">{paymentLabels[method]}</span>
                     <span className={`block text-xs ${active ? 'text-acai-100/80' : 'text-muted'}`}>
-                      {paymentHints[method]}
+                      {paymentHint(method)}
                     </span>
                   </span>
                 </button>

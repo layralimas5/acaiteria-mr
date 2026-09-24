@@ -131,8 +131,10 @@ export interface BusinessConfig {
      * - E-mail: em minúsculas
      * - Aleatória: a chave inteira, com os hifens
      *
-     * Vazia tira o Pix manual da lista. É o caso desta loja: o Pix passa pelo
-     * checkout da InfinitePay (`onlineCheckout`), que confirma sozinho.
+     * Vazia tira o Pix manual da lista e joga o Pix para o checkout da
+     * InfinitePay. Preenchida, como nesta loja, o Pix volta a ser copia e cola
+     * direto na conta: cai sem taxa e sem intermediário, em troca de alguém da
+     * loja conferir o extrato.
      */
     readonly pixKey: string
     /** Nome do recebedor que o app do banco mostra ao cliente. */
@@ -256,12 +258,16 @@ export const business: BusinessConfig = {
     note: 'A gente manda o endereço exato da retirada no WhatsApp junto com a confirmação do pedido.',
   },
   payments: {
-    pixKey: '',
+    // E-mail da titular da conta, que é como a chave está cadastrada no banco.
+    // Em minúsculas, que é o formato que o app do cliente reconhece.
+    pixKey: 'reginasoares0187@gmail.com',
     pixHolder: 'Açaiteria MR',
     pixCity: 'Viana',
-    // A loja não leva maquininha na entrega: Pix e cartão só pelo sistema, na
-    // hora do pedido, pela InfinitePay. Dinheiro é aceito, com o cliente
-    // dizendo no checkout para quanto precisa de troco.
+    // A loja não leva maquininha na entrega: cartão só pelo sistema, na hora do
+    // pedido, pela InfinitePay. O Pix é copia e cola para a conta da loja, a
+    // pedido dela: o cliente copia o código, paga no banco e volta para enviar
+    // o pedido. Dinheiro é aceito, com o cliente dizendo no checkout para
+    // quanto precisa de troco.
     //
     // O checkout online depende de INFINITEPAY_HANDLE, SUPABASE_URL e
     // SUPABASE_SERVICE_ROLE_KEY no Netlify: sem elas o cliente escolhe a opção
