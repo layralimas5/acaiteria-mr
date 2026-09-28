@@ -14,6 +14,7 @@ import {
   placeText,
   whatsappUrl,
 } from '../../lib/order'
+import { openBlankTab } from '../../lib/popup'
 import { errorMessage } from '../../lib/supabase'
 import { saveLastOrder } from '../../orders/lastOrder'
 import { orderMessage } from '../../orders/messages'
@@ -99,7 +100,7 @@ export function OrderPanel({ onBuildMore, knownCustomer, justAdded }: OrderPanel
     // A aba do WhatsApp precisa abrir agora, no clique: aberta depois da
     // resposta do banco, o navegador entende como popup e bloqueia. Ela abre
     // vazia e recebe o endereço quando o pedido tiver número.
-    const tab = payingOnline ? null : window.open('', '_blank', 'noopener,noreferrer')
+    const tab = payingOnline ? null : openBlankTab()
 
     void createOrder(items, total, chargedFee, customer)
       .then((created) => {

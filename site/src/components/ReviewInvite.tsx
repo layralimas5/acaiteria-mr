@@ -4,6 +4,7 @@ import type { LastOrder } from '../orders/lastOrder'
 import { markReviewed } from '../orders/review'
 import { saveReview } from '../orders/reviews'
 import { whatsappUrl } from '../lib/order'
+import { openBlankTab } from '../lib/popup'
 import { errorMessage } from '../lib/supabase'
 
 interface ReviewInviteProps {
@@ -59,7 +60,7 @@ export function ReviewInvite({ order, onClose }: ReviewInviteProps) {
     setError(null)
 
     // A aba precisa abrir agora, no clique, ou o navegador bloqueia o popup.
-    const tab = window.open('', '_blank', 'noopener,noreferrer')
+    const tab = openBlankTab()
 
     void saveReview({
       orderCode: order.code,
