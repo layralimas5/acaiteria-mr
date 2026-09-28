@@ -1,6 +1,8 @@
 import { statusMessage } from '../orders/messages'
+import type { WhatsAppChannel } from '../orders/messages'
 import type { Order, OrderStatus } from '../orders/types'
 import { statusLabels } from '../orders/types'
+import { useWhatsAppChannel } from './whatsappChannel'
 
 /**
  * Preferências do painel.
@@ -60,12 +62,13 @@ export function SettingsView({ autoNotify, onAutoNotifyChange }: SettingsViewPro
               Avisar o cliente ao mudar a etapa do pedido
             </span>
             <span className="mt-1 block text-xs leading-relaxed text-muted">
-              A cada mudança de etapa, o WhatsApp do cliente abre em uma aba nova com a mensagem já
-              escrita. Basta enviar.
+              A cada mudança de etapa, a conversa do cliente abre com a mensagem já escrita. Basta
+              enviar.
             </span>
           </span>
         </label>
 
+        <WhatsAppChannelPicker />
         <div className="mt-5 border-t border-acai-100 pt-4">
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">
             Mensagens enviadas
@@ -83,5 +86,57 @@ export function SettingsView({ autoNotify, onAutoNotifyChange }: SettingsViewPro
         </div>
       </section>
     </>
+  )
+}
+
+const channelOptions: readonly {
+  readonly id: WhatsAppChannel
+  readonly label: string
+  readonly hint: string
+}[] = [
+  {
+    id: 'app',
+    label: 'App do WhatsApp no computador',
+    hint: 'Abre a conversa no WhatsApp instalado, sem aba nova e sem pedir senha a cada aviso. Na primeira vez o navegador pergunta se pode abrir o WhatsApp: marque para sempre permitir.',
+  },
+  {
+    id: 'web',
+    label: 'WhatsApp Web, no navegador',
+    hint: 'Cada aviso abre uma aba nova do WhatsApp Web, que carrega do zero. Se o bloqueio de tela do WhatsApp Web estiver ligado, ele pede a senha toda vez.',
+  },
+]
+
+function WhatsAppChannelPicker() {
+  const [channel, setChannel] = useWhatsAppChannel()
+
+  return (
+    <fieldset className="mt-4">
+      <legend className="text-xs font-bold uppercase tracking-[0.14em] text-muted">
+        Abrir a conversa no
+      </legend>
+      <div className="mt-3 space-y-2">
+        {channelOptions.map((option) => (
+          <label
+            key={option.id}
+            className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-colors ${
+              channel === option.id ? 'border-acai-500 bg-acai-50' : 'border-acai-100 hover:bg-acai-50'
+            }`}
+          >
+            <input
+              type="radio"
+              name="whatsapp-channel"
+              value={option.id}
+              checked={channel === option.id}
+              onChange={() => setChannel(option.id)}
+              className="mt-0.5 size-4 shrink-0 accent-acai-800"
+            />
+            <span className="min-w-0">
+              <span className="block text-sm font-bold text-ink">{option.label}</span>
+              <span className="mt-1 block text-xs leading-relaxed text-muted">{option.hint}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
   )
 }
