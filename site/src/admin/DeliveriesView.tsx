@@ -5,6 +5,7 @@ import { notifyUrl } from '../orders/messages'
 import type { Order, OrderStatus } from '../orders/types'
 import { isPickup, paymentLabels } from '../orders/types'
 import { formatTime, startOfDay, sum } from './metrics'
+import { useWhatsAppChannel, whatsAppLinkProps } from './whatsappChannel'
 
 /**
  * Entregas: quem está pronto para sair, quem já está na rua e o que o
@@ -131,6 +132,7 @@ function DeliveryCard({
   readonly onAdvance: () => void
 }) {
   const { customer } = order
+  const [whatsAppChannel] = useWhatsAppChannel()
 
   return (
     <article className="rounded-card border border-acai-100 bg-white p-4 shadow-sm">
@@ -193,9 +195,8 @@ function DeliveryCard({
       </button>
 
       <a
-        href={notifyUrl(order, order.status)}
-        target="_blank"
-        rel="noopener noreferrer"
+        href={notifyUrl(order, order.status, whatsAppChannel)}
+        {...whatsAppLinkProps(whatsAppChannel)}
         className="mt-2 block text-center text-[11px] font-semibold text-muted underline underline-offset-2 hover:text-acai-800"
       >
         Reenviar aviso da etapa atual

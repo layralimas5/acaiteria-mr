@@ -83,8 +83,25 @@ export const statusMessage = (order: Order, status: OrderStatus): string => {
   }
 }
 
+/**
+ * Onde a conversa com o cliente abre.
+ *
+ * `web` passa pelo wa.me, sempre em aba nova: no computador cai no WhatsApp
+ * Web carregando do zero, e no celular a aba fica para trás e é nela que a loja
+ * volta, não no painel. `app` fala direto com o WhatsApp instalado, no celular
+ * ou no computador, sem aba nova.
+ */
+export type WhatsAppChannel = 'web' | 'app'
+
 /** Link do WhatsApp do cliente já com o aviso do status escrito. */
-export const notifyUrl = (order: Order, status: OrderStatus): string => {
-  const digits = order.customer.phone.replace(/\D/g, '').replace(/^55/, '')
-  return `https://wa.me/55${digits}?text=${encodeURIComponent(statusMessage(order, status))}`
+export const notifyUrl = (
+  order: Order,
+  status: OrderStatus,
+  channel: WhatsAppChannel = 'web',
+): string => {
+  const phone = `55${order.customer.phone.replace(/\D/g, '').replace(/^55/, '')}`
+  const text = encodeURIComponent(statusMessage(order, status))
+  return channel === 'app'
+    ? `whatsapp://send?phone=${phone}&text=${text}`
+    : `https://wa.me/${phone}?text=${text}`
 }

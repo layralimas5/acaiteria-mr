@@ -21,6 +21,7 @@ import { OrdersView } from './OrdersView'
 import { ReviewsView } from './ReviewsView'
 import { SettingsView } from './SettingsView'
 import { UserMenu } from './UserMenu'
+import { openWhatsApp, useWhatsAppChannel } from './whatsappChannel'
 
 /**
  * Painel da loja: acompanha os pedidos que entram pelo site e dá baixa.
@@ -128,6 +129,8 @@ function Panel({ email }: { readonly email: string }) {
     () => window.localStorage.getItem(NOTIFY_KEY) !== 'off',
   )
 
+  const [whatsAppChannel] = useWhatsAppChannel()
+
   const [supplies, setSupplies] = useState<readonly InventoryItem[]>([])
 
   const refresh = useCallback(() => {
@@ -166,14 +169,14 @@ function Panel({ email }: { readonly email: string }) {
       // A aba abre antes de gravar de propósito: aberta depois da resposta do
       // banco, o navegador entende como popup e bloqueia.
       if (autoNotify) {
-        window.open(notifyUrl(order, status), '_blank', 'noopener,noreferrer')
+        openWhatsApp(notifyUrl(order, status, whatsAppChannel), whatsAppChannel)
       }
 
       void updateOrderStatus(order.id, status)
         .then(refresh)
         .catch((cause: unknown) => setError(errorMessage(cause)))
     },
-    [autoNotify, refresh],
+    [autoNotify, whatsAppChannel, refresh],
   )
 
   const discard = useCallback(

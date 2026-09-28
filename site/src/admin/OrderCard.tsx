@@ -6,6 +6,7 @@ import { isPickup, nextStatus, paymentLabels, statusFlow, statusLabels } from '.
 import { DeleteButton } from './DeleteButton'
 import { PaymentBadge } from './PaymentBadge'
 import { WaitBadge } from './WaitBadge'
+import { useWhatsAppChannel, whatsAppLinkProps } from './whatsappChannel'
 
 interface OrderCardProps {
   readonly order: Order
@@ -47,6 +48,7 @@ export function OrderCard({
   onRemove,
 }: OrderCardProps) {
   const next = nextStatus(order.status)
+  const [whatsAppChannel] = useWhatsAppChannel()
   const { customer } = order
   const closed = order.status === 'concluido' || order.status === 'cancelado'
   const itemCount = order.items.reduce((total, item) => total + item.quantity, 0)
@@ -186,9 +188,8 @@ export function OrderCard({
 
         <div className="mt-3 flex flex-wrap gap-2">
           <a
-            href={notifyUrl(order, order.status)}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={notifyUrl(order, order.status, whatsAppChannel)}
+            {...whatsAppLinkProps(whatsAppChannel)}
             className="flex min-w-[12rem] flex-1 items-center justify-center gap-2 rounded-full border border-acai-200 px-4 py-3 text-sm font-bold text-acai-800 transition-colors hover:bg-acai-50"
           >
             <WhatsAppIcon />
