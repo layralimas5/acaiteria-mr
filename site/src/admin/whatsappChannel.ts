@@ -11,11 +11,21 @@ import type { WhatsAppChannel } from '../orders/messages'
 const STORAGE_KEY = 'acaiteria-mr:admin-whatsapp'
 const changes = createEmitter()
 
+/**
+ * Sem escolha salva, o celular vai direto para o app: pelo wa.me cada aviso
+ * deixava uma aba nova para trás, e quem voltava do WhatsApp caía nela em vez
+ * do painel. No computador o padrão segue o WhatsApp Web, que funciona mesmo
+ * sem o app instalado.
+ */
+const defaultChannel = (): WhatsAppChannel =>
+  window.matchMedia('(pointer: coarse)').matches ? 'app' : 'web'
+
 const read = (): WhatsAppChannel => {
   try {
-    return window.localStorage.getItem(STORAGE_KEY) === 'app' ? 'app' : 'web'
+    const saved = window.localStorage.getItem(STORAGE_KEY)
+    return saved === 'app' || saved === 'web' ? saved : defaultChannel()
   } catch {
-    return 'web'
+    return defaultChannel()
   }
 }
 

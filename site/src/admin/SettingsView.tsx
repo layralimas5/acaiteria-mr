@@ -96,13 +96,13 @@ const channelOptions: readonly {
 }[] = [
   {
     id: 'app',
-    label: 'App do WhatsApp no computador',
-    hint: 'Abre a conversa no WhatsApp instalado, sem aba nova e sem pedir senha a cada aviso. Na primeira vez o navegador pergunta se pode abrir o WhatsApp: marque para sempre permitir.',
+    label: 'App do WhatsApp',
+    hint: 'Abre a conversa direto no WhatsApp instalado, no celular ou no computador, sem abrir aba nova. Ao voltar, o painel continua onde estava. O navegador pode perguntar se pode abrir o WhatsApp: é só permitir.',
   },
   {
     id: 'web',
-    label: 'WhatsApp Web, no navegador',
-    hint: 'Cada aviso abre uma aba nova do WhatsApp Web, que carrega do zero. Se o bloqueio de tela do WhatsApp Web estiver ligado, ele pede a senha toda vez.',
+    label: 'Pelo navegador (wa.me)',
+    hint: 'Cada aviso abre uma aba nova. No celular, ao voltar do WhatsApp você cai nessa aba e não no painel; no computador, o WhatsApp Web carrega do zero a cada aviso. Use só se o app não abrir.',
   },
 ]
 

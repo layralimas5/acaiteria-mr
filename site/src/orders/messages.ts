@@ -86,10 +86,10 @@ export const statusMessage = (order: Order, status: OrderStatus): string => {
 /**
  * Onde a conversa com o cliente abre.
  *
- * `web` passa pelo wa.me e cai no WhatsApp Web, sempre em aba nova: cada aviso
- * carrega o WhatsApp Web do zero e, com o bloqueio de tela dele ligado, pede a
- * senha toda vez. `app` fala direto com o WhatsApp instalado no computador,
- * sem aba e sem recarga.
+ * `web` passa pelo wa.me, sempre em aba nova: no computador cai no WhatsApp
+ * Web carregando do zero, e no celular a aba fica para trás e é nela que a loja
+ * volta, não no painel. `app` fala direto com o WhatsApp instalado, no celular
+ * ou no computador, sem aba nova.
  */
 export type WhatsAppChannel = 'web' | 'app'
 
