@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { sizeLabel } from '../../catalog/types'
+import { sizeLabel, yourProduct } from '../../catalog/types'
 import type { BuildPricing, BuildSelection } from '../../lib/builder'
 import { acceptsToppings, missingSteps } from '../../lib/builder'
 import { formatPrice } from '../../lib/order'
@@ -160,7 +160,7 @@ export function MobileOrderBar({
                 </svg>
               </span>
               <span className="block truncate text-lg font-extrabold text-ink">
-                {selection.product ? `Seu ${selection.product.name.toLowerCase()}` : 'Seu pedido'} •{' '}
+                {selection.product ? yourProduct(selection.product.name) : 'Seu pedido'} •{' '}
                 {formatPrice(pricing.totalPrice)}
               </span>
             </span>

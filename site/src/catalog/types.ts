@@ -133,6 +133,17 @@ export const productChoices = (
  */
 export const sizeLabel = (size: CupSize): string => size.volume.trim() || size.name
 
+/**
+ * "Seu açaí", "Sua garrafa de açaí": o produto é cadastro, então o possessivo
+ * não pode ser fixo. Palavra terminada em "a" puxa o feminino; o resto do
+ * cardápio (açaí, sundae) é masculino.
+ */
+export const yourProduct = (name: string): string => {
+  const lower = name.trim().toLowerCase()
+  const firstWord = lower.split(/\s+/)[0] ?? ''
+  return `${firstWord.endsWith('a') ? 'Sua' : 'Seu'} ${lower}`
+}
+
 /** Soma das cotas grátis de todas as categorias. É o que o site anuncia. */
 export const totalFreeToppings = (categories: readonly ToppingCategory[]): number =>
   categories.reduce((total, category) => total + category.rule.free, 0)

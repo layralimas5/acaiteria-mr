@@ -19,6 +19,10 @@ interface ImageRule {
 /** Fotos que existem em `public/imagem`, geradas por `npm run images`. */
 const rules: readonly ImageRule[] = [
   { image: '/imagem/sundae.webp', terms: ['sundae'] },
+  // A garrafa divide o volume com o pote: "300ml" sozinho é o pote. Com o nome
+  // junto o termo fica mais longo e ganha a disputa.
+  { image: '/imagem/garrafa-300ml.webp', terms: ['garrafa 300', 'garrafa 300ml', 'garrafa 300 ml'] },
+  { image: '/imagem/garrafa-500ml.webp', terms: ['garrafa 500', 'garrafa 500ml', 'garrafa 500 ml'] },
   { image: '/imagem/poto-300ml.webp', terms: ['300', '300ml', '300 ml'] },
   { image: '/imagem/pote-500ml.webp', terms: ['500', '500ml', '500 ml'] },
   { image: '/imagem/copo-700ml.webp', terms: ['700', '700ml', '700 ml'] },
@@ -44,7 +48,7 @@ const hasTerm = (text: string, term: string): boolean =>
  * quem entrega a foto ali é o nome.
  */
 export const sizeImage = (volume: string, name = ''): string | null => {
-  const text = foldWords(`${volume} ${name}`)
+  const text = foldWords(`${name} ${volume}`)
   if (text === '') return null
   return terms.find((entry) => hasTerm(text, entry.term))?.image ?? null
 }
