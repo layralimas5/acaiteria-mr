@@ -33,8 +33,8 @@ const wideIndex = (cards: readonly ShowcaseCard[]): number => {
 }
 
 /**
- * Cada card precisa saber de qual produto veio: a garrafa e o sundae não levam
- * complemento, e anunciar cota grátis neles prometeria o que o montador não dá.
+ * Cada card precisa saber de qual produto veio: o sundae não leva complemento,
+ * e anunciar cota grátis nele prometeria o que o montador não dá.
  */
 interface ShowcaseCard {
   readonly size: CupSize
@@ -78,8 +78,8 @@ export function CupsShowcase({ onPick }: CupsShowcaseProps) {
             Do lanche rápido ao pote de dividir
           </h2>
           <p className="mt-2 text-[clamp(0.875rem,3.6vw,1rem)] leading-[1.5] text-muted sm:mt-3 sm:leading-normal">
-            Os copos e potes vêm com {freeToppings} complementos grátis para montar do seu jeito.
-            Com pressa, tem garrafa e sundae prontos.
+            Copo, pote ou garrafa, todos vêm com {freeToppings} complementos grátis para montar do
+            seu jeito. E tem sundae pra matar a vontade.
           </p>
         </div>
 

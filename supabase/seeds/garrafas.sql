@@ -8,8 +8,8 @@
 -- painel, em Cardápio > Novo produto. Depois de rodar, a garrafa aparece no
 -- montador e ganha card na vitrine "Nossos copos" do site, sem publicar nada.
 --
--- A garrafa vem pronta: não leva complemento (`accepts_toppings = false`), então
--- o montador pula essa etapa e o banco recusa complemento nela (migration 0007).
+-- A garrafa segue o mesmo passo a passo do copo, complementos incluídos, com a
+-- mesma cota grátis das categorias (`accepts_toppings = true`).
 --
 -- As fotos apontam para `/imagem/garrafa-300ml.webp` e `garrafa-500ml.webp`,
 -- que nascem de `assets-originais/garrafa-300ml.png` e `garrafa-500ml.png` pelo
@@ -46,11 +46,14 @@ begin
       'Escolha seu sabor',
       'Um por garrafa.',
       'Sabor',
-      false,
+      true,
       (select coalesce(max(sort_order), -1) + 1 from public.products)
     )
     returning id into v_product;
   end if;
+
+  update public.products set accepts_toppings = true
+   where id = v_product and not accepts_toppings;
 
   -- Tamanhos --------------------------------------------------------------
   insert into public.product_sizes (product_id, name, volume, base_price, image, sort_order)

@@ -315,7 +315,7 @@ montador já com produto e tamanho preenchidos, abrindo na etapa da base.
 A vitrine lê os mesmos dados de `productKinds`, então tamanho novo com foto
 aparece nela sozinho.
 
-Produto que não leva complemento (Sundae, garrafa) entra na vitrine com o selo
+Produto que não leva complemento (hoje, o Sundae) entra na vitrine com o selo
 "Pronto pra levar" e o botão "Escolher sabor", sem anunciar cota grátis. Quando
 o nome do produto não repete o tamanho, ele aparece acima do título: é o que
 separa a garrafa 300ml do pote 300ml.

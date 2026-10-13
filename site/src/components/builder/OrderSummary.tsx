@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { sizeLabel } from '../../catalog/types'
+import { sizeLabel, yourProduct } from '../../catalog/types'
 import type { BuildPricing, BuildSelection } from '../../lib/builder'
 import { acceptsToppings, missingSteps } from '../../lib/builder'
 import { formatPrice } from '../../lib/order'
@@ -24,7 +24,7 @@ export function OrderSummary({ selection, pricing, onAdd, onReset }: OrderSummar
     <aside className="overflow-hidden rounded-card border border-acai-100 bg-white shadow-xl shadow-acai-900/5 lg:sticky lg:top-28">
       <header className="bg-acai-900 px-6 py-5 text-white">
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-acai-200">
-          {selection.product ? `Seu ${selection.product.name.toLowerCase()}` : 'Seu pedido'}
+          {selection.product ? yourProduct(selection.product.name) : 'Seu pedido'}
         </p>
         <p className="mt-1 text-3xl font-extrabold tracking-tight">{formatPrice(pricing.totalPrice)}</p>
         <p className="mt-1 text-xs text-acai-100/70">
