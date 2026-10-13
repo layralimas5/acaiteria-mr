@@ -170,6 +170,8 @@ e o botão de WhatsApp continua disponível na seção de entrega.
 - [ ] Endereço da loja em `business.ts` (`address.street` e `district`), para a retirada mostrar onde buscar em vez de mandar pro WhatsApp
 - [ ] Cadastrar o cardápio no painel: o sistema começa vazio, sem nenhum produto
 - [ ] Publicar os primeiros depoimentos reais (painel → Avaliações → Publicar no site; a seção fica escondida até lá)
+- [ ] Garrafas de açaí 300ml e 500ml: preencher os preços em `supabase/seeds/garrafas.sql` e rodar no SQL Editor; fotos em `assets-originais/garrafa-300ml.png` e `garrafa-500ml.png`, depois `npm run images`
+- [ ] Sundae cadastrado, mas desligado: painel → Cardápio → Sundae → marcar "No site"
 - [ ] Fotos dos demais produtos (só o pote 300ml tem foto; o resto usa a ilustração `AcaiCup.tsx`)
 - [x] Logo oficial aplicada no menu, rodapé e favicon
 - [x] Imagem de compartilhamento (`public/imagem/og.jpg`)
@@ -312,6 +314,11 @@ tamanhos com preço e cota grátis. O botão "Montar esse" leva direto ao
 montador já com produto e tamanho preenchidos, abrindo na etapa da base.
 A vitrine lê os mesmos dados de `productKinds`, então tamanho novo com foto
 aparece nela sozinho.
+
+Produto que não leva complemento (Sundae, garrafa) entra na vitrine com o selo
+"Pronto pra levar" e o botão "Escolher sabor", sem anunciar cota grátis. Quando
+o nome do produto não repete o tamanho, ele aparece acima do título: é o que
+separa a garrafa 300ml do pote 300ml.
 
 ## Monte seu Açaí (configurador + carrinho)
 

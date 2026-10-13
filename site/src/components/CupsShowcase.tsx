@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import type { CupSize } from '../catalog/types'
+import type { CupSize, ProductKind } from '../catalog/types'
 import { sizeLabel, totalFreeToppings } from '../catalog/types'
 import { useSellableCatalog } from '../catalog/sellable'
 import { formatPrice } from '../lib/order'
+import { foldWords } from '../lib/text'
 
 interface CupsShowcaseProps {
   /** Leva o tamanho escolhido direto para o montador. */
@@ -20,12 +21,37 @@ interface CupsShowcaseProps {
  *
  * Com número par não sobra ninguém, então nada é esticado: o grid fecha certo
  * sozinho e um card gigante ali seria só desperdício de rolagem.
+ *
+ * O card esticado só fecha o grid numa posição par: numa ímpar ele deixa o
+ * anterior sozinho na linha e cria o buraco que devia tapar. Nesse caso quem
+ * estica é o último, que num total ímpar está sempre em posição par.
  */
-const wideIndex = (sizes: readonly CupSize[]): number => {
-  if (sizes.length % 2 === 0) return -1
-  const highlighted = sizes.findIndex((size) => size.highlight)
-  return highlighted >= 0 ? highlighted : 0
+const wideIndex = (cards: readonly ShowcaseCard[]): number => {
+  if (cards.length % 2 === 0) return -1
+  const highlighted = cards.findIndex((card) => card.size.highlight)
+  return highlighted >= 0 && highlighted % 2 === 0 ? highlighted : cards.length - 1
 }
+
+/**
+ * Cada card precisa saber de qual produto veio: a garrafa e o sundae não levam
+ * complemento, e anunciar cota grátis neles prometeria o que o montador não dá.
+ */
+interface ShowcaseCard {
+  readonly size: CupSize
+  readonly productName: string
+  readonly acceptsToppings: boolean
+}
+
+const showcaseCards = (products: readonly ProductKind[]): readonly ShowcaseCard[] =>
+  products.flatMap((product) =>
+    product.sizes
+      .filter((size) => size.image)
+      .map((size) => ({
+        size,
+        productName: product.name,
+        acceptsToppings: product.acceptsToppings,
+      })),
+  )
 
 /**
  * Vitrine dos copos: mostra o produto de verdade antes de pedir escolhas.
@@ -36,12 +62,12 @@ const wideIndex = (sizes: readonly CupSize[]): number => {
 export function CupsShowcase({ onPick }: CupsShowcaseProps) {
   const { catalog } = useSellableCatalog()
 
-  const sizes = catalog.products.flatMap((product) => product.sizes).filter((size) => size.image)
+  const cards = showcaseCards(catalog.products)
   const freeToppings = totalFreeToppings(catalog.categories)
 
-  if (sizes.length === 0) return null
+  if (cards.length === 0) return null
 
-  const wide = wideIndex(sizes)
+  const wide = wideIndex(cards)
 
   return (
     <section id="nossos-copos" className="scroll-mt-20 bg-white py-11 sm:py-24">
@@ -52,19 +78,20 @@ export function CupsShowcase({ onPick }: CupsShowcaseProps) {
             Do lanche rápido ao pote de dividir
           </h2>
           <p className="mt-2 text-[clamp(0.875rem,3.6vw,1rem)] leading-[1.5] text-muted sm:mt-3 sm:leading-normal">
-            Do copo de levar ao pote de dividir, todos vêm com {freeToppings} complementos grátis.
-            Escolha um e monte do seu jeito.
+            Os copos e potes vêm com {freeToppings} complementos grátis para montar do seu jeito.
+            Com pressa, tem garrafa e sundae prontos.
           </p>
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-2.5 sm:mt-10 sm:grid-cols-3 sm:gap-5">
-          {sizes.map((size, index) => (
+          {cards.map((card, index) => (
             <CupCard
-              key={size.id}
-              size={size}
+              key={card.size.id}
+              size={card.size}
+              productName={card.productName}
               index={index}
               wide={index === wide}
-              freeToppings={freeToppings}
+              freeToppings={card.acceptsToppings ? freeToppings : 0}
               onPick={onPick}
             />
           ))}
@@ -76,15 +103,22 @@ export function CupsShowcase({ onPick }: CupsShowcaseProps) {
 
 interface CupCardProps {
   readonly size: CupSize
+  /**
+   * Pote e garrafa dividem o "300ml": sem o nome do produto, os dois cards
+   * teriam o mesmo título. Omitido quando repete o tamanho, como no Sundae.
+   */
+  readonly productName: string
   readonly index: number
   /** Ocupa a linha inteira no celular, para o grid ímpar não deixar buraco. */
   readonly wide: boolean
+  /** Zero quando o produto não leva complemento: o card não anuncia cota. */
   readonly freeToppings: number
   readonly onPick: (sizeId: string) => void
 }
 
-function CupCard({ size, index, wide, freeToppings, onPick }: CupCardProps) {
+function CupCard({ size, productName, index, wide, freeToppings, onPick }: CupCardProps) {
   const label = sizeLabel(size)
+  const kicker = foldWords(productName) === foldWords(label) ? '' : productName
   /**
    * A foto é cadastro: a loja pode apontar para um arquivo que ainda não foi
    * publicado, e a vitrine é o lugar mais visível do site para um quadrado
@@ -115,7 +149,7 @@ function CupCard({ size, index, wide, freeToppings, onPick }: CupCardProps) {
       >
         <img
           src={size.image}
-          alt={`${size.name} da Açaiteria MR`}
+          alt={`${kicker ? `${kicker} ` : ''}${label} da Açaiteria MR`}
           loading="lazy"
           decoding="async"
           onError={() => setBroken(true)}
@@ -138,6 +172,11 @@ function CupCard({ size, index, wide, freeToppings, onPick }: CupCardProps) {
       </div>
 
       <div className="p-2.5 sm:p-5">
+        {kicker && (
+          <p className="truncate text-[11px] font-bold uppercase tracking-wide text-acai-700 sm:text-xs">
+            {kicker}
+          </p>
+        )}
         <div className="flex items-baseline justify-between gap-2">
           <h3 className="text-[0.9375rem] font-extrabold tracking-tight text-ink sm:text-lg">
             {label}
@@ -147,16 +186,22 @@ function CupCard({ size, index, wide, freeToppings, onPick }: CupCardProps) {
           </p>
         </div>
 
-        <p className="mt-1.5 inline-block rounded-full bg-green-50 px-2 py-0.5 text-[12px] font-bold text-green-700 sm:mt-2 sm:px-2.5 sm:py-1 sm:text-[11px]">
-          {freeToppings} complementos grátis
-        </p>
+        {freeToppings > 0 ? (
+          <p className="mt-1.5 inline-block rounded-full bg-green-50 px-2 py-0.5 text-[12px] font-bold text-green-700 sm:mt-2 sm:px-2.5 sm:py-1 sm:text-[11px]">
+            {freeToppings} complementos grátis
+          </p>
+        ) : (
+          <p className="mt-1.5 inline-block rounded-full bg-acai-50 px-2 py-0.5 text-[12px] font-bold text-acai-800 sm:mt-2 sm:px-2.5 sm:py-1 sm:text-[11px]">
+            Pronto pra levar
+          </p>
+        )}
 
         <button
           type="button"
           onClick={() => onPick(size.id)}
           className="mt-2.5 w-full rounded-full bg-acai-800 px-4 py-2.5 text-[0.8125rem] font-bold text-white transition-colors hover:animate-pulse-soft hover:bg-acai-900 sm:mt-4 sm:px-6 sm:py-3 sm:text-sm"
         >
-          Montar esse
+          {freeToppings > 0 ? 'Montar esse' : 'Escolher sabor'}
         </button>
       </div>
     </motion.article>
