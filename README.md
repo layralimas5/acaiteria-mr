@@ -170,8 +170,8 @@ e o botão de WhatsApp continua disponível na seção de entrega.
 - [ ] Endereço da loja em `business.ts` (`address.street` e `district`), para a retirada mostrar onde buscar em vez de mandar pro WhatsApp
 - [ ] Cadastrar o cardápio no painel: o sistema começa vazio, sem nenhum produto
 - [ ] Publicar os primeiros depoimentos reais (painel → Avaliações → Publicar no site; a seção fica escondida até lá)
-- [ ] Garrafas de açaí 300ml e 500ml: preencher os preços em `supabase/seeds/garrafas.sql` e rodar no SQL Editor; fotos em `assets-originais/garrafa-300ml.png` e `garrafa-500ml.png`, depois `npm run images`
-- [ ] Sundae cadastrado, mas desligado: painel → Cardápio → Sundae → marcar "No site"
+- [x] Garrafas de açaí 300ml (R$ 15) e 500ml (R$ 18) cadastradas no Supabase em 13/10/2026 (`supabase/seeds/garrafas.sql`)
+- [x] Sundae ligado no site em 13/10/2026
 - [ ] Fotos dos demais produtos (só o pote 300ml tem foto; o resto usa a ilustração `AcaiCup.tsx`)
 - [x] Logo oficial aplicada no menu, rodapé e favicon
 - [x] Imagem de compartilhamento (`public/imagem/og.jpg`)

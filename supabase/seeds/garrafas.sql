@@ -16,13 +16,13 @@
 -- `npm run images`. Sem a foto publicada, o card some da vitrine e a garrafa
 -- segue à venda só no montador.
 --
--- PREÇOS: confirmar com a loja antes de rodar (constantes logo abaixo).
+-- Preços confirmados com a loja em 13/10/2026 (constantes logo abaixo).
 -- =============================================================================
 
 do $seed$
 declare
-  c_price_300 constant numeric := 0;  -- preencher
-  c_price_500 constant numeric := 0;  -- preencher
+  c_price_300 constant numeric := 15.00;
+  c_price_500 constant numeric := 18.00;
   v_product uuid;
 begin
   if c_price_300 <= 0 or c_price_500 <= 0 then
