@@ -25,8 +25,11 @@ const targets = [
   { source: 'copo-700ml.png', output: 'copo-700ml.webp', width: 900, format: 'webp', quality: 84, product: true },
   { source: '1-litro.png', output: '1-litro.webp', width: 900, format: 'webp', quality: 84, product: true },
   { source: 'sundae.png', output: 'sundae.webp', width: 900, format: 'webp', quality: 84, product: true },
-  { source: 'garrafa-300ml.png', output: 'garrafa-300ml.webp', width: 900, format: 'webp', quality: 84, product: true },
-  { source: 'garrafa-500ml.png', output: 'garrafa-500ml.webp', width: 900, format: 'webp', quality: 84, product: true },
+  // A garrafa já chega enquadrada e ocupa quase a altura toda. Reenquadrar
+  // pela régua do copo afasta a câmera e completa a borda com cor lisa, que
+  // aparece no card como uma faixa: aqui é só redimensionar.
+  { source: 'garrafa-300ml.png', output: 'garrafa-300ml.webp', width: 900, format: 'webp', quality: 84 },
+  { source: 'garrafa-500ml.png', output: 'garrafa-500ml.webp', width: 900, format: 'webp', quality: 84 },
   // Arte de fundo do banner, em duas larguras (celular e desktop).
   { source: 'banner.png', output: 'banner.webp', width: 1830, format: 'webp', quality: 80 },
   { source: 'banner.png', output: 'banner-960.webp', width: 960, format: 'webp', quality: 78 },
