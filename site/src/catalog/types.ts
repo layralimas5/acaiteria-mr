@@ -61,6 +61,13 @@ export interface ProductKind {
    * entrega o produto no prejuízo. Desligado, o montador pula a etapa.
    */
   readonly acceptsToppings: boolean
+  /**
+   * Categorias de complemento que valem nesse produto.
+   *
+   * A garrafa tem complementos só dela e não leva fruta: quem diz o que entra
+   * é a categoria marcada no painel, não o produto inteiro.
+   */
+  readonly toppingCategoryIds: readonly string[]
   readonly available: boolean
   readonly sortOrder: number
   readonly sizes: readonly CupSize[]
@@ -143,6 +150,18 @@ export const yourProduct = (name: string): string => {
   const firstWord = lower.split(/\s+/)[0] ?? ''
   return `${firstWord.endsWith('a') ? 'Sua' : 'Seu'} ${lower}`
 }
+
+/**
+ * Categorias que o cliente vê ao montar esse produto, na ordem do cardápio.
+ * Produto com complemento desligado não tem nenhuma.
+ */
+export const productCategories = (
+  product: ProductKind,
+  categories: readonly ToppingCategory[],
+): readonly ToppingCategory[] =>
+  product.acceptsToppings
+    ? categories.filter((category) => product.toppingCategoryIds.includes(category.id))
+    : []
 
 /** Soma das cotas grátis de todas as categorias. É o que o site anuncia. */
 export const totalFreeToppings = (categories: readonly ToppingCategory[]): number =>

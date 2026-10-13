@@ -1,6 +1,7 @@
 import { cartItemId } from '../cart/CartContext'
 import type { CartItem } from '../cart/CartContext'
 import type { Catalog } from '../catalog/types'
+import { productCategories } from '../catalog/types'
 import { priceBuild } from './builder'
 
 /**
@@ -35,9 +36,11 @@ export const rebuildOrder = (previous: readonly CartItem[], catalog: Catalog): R
       continue
     }
 
+    // Fica fora o complemento que acabou e o que deixou de valer nesse produto.
+    const allowed = new Set(productCategories(product, catalog.categories).map((item) => item.id))
     const toppings = old.toppings.flatMap((topping) => {
       const current = catalog.toppings.find((item) => item.id === topping.id)
-      if (current?.available) return [current]
+      if (current?.available && allowed.has(current.categoryId)) return [current]
       droppedToppings.push(topping.name)
       return []
     })

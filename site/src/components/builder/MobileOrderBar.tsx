@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { sizeLabel, yourProduct } from '../../catalog/types'
 import type { BuildPricing, BuildSelection } from '../../lib/builder'
-import { acceptsToppings, missingSteps } from '../../lib/builder'
+import { missingSteps } from '../../lib/builder'
 import { formatPrice } from '../../lib/order'
 import { FreeToppingsMeter } from './FreeToppingsMeter'
 
@@ -34,7 +34,7 @@ export function MobileOrderBar({
   const paidIds = pricing.paidToppings.map((topping) => topping.id)
   /** Etapa que o produto não usa some do resumo, como some da trilha. */
   const showSize = selection.product ? selection.product.sizes.length > 1 : true
-  const showToppings = acceptsToppings(selection)
+  const showToppings = pricing.takesToppings
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 lg:hidden">

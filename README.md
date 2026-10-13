@@ -167,6 +167,8 @@ e o botão de WhatsApp continua disponível na seção de entrega.
 - [x] Criar o projeto no Supabase e rodar `supabase/migrations/0001_init.sql` (`docs/supabase.md`)
 - [x] Migrations até a `0012_pix_pela_infinitepay.sql` rodadas no SQL Editor (`docs/supabase.md`)
 - [ ] Rodar a `0013_email_no_pedido.sql` no SQL Editor (e-mail do cliente no pedido pago pelo site)
+- [ ] Rodar a `0014_complementos_por_produto.sql` no SQL Editor **antes** de publicar o site desta versão: o site novo lê a tabela `product_topping_categories` e, sem ela, o cardápio não carrega
+- [ ] Garrafa com complementos próprios: no painel, criar a categoria exclusiva marcando só a garrafa e desmarcar a garrafa em Frutas e no que mais não vale
 - [ ] Endereço da loja em `business.ts` (`address.street` e `district`), para a retirada mostrar onde buscar em vez de mandar pro WhatsApp
 - [ ] Cadastrar o cardápio no painel: o sistema começa vazio, sem nenhum produto
 - [ ] Publicar os primeiros depoimentos reais (painel → Avaliações → Publicar no site; a seção fica escondida até lá)

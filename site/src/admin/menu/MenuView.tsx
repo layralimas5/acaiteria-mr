@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { createCategory, createProduct, saveOrder } from '../../catalog/api'
+import { createCategory, createProduct, saveOrder, setCategoryProducts } from '../../catalog/api'
 import { useCatalog } from '../../catalog/useCatalog'
 import { totalFreeToppings } from '../../catalog/types'
 import { errorMessage } from '../../lib/supabase'
@@ -140,9 +140,13 @@ export function MenuView() {
             {addingCategory && (
               <div className="mt-3 overflow-hidden rounded-card border border-acai-200 bg-white shadow-sm">
                 <CategoryForm
+                  products={catalog.products}
                   onCancel={() => setAddingCategory(false)}
                   onSave={(values) => {
-                    run(() => createCategory(values, catalog.categories))
+                    run(async () => {
+                      const categoryId = await createCategory(values, catalog.categories)
+                      await setCategoryProducts(categoryId, values.productIds)
+                    })
                     setAddingCategory(false)
                   }}
                 />
@@ -170,6 +174,7 @@ export function MenuView() {
                     category={category}
                     handle={handle}
                     toppings={catalog.toppingsByCategory(category.id)}
+                    products={catalog.products}
                     run={run}
                     busy={busy}
                   />

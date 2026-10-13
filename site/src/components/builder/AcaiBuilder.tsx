@@ -8,7 +8,7 @@ import { useStoreOpen } from '../../opening/useStoreOpen'
 import type { Customer } from '../../orders/types'
 import type { BuildSelection } from '../../lib/builder'
 import {
-  acceptsToppings,
+  allowedToppings,
   canAddTopping,
   emptySelection,
   priceBuild,
@@ -119,12 +119,14 @@ export function AcaiBuilder({
     }
   }, [selection.product, selection.size])
 
-  // Produto que não leva complemento não carrega o que ficou do anterior.
+  // Trocar de produto não carrega complemento que o novo não aceita: a garrafa
+  // não leva fruta, o sundae não leva nada.
   useEffect(() => {
-    if (!acceptsToppings(selection) && selection.toppings.length > 0) {
-      setSelection((current) => ({ ...current, toppings: [] }))
+    const allowed = allowedToppings(selection, categories)
+    if (allowed.length !== selection.toppings.length) {
+      setSelection((current) => ({ ...current, toppings: allowed }))
     }
-  }, [selection])
+  }, [selection, categories])
 
   const pricing = useMemo(() => priceBuild(selection, categories), [selection, categories])
 
@@ -221,7 +223,8 @@ export function AcaiBuilder({
    * painel devolve a etapa ao site na hora, sem tocar em código.
    */
   const showSize = !product || product.sizes.length > 1
-  const showToppings = acceptsToppings(selection)
+  const showToppings = pricing.takesToppings
+  const productToppingCategories = categories.filter((category) => pricing.byCategory[category.id])
 
   const steps: readonly StepInfo[] = [
     { id: 1, label: 'Produto', done: productDone, hint: product?.name ?? choices.toLowerCase() },
@@ -465,7 +468,7 @@ export function AcaiBuilder({
                           )}
                         </p>
                         <p className="mt-1 text-xs text-muted">
-                          A cota é por categoria: {categories
+                          A cota é por categoria: {productToppingCategories
                             .map((category) => `${category.rule.free} ${category.title.toLowerCase()}`)
                             .join(', ')}
                           .
@@ -479,7 +482,7 @@ export function AcaiBuilder({
                     )}
 
                     <div className="space-y-6 sm:space-y-8">
-                      {categories.map((category) => {
+                      {productToppingCategories.map((category) => {
                         const usage = pricing.byCategory[category.id]
                         if (!usage) return null
 

@@ -60,6 +60,11 @@ interface CategoryRow {
   sort_order: number
 }
 
+interface ProductCategoryRow {
+  product_id: string
+  category_id: string
+}
+
 interface ToppingRow {
   id: string
   category_id: string
@@ -138,23 +143,27 @@ const toTopping = (row: ToppingRow, categoryTitle = ''): Topping => ({
 /**
  * Cardápio inteiro numa tacada.
  *
- * São cinco tabelas pequenas e o site precisa das cinco para desenhar o
+ * São seis tabelas pequenas e o site precisa de todas para desenhar o
  * montador, então buscar tudo junto sai mais barato do que buscar por etapa.
  */
 export const fetchCatalog = async (): Promise<Catalog> => {
-  const [products, sizes, bases, categories, toppings] = await Promise.all([
+  const [products, sizes, bases, categories, toppings, links] = await Promise.all([
     supabase.from('products').select('*').order('sort_order'),
     supabase.from('product_sizes').select('*').order('sort_order'),
     supabase.from('product_bases').select('*').order('sort_order'),
     supabase.from('topping_categories').select('*').order('sort_order'),
     supabase.from('toppings').select('*').order('sort_order'),
+    supabase.from('product_topping_categories').select('product_id, category_id'),
   ])
 
-  const failure = [products, sizes, bases, categories, toppings].find((result) => result.error)
+  const failure = [products, sizes, bases, categories, toppings, links].find(
+    (result) => result.error,
+  )
   if (failure?.error) throw failure.error
 
   const sizeRows = (sizes.data ?? []) as SizeRow[]
   const baseRows = (bases.data ?? []) as BaseRow[]
+  const linkRows = (links.data ?? []) as ProductCategoryRow[]
 
   const productList: readonly ProductKind[] = ((products.data ?? []) as ProductRow[]).map((row) => ({
     id: row.id,
@@ -166,6 +175,9 @@ export const fetchCatalog = async (): Promise<Catalog> => {
     baseStepSubtitle: row.base_step_subtitle,
     baseLabel: row.base_label,
     acceptsToppings: row.accepts_toppings ?? true,
+    toppingCategoryIds: linkRows
+      .filter((link) => link.product_id === row.id)
+      .map((link) => link.category_id),
     available: row.available,
     sortOrder: row.sort_order,
     sizes: sizeRows.filter((size) => size.product_id === row.id).map(toSize),
@@ -358,18 +370,55 @@ export interface CategoryDraft {
   readonly max: number | null
 }
 
+/** Devolve o id da categoria criada, para gravar em seguida os produtos dela. */
 export const createCategory = async (
   draft: CategoryDraft,
   existing: readonly ToppingCategory[],
-): Promise<void> => {
-  const { error } = await supabase.from('topping_categories').insert({
-    title: draft.title.trim(),
-    subtitle: draft.subtitle.trim(),
-    free_count: draft.free,
-    max_count: draft.max,
-    sort_order: nextOrder(existing),
-  })
+): Promise<string> => {
+  const { data, error } = await supabase
+    .from('topping_categories')
+    .insert({
+      title: draft.title.trim(),
+      subtitle: draft.subtitle.trim(),
+      free_count: draft.free,
+      max_count: draft.max,
+      sort_order: nextOrder(existing),
+    })
+    .select('id')
+    .single()
   if (error) fail(error)
+  return (data as { id: string }).id
+}
+
+/**
+ * Grava em quais produtos a categoria vale, trocando a lista inteira.
+ *
+ * Categoria nova nasce ligada a todo produto (gatilho no banco), então mesmo
+ * logo depois de criar é preciso tirar o que a loja desmarcou.
+ */
+export const setCategoryProducts = async (
+  categoryId: string,
+  productIds: readonly string[],
+): Promise<void> => {
+  const removal = supabase
+    .from('product_topping_categories')
+    .delete()
+    .eq('category_id', categoryId)
+  const { error: removeError } =
+    productIds.length > 0
+      ? await removal.not('product_id', 'in', `(${productIds.join(',')})`)
+      : await removal
+  if (removeError) fail(removeError)
+
+  if (productIds.length === 0) return
+
+  const { error: insertError } = await supabase
+    .from('product_topping_categories')
+    .upsert(
+      productIds.map((productId) => ({ product_id: productId, category_id: categoryId })),
+      { onConflict: 'product_id,category_id', ignoreDuplicates: true },
+    )
+  if (insertError) fail(insertError)
 }
 
 export const updateCategory = async (id: string, patch: Partial<CategoryDraft>): Promise<void> => {

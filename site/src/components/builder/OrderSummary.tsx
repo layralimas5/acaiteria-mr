@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { sizeLabel, yourProduct } from '../../catalog/types'
 import type { BuildPricing, BuildSelection } from '../../lib/builder'
-import { acceptsToppings, missingSteps } from '../../lib/builder'
+import { missingSteps } from '../../lib/builder'
 import { formatPrice } from '../../lib/order'
 import { FreeToppingsMeter } from './FreeToppingsMeter'
 
@@ -18,7 +18,7 @@ export function OrderSummary({ selection, pricing, onAdd, onReset }: OrderSummar
   const started = Boolean(selection.product ?? selection.size) || selection.toppings.length > 0
   /** Etapa que o produto não usa some do resumo, como some da trilha. */
   const showSize = selection.product ? selection.product.sizes.length > 1 : true
-  const showToppings = acceptsToppings(selection)
+  const showToppings = pricing.takesToppings
 
   return (
     <aside className="overflow-hidden rounded-card border border-acai-100 bg-white shadow-xl shadow-acai-900/5 lg:sticky lg:top-28">
