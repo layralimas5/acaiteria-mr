@@ -7,6 +7,7 @@ import type {
   ToppingCategory,
   ToppingRule,
 } from '../catalog/types'
+import { productCategories } from '../catalog/types'
 
 /**
  * Regras de preço da montagem.
@@ -46,6 +47,8 @@ export interface CategoryUsage {
 }
 
 export interface BuildPricing {
+  /** false quando o produto não tem nenhuma categoria de complemento valendo. */
+  readonly takesToppings: boolean
   readonly basePrice: number
   /** Soma das cotas grátis de todas as categorias. Serve para exibição. */
   readonly freeLimit: number
@@ -91,18 +94,36 @@ const freeIn = (
 /** Cota de uma categoria que o cardápio não conhece mais: nada grátis, sem teto. */
 const noRule: ToppingRule = { free: 0, max: null }
 
-/** Produto que não leva complemento não tem cota grátis nem adicional. */
-export const acceptsToppings = (selection: BuildSelection): boolean =>
-  selection.product?.acceptsToppings ?? true
+/**
+ * Categorias que valem na montagem atual. Antes de escolher o produto, todas:
+ * é o cardápio inteiro que o cliente ainda pode alcançar. Produto que não leva
+ * complemento não tem nenhuma, e sem categoria não há cota grátis nem adicional.
+ */
+export const selectionCategories = (
+  selection: BuildSelection,
+  categories: readonly ToppingCategory[],
+): readonly ToppingCategory[] =>
+  selection.product ? productCategories(selection.product, categories) : categories
+
+/** Complementos escolhidos que o produto atual aceita. Os outros caem fora. */
+export const allowedToppings = (
+  selection: BuildSelection,
+  categories: readonly ToppingCategory[],
+): readonly Topping[] => {
+  const allowed = new Set(selectionCategories(selection, categories).map((category) => category.id))
+  return selection.toppings.filter((topping) => allowed.has(topping.categoryId))
+}
 
 export const priceBuild = (
   selection: BuildSelection,
-  categories: readonly ToppingCategory[],
+  allCategories: readonly ToppingCategory[],
 ): BuildPricing => {
   const basePrice = (selection.size?.basePrice ?? 0) + (selection.base?.extraPrice ?? 0)
+  const categories = selectionCategories(selection, allCategories)
 
-  if (!acceptsToppings(selection)) {
+  if (categories.length === 0) {
     return {
+      takesToppings: false,
       basePrice,
       freeLimit: 0,
       freeUsed: 0,
@@ -137,6 +158,7 @@ export const priceBuild = (
   const additionalPrice = paidToppings.reduce((total, topping) => total + topping.price, 0)
 
   return {
+    takesToppings: true,
     basePrice,
     freeLimit: usages.reduce((total, usage) => total + usage.free, 0),
     freeUsed: usages.reduce((total, usage) => total + usage.freeUsed, 0),

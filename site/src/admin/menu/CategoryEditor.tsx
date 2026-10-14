@@ -5,11 +5,12 @@ import {
   deleteCategory,
   deleteTopping,
   saveOrder,
+  setCategoryProducts,
   updateCategory,
   updateTopping,
 } from '../../catalog/api'
 import { suggestEmoji } from '../../catalog/emoji'
-import type { Topping, ToppingCategory } from '../../catalog/types'
+import type { ProductKind, Topping, ToppingCategory } from '../../catalog/types'
 import { formatPrice } from '../../lib/order'
 import { DragList } from './DragList'
 import {
@@ -29,18 +30,45 @@ import {
  *
  * A cota grátis e o teto de escolha são da categoria, não do complemento: é
  * assim que a loja explica no balcão ("3 frutas grátis, caldas no máximo 2").
+ * A categoria também diz em quais produtos vale: complemento exclusivo da
+ * garrafa é uma categoria marcada só nela.
  */
+
+/** Produtos em que a categoria vale hoje. */
+const linkedProducts = (
+  category: ToppingCategory,
+  products: readonly ProductKind[],
+): readonly ProductKind[] =>
+  products.filter((product) => product.toppingCategoryIds.includes(category.id))
+
+/** Resumo do "vale para" no cabeçalho da categoria. */
+const productsSummary = (
+  linked: readonly ProductKind[],
+  products: readonly ProductKind[],
+): string => {
+  if (linked.length === 0) return 'não vale em nenhum produto'
+  if (linked.length === products.length) return 'vale em todos os produtos'
+  return `só em ${linked.map((product) => product.name).join(', ')}`
+}
 
 interface CategoryEditorProps {
   readonly category: ToppingCategory
   /** Alça de arrastar da linha, criada pela lista que ordena as categorias. */
   readonly handle: ReactNode
   readonly toppings: readonly Topping[]
+  readonly products: readonly ProductKind[]
   readonly run: (action: () => Promise<void>) => void
   readonly busy: boolean
 }
 
-export function CategoryEditor({ category, handle, toppings, run, busy }: CategoryEditorProps) {
+export function CategoryEditor({
+  category,
+  handle,
+  toppings,
+  products,
+  run,
+  busy,
+}: CategoryEditorProps) {
   const [editing, setEditing] = useState(false)
   const [adding, setAdding] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -49,6 +77,7 @@ export function CategoryEditor({ category, handle, toppings, run, busy }: Catego
     category.rule.free > 0 ? `${category.rule.free} grátis` : 'nenhum grátis',
     category.rule.max === null ? 'sem limite' : `máx. ${category.rule.max}`,
   ].join(' · ')
+  const linked = linkedProducts(category, products)
 
   return (
     <article className="rounded-card border border-acai-100 bg-white shadow-sm">
@@ -58,6 +87,9 @@ export function CategoryEditor({ category, handle, toppings, run, busy }: Catego
           <span className="block truncate text-sm font-extrabold text-ink">{category.title}</span>
           <span className="block truncate text-xs text-muted">
             {quota} · {toppings.length} {toppings.length === 1 ? 'item' : 'itens'}
+          </span>
+          <span className="block truncate text-xs text-muted">
+            {productsSummary(linked, products)}
           </span>
         </span>
 
@@ -81,9 +113,13 @@ export function CategoryEditor({ category, handle, toppings, run, busy }: Catego
       {editing && (
         <CategoryForm
           category={category}
+          products={products}
           onCancel={() => setEditing(false)}
           onSave={(values) => {
-            run(() => updateCategory(category.id, values))
+            run(async () => {
+              await updateCategory(category.id, values)
+              await setCategoryProducts(category.id, values.productIds)
+            })
             setEditing(false)
           }}
         />
@@ -203,29 +239,51 @@ export interface CategoryValues {
   readonly subtitle: string
   readonly free: number
   readonly max: number | null
+  /** Produtos em que a categoria aparece no montador. */
+  readonly productIds: readonly string[]
 }
 
-export const emptyCategory: CategoryValues = { title: '', subtitle: '', free: 0, max: null }
+/** Categoria nova já vem marcada em todo produto que leva complemento. */
+const initialValues = (
+  category: ToppingCategory | undefined,
+  products: readonly ProductKind[],
+): CategoryValues =>
+  category
+    ? {
+        title: category.title,
+        subtitle: category.subtitle,
+        free: category.rule.free,
+        max: category.rule.max,
+        productIds: linkedProducts(category, products).map((product) => product.id),
+      }
+    : {
+        title: '',
+        subtitle: '',
+        free: 0,
+        max: null,
+        productIds: products.filter((product) => product.acceptsToppings).map((product) => product.id),
+      }
 
 export function CategoryForm({
   category,
+  products,
   onSave,
   onCancel,
 }: {
   readonly category?: ToppingCategory
+  readonly products: readonly ProductKind[]
   readonly onSave: (values: CategoryValues) => void
   readonly onCancel: () => void
 }) {
-  const [values, setValues] = useState<CategoryValues>(
-    category
-      ? {
-          title: category.title,
-          subtitle: category.subtitle,
-          free: category.rule.free,
-          max: category.rule.max,
-        }
-      : emptyCategory,
-  )
+  const [values, setValues] = useState<CategoryValues>(() => initialValues(category, products))
+
+  const toggleProduct = (productId: string, checked: boolean) =>
+    setValues((current) => ({
+      ...current,
+      productIds: checked
+        ? [...current.productIds, productId]
+        : current.productIds.filter((id) => id !== productId),
+    }))
 
   const set = <K extends keyof CategoryValues>(key: K, value: CategoryValues[K]) =>
     setValues((current) => ({ ...current, [key]: value }))
@@ -281,6 +339,32 @@ export function CategoryForm({
           )}
         </div>
       </div>
+
+      {products.length > 0 && (
+        <fieldset className="mt-3 rounded-xl border border-acai-200 bg-white px-3 py-2.5">
+          <legend className="px-1 text-xs font-bold text-acai-700">Vale para</legend>
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
+            {products.map((product) => (
+              <label key={product.id} className="flex cursor-pointer items-center gap-2 text-sm text-ink">
+                <input
+                  type="checkbox"
+                  checked={values.productIds.includes(product.id)}
+                  onChange={(event) => toggleProduct(product.id, event.target.checked)}
+                  className="size-4 shrink-0 accent-acai-800"
+                />
+                {product.name}
+                {!product.acceptsToppings && (
+                  <span className="text-xs text-muted">(complementos desligados)</span>
+                )}
+              </label>
+            ))}
+          </div>
+          <p className="mt-1.5 text-xs text-muted">
+            O cliente só vê essa categoria nos produtos marcados. Para um complemento exclusivo da
+            garrafa, crie uma categoria e marque só a garrafa.
+          </p>
+        </fieldset>
+      )}
 
       {limited && values.max !== null && values.free > values.max && (
         <p role="alert" className="mt-3 text-xs font-semibold text-red-700">

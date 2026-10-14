@@ -7,12 +7,13 @@ import {
   deleteProduct,
   deleteSize,
   saveOrder,
+  setProductCategories,
   updateBase,
   updateProduct,
   updateSize,
 } from '../../catalog/api'
 import { sizeImage } from '../../catalog/productImage'
-import type { AcaiBase, CupSize, ProductKind } from '../../catalog/types'
+import type { AcaiBase, CupSize, ProductKind, ToppingCategory } from '../../catalog/types'
 import { formatPrice } from '../../lib/order'
 import { DragList } from './DragList'
 import {
@@ -36,6 +37,7 @@ import {
 
 interface ProductEditorProps {
   readonly product: ProductKind
+  readonly categories: readonly ToppingCategory[]
   /** Alça de arrastar da linha, criada pela lista que ordena os produtos. */
   readonly handle: ReactNode
   /** Executa a ação no banco, cuidando de erro e recarga do cardápio. */
@@ -43,7 +45,7 @@ interface ProductEditorProps {
   readonly busy: boolean
 }
 
-export function ProductEditor({ product, handle, run, busy }: ProductEditorProps) {
+export function ProductEditor({ product, categories, handle, run, busy }: ProductEditorProps) {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(false)
 
@@ -98,9 +100,13 @@ export function ProductEditor({ product, handle, run, busy }: ProductEditorProps
       {editing && (
         <ProductForm
           product={product}
+          categories={categories}
           onCancel={() => setEditing(false)}
-          onSave={(draft) => {
-            run(() => updateProduct(product.id, draft))
+          onSave={({ categoryIds, ...draft }) => {
+            run(async () => {
+              await updateProduct(product.id, draft)
+              await setProductCategories(product.id, categoryIds)
+            })
             setEditing(false)
           }}
         />
@@ -129,6 +135,8 @@ interface ProductFormValues {
   readonly baseStepSubtitle: string
   readonly baseLabel: string
   readonly acceptsToppings: boolean
+  /** Categorias de complemento que o cliente vê ao montar esse produto. */
+  readonly categoryIds: readonly string[]
 }
 
 export const emptyProductForm: ProductFormValues = {
@@ -140,14 +148,17 @@ export const emptyProductForm: ProductFormValues = {
   baseStepSubtitle: 'Uma por copo.',
   baseLabel: 'Base',
   acceptsToppings: true,
+  categoryIds: [],
 }
 
 export function ProductForm({
   product,
+  categories,
   onSave,
   onCancel,
 }: {
   readonly product?: ProductKind
+  readonly categories: readonly ToppingCategory[]
   readonly onSave: (draft: ProductFormValues) => void
   readonly onCancel: () => void
 }) {
@@ -162,12 +173,21 @@ export function ProductForm({
           baseStepSubtitle: product.baseStepSubtitle,
           baseLabel: product.baseLabel,
           acceptsToppings: product.acceptsToppings,
+          categoryIds: product.toppingCategoryIds,
         }
       : emptyProductForm,
   )
 
   const set = <K extends keyof ProductFormValues>(key: K, value: ProductFormValues[K]) =>
     setValues((current) => ({ ...current, [key]: value }))
+
+  const toggleCategory = (categoryId: string, checked: boolean) =>
+    setValues((current) => ({
+      ...current,
+      categoryIds: checked
+        ? [...current.categoryIds, categoryId]
+        : current.categoryIds.filter((id) => id !== categoryId),
+    }))
 
   return (
     <div className="border-t border-acai-100 bg-acai-50/50 p-4">
@@ -236,6 +256,35 @@ export function ProductForm({
             Desligado, o cliente não vê a etapa de complementos nesse produto e a cota grátis não
             vale para ele. É o caso do sundae, que sai por um preço menor.
           </p>
+
+          {values.acceptsToppings && categories.length > 0 && (
+            <fieldset className="mt-3 border-t border-acai-100 pt-2.5">
+              <legend className="sr-only">Complementos que valem nesse produto</legend>
+              <p aria-hidden="true" className="text-xs font-bold text-acai-700">
+                Complementos que valem nesse produto
+              </p>
+              <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
+                {categories.map((category) => (
+                  <label
+                    key={category.id}
+                    className="flex cursor-pointer items-center gap-2 text-sm text-ink"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={values.categoryIds.includes(category.id)}
+                      onChange={(event) => toggleCategory(category.id, event.target.checked)}
+                      className="size-4 shrink-0 accent-acai-800"
+                    />
+                    {category.title}
+                  </label>
+                ))}
+              </div>
+              <p className="mt-1.5 text-xs text-muted">
+                O cliente só vê as categorias marcadas. Complemento novo entra pela categoria, em
+                Complementos, mais abaixo.
+              </p>
+            </fieldset>
+          )}
         </div>
       </div>
 

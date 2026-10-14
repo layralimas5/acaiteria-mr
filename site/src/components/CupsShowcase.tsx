@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import type { CupSize, ProductKind } from '../catalog/types'
-import { sizeLabel, totalFreeToppings } from '../catalog/types'
+import type { CupSize, ProductKind, ToppingCategory } from '../catalog/types'
+import { productCategories, sizeLabel, totalFreeToppings } from '../catalog/types'
 import { useSellableCatalog } from '../catalog/sellable'
 import { formatPrice } from '../lib/order'
 import { foldWords } from '../lib/text'
@@ -33,25 +33,43 @@ const wideIndex = (cards: readonly ShowcaseCard[]): number => {
 }
 
 /**
- * Cada card precisa saber de qual produto veio: o sundae não leva complemento,
- * e anunciar cota grátis nele prometeria o que o montador não dá.
+ * Cada card precisa saber de qual produto veio: o sundae não leva complemento
+ * e a garrafa tem categorias próprias, então a cota grátis anunciada é a do
+ * produto, não a soma do cardápio inteiro.
  */
 interface ShowcaseCard {
   readonly size: CupSize
   readonly productName: string
-  readonly acceptsToppings: boolean
+  readonly freeToppings: number
+  /** A garrafa leva complemento sem cota grátis anunciada: zero não é "não leva". */
+  readonly takesToppings: boolean
 }
 
-const showcaseCards = (products: readonly ProductKind[]): readonly ShowcaseCard[] =>
-  products.flatMap((product) =>
-    product.sizes
+const showcaseCards = (
+  products: readonly ProductKind[],
+  categories: readonly ToppingCategory[],
+): readonly ShowcaseCard[] =>
+  products.flatMap((product) => {
+    const productToppingCategories = productCategories(product, categories)
+    const freeToppings = totalFreeToppings(productToppingCategories)
+    const takesToppings = productToppingCategories.length > 0
+
+    return product.sizes
       .filter((size) => size.image)
-      .map((size) => ({
-        size,
-        productName: product.name,
-        acceptsToppings: product.acceptsToppings,
-      })),
+      .map((size) => ({ size, productName: product.name, freeToppings, takesToppings }))
+  })
+
+/**
+ * Frase da cota na abertura da seção. Com todo produto dando a mesma cota, o
+ * número vai na frase; com cotas diferentes, cada card mostra a sua.
+ */
+const freeToppingsPitch = (cards: readonly ShowcaseCard[]): string => {
+  const quotas = new Set(
+    cards.filter((card) => card.takesToppings).map((card) => card.freeToppings),
   )
+  const [only] = quotas
+  return quotas.size === 1 && only !== undefined ? `${only} complementos grátis` : 'complementos grátis'
+}
 
 /**
  * Vitrine dos copos: mostra o produto de verdade antes de pedir escolhas.
@@ -62,8 +80,7 @@ const showcaseCards = (products: readonly ProductKind[]): readonly ShowcaseCard[
 export function CupsShowcase({ onPick }: CupsShowcaseProps) {
   const { catalog } = useSellableCatalog()
 
-  const cards = showcaseCards(catalog.products)
-  const freeToppings = totalFreeToppings(catalog.categories)
+  const cards = showcaseCards(catalog.products, catalog.categories)
 
   if (cards.length === 0) return null
 
@@ -78,7 +95,7 @@ export function CupsShowcase({ onPick }: CupsShowcaseProps) {
             Do lanche rápido ao pote de dividir
           </h2>
           <p className="mt-2 text-[clamp(0.875rem,3.6vw,1rem)] leading-[1.5] text-muted sm:mt-3 sm:leading-normal">
-            Copo, pote ou garrafa, todos vêm com {freeToppings} complementos grátis para montar do
+            Copo, pote ou garrafa, todos vêm com {freeToppingsPitch(cards)} para montar do
             seu jeito. E tem sundae pra matar a vontade.
           </p>
         </div>
@@ -91,7 +108,8 @@ export function CupsShowcase({ onPick }: CupsShowcaseProps) {
               productName={card.productName}
               index={index}
               wide={index === wide}
-              freeToppings={card.acceptsToppings ? freeToppings : 0}
+              freeToppings={card.freeToppings}
+              takesToppings={card.takesToppings}
               onPick={onPick}
             />
           ))}
@@ -111,12 +129,21 @@ interface CupCardProps {
   readonly index: number
   /** Ocupa a linha inteira no celular, para o grid ímpar não deixar buraco. */
   readonly wide: boolean
-  /** Zero quando o produto não leva complemento: o card não anuncia cota. */
+  /** Zero quando não há cota grátis anunciada: o card não mostra número. */
   readonly freeToppings: number
+  readonly takesToppings: boolean
   readonly onPick: (sizeId: string) => void
 }
 
-function CupCard({ size, productName, index, wide, freeToppings, onPick }: CupCardProps) {
+function CupCard({
+  size,
+  productName,
+  index,
+  wide,
+  freeToppings,
+  takesToppings,
+  onPick,
+}: CupCardProps) {
   const label = sizeLabel(size)
   const kicker = foldWords(productName) === foldWords(label) ? '' : productName
   /**
@@ -192,7 +219,7 @@ function CupCard({ size, productName, index, wide, freeToppings, onPick }: CupCa
           </p>
         ) : (
           <p className="mt-1.5 inline-block rounded-full bg-acai-50 px-2 py-0.5 text-[12px] font-bold text-acai-800 sm:mt-2 sm:px-2.5 sm:py-1 sm:text-[11px]">
-            Pronto pra levar
+            {takesToppings ? 'Com complementos' : 'Pronto pra levar'}
           </p>
         )}
 
@@ -201,7 +228,7 @@ function CupCard({ size, productName, index, wide, freeToppings, onPick }: CupCa
           onClick={() => onPick(size.id)}
           className="mt-2.5 w-full rounded-full bg-acai-800 px-4 py-2.5 text-[0.8125rem] font-bold text-white transition-colors hover:animate-pulse-soft hover:bg-acai-900 sm:mt-4 sm:px-6 sm:py-3 sm:text-sm"
         >
-          {freeToppings > 0 ? 'Montar esse' : 'Escolher sabor'}
+          {takesToppings ? 'Montar esse' : 'Escolher sabor'}
         </button>
       </div>
     </motion.article>

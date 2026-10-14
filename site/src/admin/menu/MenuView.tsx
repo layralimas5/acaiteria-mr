@@ -1,5 +1,11 @@
 import { useCallback, useState } from 'react'
-import { createCategory, createProduct, saveOrder } from '../../catalog/api'
+import {
+  createCategory,
+  createProduct,
+  saveOrder,
+  setCategoryProducts,
+  setProductCategories,
+} from '../../catalog/api'
 import { useCatalog } from '../../catalog/useCatalog'
 import { totalFreeToppings } from '../../catalog/types'
 import { errorMessage } from '../../lib/supabase'
@@ -82,9 +88,13 @@ export function MenuView() {
             {addingProduct && (
               <div className="mt-3 overflow-hidden rounded-card border border-acai-200 bg-white shadow-sm">
                 <ProductForm
+                  categories={catalog.categories}
                   onCancel={() => setAddingProduct(false)}
-                  onSave={(draft) => {
-                    run(() => createProduct(draft, catalog.products))
+                  onSave={({ categoryIds, ...draft }) => {
+                    run(async () => {
+                      const productId = await createProduct(draft, catalog.products)
+                      await setProductCategories(productId, categoryIds)
+                    })
                     setAddingProduct(false)
                   }}
                 />
@@ -108,7 +118,13 @@ export function MenuView() {
                 className="mt-3 space-y-3"
               >
                 {(product, handle) => (
-                  <ProductEditor product={product} handle={handle} run={run} busy={busy} />
+                  <ProductEditor
+                    product={product}
+                    categories={catalog.categories}
+                    handle={handle}
+                    run={run}
+                    busy={busy}
+                  />
                 )}
               </DragList>
             )}
@@ -140,9 +156,13 @@ export function MenuView() {
             {addingCategory && (
               <div className="mt-3 overflow-hidden rounded-card border border-acai-200 bg-white shadow-sm">
                 <CategoryForm
+                  products={catalog.products}
                   onCancel={() => setAddingCategory(false)}
                   onSave={(values) => {
-                    run(() => createCategory(values, catalog.categories))
+                    run(async () => {
+                      const categoryId = await createCategory(values, catalog.categories)
+                      await setCategoryProducts(categoryId, values.productIds)
+                    })
                     setAddingCategory(false)
                   }}
                 />
@@ -170,6 +190,7 @@ export function MenuView() {
                     category={category}
                     handle={handle}
                     toppings={catalog.toppingsByCategory(category.id)}
+                    products={catalog.products}
                     run={run}
                     busy={busy}
                   />

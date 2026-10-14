@@ -8,7 +8,7 @@ import { useStoreOpen } from '../../opening/useStoreOpen'
 import type { Customer } from '../../orders/types'
 import type { BuildSelection } from '../../lib/builder'
 import {
-  acceptsToppings,
+  allowedToppings,
   canAddTopping,
   emptySelection,
   priceBuild,
@@ -119,12 +119,14 @@ export function AcaiBuilder({
     }
   }, [selection.product, selection.size])
 
-  // Produto que não leva complemento não carrega o que ficou do anterior.
+  // Trocar de produto não carrega complemento que o novo não aceita: a garrafa
+  // não leva fruta, o sundae não leva nada.
   useEffect(() => {
-    if (!acceptsToppings(selection) && selection.toppings.length > 0) {
-      setSelection((current) => ({ ...current, toppings: [] }))
+    const allowed = allowedToppings(selection, categories)
+    if (allowed.length !== selection.toppings.length) {
+      setSelection((current) => ({ ...current, toppings: allowed }))
     }
-  }, [selection])
+  }, [selection, categories])
 
   const pricing = useMemo(() => priceBuild(selection, categories), [selection, categories])
 
@@ -221,7 +223,8 @@ export function AcaiBuilder({
    * painel devolve a etapa ao site na hora, sem tocar em código.
    */
   const showSize = !product || product.sizes.length > 1
-  const showToppings = acceptsToppings(selection)
+  const showToppings = pricing.takesToppings
+  const productToppingCategories = categories.filter((category) => pricing.byCategory[category.id])
 
   const steps: readonly StepInfo[] = [
     { id: 1, label: 'Produto', done: productDone, hint: product?.name ?? choices.toLowerCase() },
@@ -378,7 +381,7 @@ export function AcaiBuilder({
                     key="size"
                     title="Escolha seu tamanho"
                     subtitle={
-                      showToppings
+                      showToppings && pricing.freeLimit > 0
                         ? sizeDone
                           ? `${selection.size ? sizeLabel(selection.size) : ''} · ${pricing.freeLimit} complementos grátis`
                           : `Todo tamanho vem com ${pricing.freeLimit} complementos grátis inclusos.`
@@ -439,9 +442,11 @@ export function AcaiBuilder({
                     key="toppings"
                     title="Escolha seus complementos"
                     subtitle={
-                      sizeDone
-                        ? `Cada categoria tem a própria cota grátis. Passou dela, o item soma no total.`
-                        : 'Escolha o tamanho antes para liberar os complementos.'
+                      !sizeDone
+                        ? 'Escolha o tamanho antes para liberar os complementos.'
+                        : pricing.freeLimit > 0
+                          ? 'Cada categoria tem a própria cota grátis. Passou dela, o item soma no total.'
+                          : 'Os marcados como grátis não custam nada. Os com preço somam no total.'
                     }
                     done={toppingsDone}
                     footer={
@@ -453,24 +458,26 @@ export function AcaiBuilder({
                     }
                   >
                     {sizeDone ? (
-                      <div className="mb-4 rounded-2xl border border-acai-100 bg-acai-50/60 px-3.5 py-2.5 sm:mb-6 sm:px-4 sm:py-3">
-                        <p className="text-sm font-semibold text-muted">
-                          <span className="text-ink">{pricing.freeUsed}</span> de {pricing.freeLimit}{' '}
-                          grátis usados
-                          {pricing.additionalPrice > 0 && (
-                            <span className="text-acai-800">
-                              {' '}
-                              · {formatPrice(pricing.additionalPrice)} em adicionais
-                            </span>
-                          )}
-                        </p>
-                        <p className="mt-1 text-xs text-muted">
-                          A cota é por categoria: {categories
-                            .map((category) => `${category.rule.free} ${category.title.toLowerCase()}`)
-                            .join(', ')}
-                          .
-                        </p>
-                      </div>
+                      pricing.freeLimit > 0 && (
+                        <div className="mb-4 rounded-2xl border border-acai-100 bg-acai-50/60 px-3.5 py-2.5 sm:mb-6 sm:px-4 sm:py-3">
+                          <p className="text-sm font-semibold text-muted">
+                            <span className="text-ink">{pricing.freeUsed}</span> de {pricing.freeLimit}{' '}
+                            grátis usados
+                            {pricing.additionalPrice > 0 && (
+                              <span className="text-acai-800">
+                                {' '}
+                                · {formatPrice(pricing.additionalPrice)} em adicionais
+                              </span>
+                            )}
+                          </p>
+                          <p className="mt-1 text-xs text-muted">
+                            A cota é por categoria: {productToppingCategories
+                              .map((category) => `${category.rule.free} ${category.title.toLowerCase()}`)
+                              .join(', ')}
+                            .
+                          </p>
+                        </div>
+                      )
                     ) : (
                       <StepBlocked
                         onGo={() => goToStep(2)}
@@ -479,7 +486,7 @@ export function AcaiBuilder({
                     )}
 
                     <div className="space-y-6 sm:space-y-8">
-                      {categories.map((category) => {
+                      {productToppingCategories.map((category) => {
                         const usage = pricing.byCategory[category.id]
                         if (!usage) return null
 

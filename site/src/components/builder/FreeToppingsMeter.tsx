@@ -12,6 +12,10 @@ interface FreeToppingsMeterProps {
  * disponíveis, roxas = passaram do limite e entram como adicional.
  */
 export function FreeToppingsMeter({ limit, freeUsed, paid }: FreeToppingsMeterProps) {
+  // Sem cota anunciada (a garrafa) não há o que contar: os adicionais já
+  // aparecem com o preço na lista de escolhidos.
+  if (limit === 0) return null
+
   const extra = paid
   const used = Math.min(freeUsed, limit)
 
