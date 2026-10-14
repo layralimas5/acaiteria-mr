@@ -226,22 +226,60 @@ export interface ProductDraft {
   readonly acceptsToppings: boolean
 }
 
+/** Devolve o id do produto criado, para gravar em seguida as categorias dele. */
 export const createProduct = async (
   draft: ProductDraft,
   existing: readonly ProductKind[],
-): Promise<void> => {
-  const { error } = await supabase.from('products').insert({
-    name: draft.name.trim(),
-    description: draft.description.trim(),
-    emoji: draft.emoji.trim(),
-    image: draft.image.trim() || null,
-    base_step_title: draft.baseStepTitle.trim(),
-    base_step_subtitle: draft.baseStepSubtitle.trim(),
-    base_label: draft.baseLabel.trim(),
-    accepts_toppings: draft.acceptsToppings,
-    sort_order: nextOrder(existing),
-  })
+): Promise<string> => {
+  const { data, error } = await supabase
+    .from('products')
+    .insert({
+      name: draft.name.trim(),
+      description: draft.description.trim(),
+      emoji: draft.emoji.trim(),
+      image: draft.image.trim() || null,
+      base_step_title: draft.baseStepTitle.trim(),
+      base_step_subtitle: draft.baseStepSubtitle.trim(),
+      base_label: draft.baseLabel.trim(),
+      accepts_toppings: draft.acceptsToppings,
+      sort_order: nextOrder(existing),
+    })
+    .select('id')
+    .single()
   if (error) fail(error)
+  return (data as { id: string }).id
+}
+
+/**
+ * Grava quais categorias de complemento valem no produto, trocando a lista
+ * inteira. É o mesmo vínculo de `setCategoryProducts`, visto pelo produto.
+ *
+ * Produto novo nasce ligado a toda categoria (gatilho no banco), então mesmo
+ * logo depois de criar é preciso tirar o que a loja desmarcou.
+ */
+export const setProductCategories = async (
+  productId: string,
+  categoryIds: readonly string[],
+): Promise<void> => {
+  const removal = supabase
+    .from('product_topping_categories')
+    .delete()
+    .eq('product_id', productId)
+  const { error: removeError } =
+    categoryIds.length > 0
+      ? await removal.not('category_id', 'in', `(${categoryIds.join(',')})`)
+      : await removal
+  if (removeError) fail(removeError)
+
+  if (categoryIds.length === 0) return
+
+  const { error: insertError } = await supabase
+    .from('product_topping_categories')
+    .upsert(
+      categoryIds.map((categoryId) => ({ product_id: productId, category_id: categoryId })),
+      { onConflict: 'product_id,category_id', ignoreDuplicates: true },
+    )
+  if (insertError) fail(insertError)
 }
 
 export const updateProduct = async (

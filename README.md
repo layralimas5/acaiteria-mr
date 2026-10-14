@@ -173,6 +173,7 @@ e o botão de WhatsApp continua disponível na seção de entrega.
 - [ ] Cadastrar o cardápio no painel: o sistema começa vazio, sem nenhum produto
 - [ ] Publicar os primeiros depoimentos reais (painel → Avaliações → Publicar no site; a seção fica escondida até lá)
 - [x] Garrafas de açaí 300ml (R$ 15) e 500ml (R$ 18) cadastradas no Supabase em 13/10/2026 (`supabase/seeds/garrafas.sql`)
+- [ ] Rodar o `supabase/seeds/complementos-garrafa.sql` depois da `0014`: complementos da garrafa (Avelã R$ 3, Creme de ninho R$ 2, o resto cortesia), sem os do copo
 - [x] Sundae ligado no site em 13/10/2026
 - [ ] Fotos dos demais produtos (só o pote 300ml tem foto; o resto usa a ilustração `AcaiCup.tsx`)
 - [x] Logo oficial aplicada no menu, rodapé e favicon

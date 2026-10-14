@@ -39,6 +39,8 @@ loja faria no painel. São opcionais, rodam na mesma tela e podem rodar de novo
 sem duplicar nada:
 
 - `sundae.sql`: cria o Sundae (R$ 6,50) com os sabores Açaí com Ninho e Morango
+- `garrafas.sql`: cria a Garrafa de açaí, 300ml (R$ 15) e 500ml (R$ 18)
+- `complementos-garrafa.sql`: categoria "Complementos da garrafa", marcada só na garrafa (roda depois da `0014` e do `garrafas.sql`)
 
 ## 3. Criar o usuário da loja
 
