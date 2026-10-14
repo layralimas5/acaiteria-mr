@@ -41,6 +41,8 @@ interface ShowcaseCard {
   readonly size: CupSize
   readonly productName: string
   readonly freeToppings: number
+  /** A garrafa leva complemento sem cota grátis anunciada: zero não é "não leva". */
+  readonly takesToppings: boolean
 }
 
 const showcaseCards = (
@@ -48,11 +50,13 @@ const showcaseCards = (
   categories: readonly ToppingCategory[],
 ): readonly ShowcaseCard[] =>
   products.flatMap((product) => {
-    const freeToppings = totalFreeToppings(productCategories(product, categories))
+    const productToppingCategories = productCategories(product, categories)
+    const freeToppings = totalFreeToppings(productToppingCategories)
+    const takesToppings = productToppingCategories.length > 0
 
     return product.sizes
       .filter((size) => size.image)
-      .map((size) => ({ size, productName: product.name, freeToppings }))
+      .map((size) => ({ size, productName: product.name, freeToppings, takesToppings }))
   })
 
 /**
@@ -60,7 +64,9 @@ const showcaseCards = (
  * número vai na frase; com cotas diferentes, cada card mostra a sua.
  */
 const freeToppingsPitch = (cards: readonly ShowcaseCard[]): string => {
-  const quotas = new Set(cards.map((card) => card.freeToppings).filter((quota) => quota > 0))
+  const quotas = new Set(
+    cards.filter((card) => card.takesToppings).map((card) => card.freeToppings),
+  )
   const [only] = quotas
   return quotas.size === 1 && only !== undefined ? `${only} complementos grátis` : 'complementos grátis'
 }
@@ -103,6 +109,7 @@ export function CupsShowcase({ onPick }: CupsShowcaseProps) {
               index={index}
               wide={index === wide}
               freeToppings={card.freeToppings}
+              takesToppings={card.takesToppings}
               onPick={onPick}
             />
           ))}
@@ -122,12 +129,21 @@ interface CupCardProps {
   readonly index: number
   /** Ocupa a linha inteira no celular, para o grid ímpar não deixar buraco. */
   readonly wide: boolean
-  /** Zero quando o produto não leva complemento: o card não anuncia cota. */
+  /** Zero quando não há cota grátis anunciada: o card não mostra número. */
   readonly freeToppings: number
+  readonly takesToppings: boolean
   readonly onPick: (sizeId: string) => void
 }
 
-function CupCard({ size, productName, index, wide, freeToppings, onPick }: CupCardProps) {
+function CupCard({
+  size,
+  productName,
+  index,
+  wide,
+  freeToppings,
+  takesToppings,
+  onPick,
+}: CupCardProps) {
   const label = sizeLabel(size)
   const kicker = foldWords(productName) === foldWords(label) ? '' : productName
   /**
@@ -203,7 +219,7 @@ function CupCard({ size, productName, index, wide, freeToppings, onPick }: CupCa
           </p>
         ) : (
           <p className="mt-1.5 inline-block rounded-full bg-acai-50 px-2 py-0.5 text-[12px] font-bold text-acai-800 sm:mt-2 sm:px-2.5 sm:py-1 sm:text-[11px]">
-            Pronto pra levar
+            {takesToppings ? 'Com complementos' : 'Pronto pra levar'}
           </p>
         )}
 
@@ -212,7 +228,7 @@ function CupCard({ size, productName, index, wide, freeToppings, onPick }: CupCa
           onClick={() => onPick(size.id)}
           className="mt-2.5 w-full rounded-full bg-acai-800 px-4 py-2.5 text-[0.8125rem] font-bold text-white transition-colors hover:animate-pulse-soft hover:bg-acai-900 sm:mt-4 sm:px-6 sm:py-3 sm:text-sm"
         >
-          {freeToppings > 0 ? 'Montar esse' : 'Escolher sabor'}
+          {takesToppings ? 'Montar esse' : 'Escolher sabor'}
         </button>
       </div>
     </motion.article>

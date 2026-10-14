@@ -67,9 +67,11 @@ export function SizeSelector({ sizes, freeToppings, selected, onSelect }: SizeSe
                 {formatPrice(size.basePrice)}
               </span>
 
-              <span className="mt-1.5 inline-block whitespace-nowrap rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700 sm:mt-2 sm:px-2.5 sm:py-1 sm:text-[11px]">
-                {freeToppings} complementos grátis
-              </span>
+              {freeToppings > 0 && (
+                <span className="mt-1.5 inline-block whitespace-nowrap rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700 sm:mt-2 sm:px-2.5 sm:py-1 sm:text-[11px]">
+                  {freeToppings} complementos grátis
+                </span>
+              )}
             </span>
           </motion.button>
         )
